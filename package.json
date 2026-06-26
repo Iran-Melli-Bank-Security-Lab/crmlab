@@ -1,0 +1,41 @@
+{
+  "name": "role-dashboard-project-enterprise",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB -c blue,green \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:web": "vite --config apps/web-fsa/vite.config.ts",
+    "dev:api": "npm --workspace enterprise-dashboard-backend run dev",
+    "build": "npm run build:api && npm run build:web",
+    "build:web": "vite build --config apps/web-fsa/vite.config.ts",
+    "build:api": "npm --workspace enterprise-dashboard-backend run build",
+    "preview": "vite preview --config apps/web-fsa/vite.config.ts",
+    "start:api": "npm --workspace enterprise-dashboard-backend run start",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:api": "npm --workspace enterprise-dashboard-backend run lint",
+    "format": "prettier --write .",
+    "typecheck": "npm run typecheck:api && npm run typecheck:web",
+    "typecheck:web": "tsc -p apps/web-fsa/tsconfig.json --noEmit",
+    "typecheck:api": "npm --workspace enterprise-dashboard-backend run typecheck",
+    "seed:api": "npm --workspace enterprise-dashboard-backend run seed",
+    "msw:init": "msw init apps/web-fsa/public/ --save"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "concurrently": "^10.0.3",
+    "eslint": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-plugin-react": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "prettier": "latest",
+    "typescript": "latest"
+  }
+}

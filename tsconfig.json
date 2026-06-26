@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web-fsa"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./packages/authz"
+    },
+    {
+      "path": "./packages/contracts"
+    }
+  ]
+}

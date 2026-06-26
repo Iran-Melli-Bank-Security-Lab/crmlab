@@ -1,0 +1,30 @@
+export const VULNERABILITY_SEVERITIES = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  CRITICAL: "critical",
+} as const;
+
+export const VULNERABILITY_SEVERITY_VALUES = [
+  VULNERABILITY_SEVERITIES.LOW,
+  VULNERABILITY_SEVERITIES.MEDIUM,
+  VULNERABILITY_SEVERITIES.HIGH,
+  VULNERABILITY_SEVERITIES.CRITICAL,
+] as const;
+
+export const VULNERABILITY_STATUS = {
+  OPEN: "open",
+  TRIAGED: "triaged",
+  FIXED: "fixed",
+  CLOSED: "closed",
+} as const;
+
+export const VULNERABILITY_STATUS_VALUES = [
+  VULNERABILITY_STATUS.OPEN,
+  VULNERABILITY_STATUS.TRIAGED,
+  VULNERABILITY_STATUS.FIXED,
+  VULNERABILITY_STATUS.CLOSED,
+] as const;
+
+export type VulnerabilitySeverity = (typeof VULNERABILITY_SEVERITIES)[keyof typeof VULNERABILITY_SEVERITIES];
+export type VulnerabilityStatus = (typeof VULNERABILITY_STATUS)[keyof typeof VULNERABILITY_STATUS];

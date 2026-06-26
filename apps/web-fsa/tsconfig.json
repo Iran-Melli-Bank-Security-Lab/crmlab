@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../../",
+    "paths": {
+      "@/*": ["apps/web-fsa/src/*"],
+      "@role-dashboard/authz": ["packages/authz/src/index.ts"],
+      "@role-dashboard/contracts": ["packages/contracts/src/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "@role-dashboard/web-fsa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.config.ts",
+    "build": "vite build --config vite.config.ts",
+    "preview": "vite preview --config vite.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "latest",
+    "@emotion/react": "latest",
+    "@emotion/styled": "latest",
+    "@hookform/resolvers": "latest",
+    "@reduxjs/toolkit": "latest",
+    "framer-motion": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-hook-form": "latest",
+    "react-hot-toast": "latest",
+    "react-redux": "latest",
+    "react-router-dom": "latest",
+    "socket.io-client": "^4.8.3",
+    "vazirmatn": "^33.0.3",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "msw": "latest",
+    "vite": "latest"
+  }
+}

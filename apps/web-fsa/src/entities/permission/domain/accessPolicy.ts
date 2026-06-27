@@ -49,6 +49,10 @@ export const ROUTE_ACCESS_POLICIES = {
     path: "/projects",
     permissions: PROJECT_ACCESS_PERMISSIONS,
   },
+  pentestWorkspace: {
+    path: "/projects/pentest/:projectId",
+    permissions: [PERMISSIONS.PENTEST_PROJECTS_READ],
+  },
   createProject: {
     path: "/projects/create",
     permissions: [PERMISSIONS.ADMIN_PROJECTS_CREATE],

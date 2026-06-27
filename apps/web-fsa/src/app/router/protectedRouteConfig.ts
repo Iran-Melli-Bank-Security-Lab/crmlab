@@ -9,6 +9,9 @@ const Profile = lazy(() => import("@/pages/profile/Profile"));
 const Settings = lazy(() => import("@/pages/settings/Settings"));
 const Projects = lazy(() => import("@/pages/projects/Projects"));
 const CreateProject = lazy(() => import("@/pages/create-project/CreateProject"));
+const PentestWorkspacePage = lazy(
+  () => import("@/pages/pentest-workspace/PentestWorkspacePage")
+);
 
 export const protectedRouteConfig = [
   {
@@ -25,6 +28,11 @@ export const protectedRouteConfig = [
     path: ROUTE_ACCESS_POLICIES.projects.path,
     element: Projects,
     permissions: ROUTE_ACCESS_POLICIES.projects.permissions,
+  },
+  {
+    path: ROUTE_ACCESS_POLICIES.pentestWorkspace.path,
+    element: PentestWorkspacePage,
+    permissions: ROUTE_ACCESS_POLICIES.pentestWorkspace.permissions,
   },
   {
     path: ROUTE_ACCESS_POLICIES.createProject.path,

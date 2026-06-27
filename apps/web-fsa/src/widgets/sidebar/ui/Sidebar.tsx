@@ -158,85 +158,119 @@ function NavigationPanel({
             </Text>
 
             {items.map((item) => (
-              <ChakraLink
-                asChild
-                key={item.path}
-                borderRadius="md"
-                color="var(--apple-secondary)"
-                fontSize="sm"
-                fontWeight="650"
-                _hover={{ textDecoration: "none" }}
-                _focus={{ outline: "none", boxShadow: "none" }}
-                _focusVisible={{ outline: "none", boxShadow: "none" }}
-                css={{
-                  "&.active .nav-item": {
-                    background: "var(--apple-blue-soft)",
-                    borderColor: "rgba(0, 113, 227, 0.18)",
-                    color: "var(--apple-blue)",
-                  },
-                  "&:focus .nav-item, &:focus-visible .nav-item": {
-                    boxShadow: "none",
-                    outline: "none",
-                  },
-                  "&.active .nav-accent": {
-                    opacity: 1,
-                  },
-                  "&.active .nav-icon": {
-                    background: "rgba(0, 113, 227, 0.12)",
-                    color: "var(--apple-blue)",
-                  },
-                }}
-              >
-                <NavLink
-                  to={item.path}
-                  className={() => (isItemActive(item.path) ? "active" : undefined)}
-                  end
-                  onClick={onNavigate}
-                >
-                  <HStack
-                    className="nav-item"
-                    position="relative"
-                    gap={3}
-                    px={3}
-                    py={2.5}
-                    minH="42px"
-                    border="1px solid"
-                    borderColor="transparent"
-                    borderRadius="md"
-                    outline="none"
-                    transition="background 120ms ease, border-color 120ms ease, color 120ms ease"
-                    _hover={{ bg: "var(--apple-blue-soft)", borderColor: "transparent" }}
-                    _focus={{ boxShadow: "none", outline: "none" }}
-                    _focusVisible={{ boxShadow: "none", outline: "none" }}
-                  >
-                    <Box
-                      className="nav-accent"
-                      position="absolute"
-                      insetStart="-1px"
-                      top="8px"
-                      bottom="8px"
-                      w="3px"
-                      borderRadius="full"
-                      bg="var(--apple-blue)"
-                      opacity={0}
-                    />
-                    <Flex
-                      className="nav-icon"
-                      boxSize="8"
-                      shrink={0}
-                      borderRadius="md"
-                      align="center"
-                      justify="center"
-                      bg="var(--apple-surface-subtle)"
-                      color="var(--apple-muted)"
-                    >
-                      <NavIcon name={item.icon} />
-                    </Flex>
-                    <Text lineClamp={1}>{t(item.titleKey)}</Text>
-                  </HStack>
-                </NavLink>
-              </ChakraLink>
-            ))}
+  <ChakraLink
+    asChild
+    key={item.path}
+    display="block"
+    w="full"
+    width="100%"
+    borderRadius="md"
+    color="var(--apple-secondary)"
+    fontSize="sm"
+    fontWeight="650"
+    textDecoration="none"
+    _hover={{ textDecoration: "none" }}
+    _focus={{ outline: "none", boxShadow: "none" }}
+    _focusVisible={{ outline: "none", boxShadow: "none" }}
+    css={{
+      "&": {
+        width: "100%",
+      },
+
+      "& .nav-item": {
+        width: "100%",
+      },
+
+      "&.active .nav-item": {
+        width: "100%",
+        background: "var(--apple-blue-soft)",
+        borderColor: "rgba(0, 113, 227, 0.18)",
+        color: "var(--apple-blue)",
+      },
+
+      "&:focus .nav-item, &:focus-visible .nav-item": {
+        boxShadow: "none",
+        outline: "none",
+      },
+
+      "&.active .nav-accent": {
+        opacity: 1,
+      },
+
+      "&.active .nav-icon": {
+        background: "rgba(0, 113, 227, 0.12)",
+        color: "var(--apple-blue)",
+      },
+    }}
+  >
+    <NavLink
+      to={item.path}
+      className={() => (isItemActive(item.path) ? "active" : undefined)}
+      end
+      onClick={onNavigate}
+      style={{
+        display: "block",
+        width: "100%",
+        textDecoration: "none",
+      }}
+    >
+      <HStack
+        className="nav-item"
+        position="relative"
+        w="full"
+        width="100%"
+        gap={3}
+        px={3}
+        py={2.5}
+        minH="42px"
+        border="1px solid"
+        borderColor="transparent"
+        borderRadius="md"
+        outline="none"
+        transition="background 120ms ease, border-color 120ms ease, color 120ms ease"
+        _hover={{
+          bg: "var(--apple-blue-soft)",
+          borderColor: "transparent",
+        }}
+        _focus={{ boxShadow: "none", outline: "none" }}
+        _focusVisible={{ boxShadow: "none", outline: "none" }}
+      >
+        <Box
+          className="nav-accent"
+          position="absolute"
+          insetStart="-1px"
+          top="8px"
+          bottom="8px"
+          w="3px"
+          borderRadius="full"
+          bg="var(--apple-blue)"
+          opacity={0}
+        />
+
+        <Flex
+          className="nav-icon"
+          boxSize="8"
+          shrink={0}
+          borderRadius="md"
+          align="center"
+          justify="center"
+          bg="var(--apple-surface-subtle)"
+          color="var(--apple-muted)"
+        >
+          <NavIcon name={item.icon} />
+        </Flex>
+
+        <Text flex="1" minW={0} lineClamp={1}>
+          {t(item.titleKey)}
+        </Text>
+      </HStack>
+    </NavLink>
+  </ChakraLink>
+))}
+
+
+
+
           </VStack>
         ))}
       </VStack>
@@ -324,6 +358,8 @@ export default function Sidebar() {
           </Drawer.Positioner>
         </Portal>
       </Drawer.Root>
+
+
     </>
   );
 }

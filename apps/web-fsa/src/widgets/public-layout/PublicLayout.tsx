@@ -1,8 +1,12 @@
 import { Outlet, Link } from "react-router-dom";
 import { Box, Container, HStack, Link as ChakraLink } from "@chakra-ui/react";
 import { ThemeIconButton } from "@/features/theme/ui/ThemeToggle";
+import LanguageSwitcher from "@/features/language/ui/LanguageSwitcher";
+import { useLanguage } from "@/features/language/model";
 
 export default function PublicLayout() {
+  const { t } = useLanguage();
+
   return (
     <Box minH="100vh" bg="var(--apple-bg)" py={8} px={4}>
       <HStack
@@ -14,14 +18,15 @@ export default function PublicLayout() {
         fontWeight="700"
       >
         <ChakraLink asChild>
-          <Link to="/login">Login</Link>
+          <Link to="/login">{t("auth.login.title")}</Link>
         </ChakraLink>
         <ChakraLink asChild>
-          <Link to="/signup">Signup</Link>
+          <Link to="/signup">{t("auth.signup.submit")}</Link>
         </ChakraLink>
         <ChakraLink asChild>
-          <Link to="/forgot-password">Forgot Password</Link>
+          <Link to="/forgot-password">{t("auth.forgot.title")}</Link>
         </ChakraLink>
+        <LanguageSwitcher />
         <ThemeIconButton />
       </HStack>
       <Container maxW="xl">

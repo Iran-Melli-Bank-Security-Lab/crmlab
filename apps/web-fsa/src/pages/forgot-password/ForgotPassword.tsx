@@ -1,6 +1,9 @@
 import { Box, Heading, Text, VStack } from "@chakra-ui/react";
+import { useLanguage } from "@/features/language/model";
 
 export default function ForgotPassword() {
+  const { t } = useLanguage();
+
   return (
     <Box
       bg="var(--apple-surface-raised)"
@@ -11,9 +14,9 @@ export default function ForgotPassword() {
       p={{ base: 6, md: 8 }}
     >
       <VStack align="stretch" gap={2}>
-        <Heading size="lg">Forgot Password</Heading>
+        <Heading size="lg">{t("auth.forgot.title")}</Heading>
         <Text color="var(--apple-muted)">
-          Connect this page to your password reset endpoint when your backend is ready.
+          {t("auth.forgot.description")}
         </Text>
       </VStack>
     </Box>

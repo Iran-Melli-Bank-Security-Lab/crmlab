@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Box, Heading, Link as ChakraLink, Text, VStack } from "@chakra-ui/react";
+import { useLanguage } from "@/features/language/model";
 
 export default function NotFound() {
+  const { t } = useLanguage();
+
   return (
     <Box
       bg="var(--apple-surface-raised)"
@@ -13,10 +16,10 @@ export default function NotFound() {
       textAlign="center"
     >
       <VStack gap={3}>
-        <Heading>404 Not Found</Heading>
-        <Text color="var(--apple-muted)">This page does not exist.</Text>
+        <Heading>{t("notFound.title")}</Heading>
+        <Text color="var(--apple-muted)">{t("notFound.description")}</Text>
         <ChakraLink asChild color="var(--apple-blue)" fontWeight="700">
-          <Link to="/login">Go to login</Link>
+          <Link to="/login">{t("notFound.login")}</Link>
         </ChakraLink>
       </VStack>
     </Box>

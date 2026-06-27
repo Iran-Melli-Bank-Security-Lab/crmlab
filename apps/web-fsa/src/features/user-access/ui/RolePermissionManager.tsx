@@ -136,7 +136,7 @@ function RolePermissionEditor({
   const handleSave = async () => {
     if (!selectedUser) return;
     if (draftRoles.length === 0) {
-      toast.error("Select at least one role before saving.");
+      toast.error(t("userAccess.requireRole"));
       return;
     }
 
@@ -160,7 +160,7 @@ function RolePermissionEditor({
   };
 
   if (isLoadingRoles) {
-    return <LoadingScreen text="Loading roles and permissions..." />;
+    return <LoadingScreen text={t("userAccess.loadingRoles")} />;
   }
 
   if (rolesError) {
@@ -171,8 +171,8 @@ function RolePermissionEditor({
     return (
       <Card title={t("userAccess.title")}>
         <EmptyState
-          title="No roles loaded"
-          description="The backend /users/roles endpoint did not return any roles."
+          title={t("userAccess.noRolesTitle")}
+          description={t("userAccess.noRolesDescription")}
         />
       </Card>
     );

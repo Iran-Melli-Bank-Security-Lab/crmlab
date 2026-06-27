@@ -6,6 +6,7 @@ import { useGetProjectsQuery } from "@/entities/project/api/projectsApi";
 import { projectViewRegistry } from "@/entities/project/model/projectViewRegistry";
 import { useGetUsersQuery } from "@/entities/user/api/usersApi";
 import PermissionGate from "@/features/access-control/ui/PermissionGate";
+import { useLanguage } from "@/features/language/model";
 import EmptyState from "@/shared/ui/feedback/EmptyState";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
@@ -43,25 +44,26 @@ function useProjectCount(view: ProjectListView) {
 }
 
 function AdminPlatformWidget() {
+  const { t } = useLanguage();
   const projectCount = useProjectCount("admin");
 
   return (
-    <Card title="Platform Overview" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.adminPlatform.title")} accentColor={appleBlue}>
       <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
         <Stat.Root>
-          <Stat.Label color={appleMuted} fontWeight="800">Projects</Stat.Label>
+          <Stat.Label color={appleMuted} fontWeight="800">{t("dashboard.widgets.adminPlatform.projects")}</Stat.Label>
           <Stat.ValueText color={appleText} fontWeight="850">{projectCount}</Stat.ValueText>
-          <Stat.HelpText color={appleMuted}>Created by you</Stat.HelpText>
+          <Stat.HelpText color={appleMuted}>{t("dashboard.widgets.adminPlatform.createdByYou")}</Stat.HelpText>
         </Stat.Root>
         <Stat.Root>
-          <Stat.Label color={appleMuted} fontWeight="800">Project views</Stat.Label>
+          <Stat.Label color={appleMuted} fontWeight="800">{t("dashboard.widgets.adminPlatform.projectViews")}</Stat.Label>
           <Stat.ValueText color={appleText} fontWeight="850">{projectViewRegistry.length}</Stat.ValueText>
-          <Stat.HelpText color={appleMuted}>Permission-based</Stat.HelpText>
+          <Stat.HelpText color={appleMuted}>{t("dashboard.widgets.adminPlatform.permissionBased")}</Stat.HelpText>
         </Stat.Root>
         <Stat.Root>
-          <Stat.Label color={appleMuted} fontWeight="800">Admin scope</Stat.Label>
-          <Stat.ValueText color={appleText} fontWeight="850">All</Stat.ValueText>
-          <Stat.HelpText color={appleMuted}>System-wide access</Stat.HelpText>
+          <Stat.Label color={appleMuted} fontWeight="800">{t("dashboard.widgets.adminPlatform.adminScope")}</Stat.Label>
+          <Stat.ValueText color={appleText} fontWeight="850">{t("dashboard.widgets.adminPlatform.all")}</Stat.ValueText>
+          <Stat.HelpText color={appleMuted}>{t("dashboard.widgets.adminPlatform.systemWide")}</Stat.HelpText>
         </Stat.Root>
       </SimpleGrid>
     </Card>
@@ -69,32 +71,33 @@ function AdminPlatformWidget() {
 }
 
 function AdminUsersWidget() {
+  const { t } = useLanguage();
   const { data: usersResponse, isLoading, error } = useGetUsersQuery();
   const users = getUsersList(usersResponse);
   const restrictedUsers = users.filter((user) => user.status === "Inactive").length;
 
   return (
-    <Card title="User Management" accentColor={appleBlue}>
-      {isLoading && <LoadingScreen text="Loading users..." />}
+    <Card title={t("adminUsers.title")} accentColor={appleBlue}>
+      {isLoading && <LoadingScreen text={t("adminUsers.loading")} />}
       {error && <ErrorState error={error} />}
       {!isLoading && !error && (
         <VStack align="stretch" gap={4}>
           <HStack gap={6} flexWrap="wrap">
             <Stat.Root minW="130px">
-              <Stat.Label color={appleMuted} fontWeight="800">Total users</Stat.Label>
+              <Stat.Label color={appleMuted} fontWeight="800">{t("dashboard.widgets.adminUsers.total")}</Stat.Label>
               <Stat.ValueText color={appleText} fontWeight="850">{users.length}</Stat.ValueText>
             </Stat.Root>
             <Stat.Root minW="130px">
-              <Stat.Label color={appleMuted} fontWeight="800">Restricted</Stat.Label>
+              <Stat.Label color={appleMuted} fontWeight="800">{t("dashboard.widgets.adminUsers.restricted")}</Stat.Label>
               <Stat.ValueText color={appleText} fontWeight="850">{restrictedUsers}</Stat.ValueText>
             </Stat.Root>
           </HStack>
           <Box>
             <Text color={appleMuted} mb={4}>
-              Manage users, roles, permissions, and account state.
+              {t("dashboard.widgets.adminUsers.description")}
             </Text>
             <Button asChild>
-              <Link to="/admin/users">Manage Users</Link>
+              <Link to="/admin/users">{t("dashboard.widgets.adminUsers.manage")}</Link>
             </Button>
           </Box>
         </VStack>
@@ -104,17 +107,18 @@ function AdminUsersWidget() {
 }
 
 function SecurityReviewWidget() {
+  const { t } = useLanguage();
   return (
-    <Card title="Security Review" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.security.title")} accentColor={appleBlue}>
       <Text color={appleMuted} mb={4}>
-        Review security projects, assigned testing work, findings, and reports.
+        {t("dashboard.widgets.security.description")}
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=security">Open Security Projects</Link>
+          <Link to="/projects?view=security">{t("dashboard.widgets.security.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.SECURITY_PROJECTS_ASSIGN]}>
-          <Button>Assign Project</Button>
+          <Button>{t("dashboard.widgets.security.assign")}</Button>
         </PermissionGate>
       </HStack>
     </Card>
@@ -122,22 +126,23 @@ function SecurityReviewWidget() {
 }
 
 function PentestWorkWidget() {
+  const { t } = useLanguage();
   const projectCount = useProjectCount("pentest");
 
   return (
-    <Card title="Pentest Work" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.pentest.title")} accentColor={appleBlue}>
       <Text color={appleMuted} mb={4}>
-        {projectCount} assigned pentest projects are available.
+        {t("dashboard.widgets.pentest.description", { count: projectCount })}
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=pentest">Open Pentest Queue</Link>
+          <Link to="/projects?view=pentest">{t("dashboard.widgets.pentest.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.PENTEST_VULNERABILITIES_CREATE]}>
-          <Button>Add Vulnerability</Button>
+          <Button>{t("dashboard.widgets.pentest.addVulnerability")}</Button>
         </PermissionGate>
         <PermissionGate permissions={[PERMISSIONS.PENTEST_REPORTS_EXPORT]}>
-          <Button variant="secondary">Export Report</Button>
+          <Button variant="secondary">{t("dashboard.widgets.pentest.exportReport")}</Button>
         </PermissionGate>
       </HStack>
     </Card>
@@ -145,17 +150,18 @@ function PentestWorkWidget() {
 }
 
 function DevOpsDeliveryWidget() {
+  const { t } = useLanguage();
   return (
-    <Card title="Delivery" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.devops.title")} accentColor={appleBlue}>
       <Text color={appleMuted} mb={4}>
-        Track environments, repositories, pipelines, and deployment activity.
+        {t("dashboard.widgets.devops.description")}
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=devops">Open Delivery Projects</Link>
+          <Link to="/projects?view=devops">{t("dashboard.widgets.devops.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.DEVOPS_DEPLOYMENTS_CREATE]}>
-          <Button>Start Deployment</Button>
+          <Button>{t("dashboard.widgets.devops.start")}</Button>
         </PermissionGate>
       </HStack>
     </Card>
@@ -163,17 +169,18 @@ function DevOpsDeliveryWidget() {
 }
 
 function QualityReviewWidget() {
+  const { t } = useLanguage();
   return (
-    <Card title="Quality Review" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.quality.title")} accentColor={appleBlue}>
       <Text color={appleMuted} mb={4}>
-        Assign quality projects, review QA results, and prepare quality reports.
+        {t("dashboard.widgets.quality.description")}
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=quality">Open Quality Projects</Link>
+          <Link to="/projects?view=quality">{t("dashboard.widgets.quality.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.QUALITY_PROJECTS_ASSIGN]}>
-          <Button>Assign Project</Button>
+          <Button>{t("dashboard.widgets.security.assign")}</Button>
         </PermissionGate>
       </HStack>
     </Card>
@@ -181,17 +188,18 @@ function QualityReviewWidget() {
 }
 
 function QaWorkWidget() {
+  const { t } = useLanguage();
   return (
-    <Card title="QA Work" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.qa.title")} accentColor={appleBlue}>
       <Text color={appleMuted} mb={4}>
-        Manage assigned test cases, bug reports, QA cycles, and release checks.
+        {t("dashboard.widgets.qa.description")}
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=qa">Open QA Assignments</Link>
+          <Link to="/projects?view=qa">{t("dashboard.widgets.qa.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.QA_TEST_CASES_CREATE]}>
-          <Button>Create Test Case</Button>
+          <Button>{t("dashboard.widgets.qa.create")}</Button>
         </PermissionGate>
       </HStack>
     </Card>
@@ -199,17 +207,18 @@ function QaWorkWidget() {
 }
 
 function RepresentativeWorkWidget() {
+  const { t } = useLanguage();
   return (
-    <Card title="Customer Work" accentColor={appleBlue}>
+    <Card title={t("dashboard.widgets.customer.title")} accentColor={appleBlue}>
       <Text color={appleMuted} mb={4}>
-        Track customer-facing project status, tickets, and communication workflows.
+        {t("dashboard.widgets.customer.description")}
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=representative">Open Customer Projects</Link>
+          <Link to="/projects?view=representative">{t("dashboard.widgets.customer.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.REPRESENTATIVE_TICKETS_CREATE]}>
-          <Button>Create Ticket</Button>
+          <Button>{t("dashboard.widgets.customer.create")}</Button>
         </PermissionGate>
       </HStack>
     </Card>
@@ -228,11 +237,12 @@ export const dashboardWidgetComponents: Record<DashboardWidgetId, ComponentType>
 };
 
 export function EmptyDashboardState() {
+  const { t } = useLanguage();
   return (
     <Card>
       <EmptyState
-        title="No dashboard widgets available"
-        description="Your account does not have dashboard permissions yet."
+        title={t("dashboard.emptyTitle")}
+        description={t("dashboard.emptyDescription")}
       />
     </Card>
   );

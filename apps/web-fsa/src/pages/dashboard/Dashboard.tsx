@@ -1,6 +1,7 @@
 import { Badge, Box, Heading, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { hasAnyExplicitPermissionGrant } from "@/entities/permission/model/permissionGrants";
 import { usePermission } from "@/features/access-control/model/usePermission";
+import { useLanguage } from "@/features/language/model";
 import { dashboardWidgetRegistry } from "@/widgets/dashboard/model/dashboardWidgetRegistry";
 import {
   dashboardWidgetComponents,
@@ -8,6 +9,7 @@ import {
 } from "@/widgets/dashboard/ui/DashboardWidgets";
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const { permissions } = usePermission();
   const visibleWidgets = dashboardWidgetRegistry
     .filter((widget) => hasAnyExplicitPermissionGrant(permissions, widget.permissions))
@@ -29,7 +31,7 @@ export default function Dashboard() {
             textTransform="none"
             fontWeight="850"
           >
-            Permission-composed workspace
+            {t("dashboard.badge")}
           </Badge>
           <Heading
             color="var(--apple-text)"
@@ -38,14 +40,14 @@ export default function Dashboard() {
             letterSpacing="0"
             lineHeight="1.12"
           >
-            Dashboard
+            {t("dashboard.title")}
           </Heading>
           <Text color="var(--apple-muted)" mt={2} fontSize="md">
-          A single workspace composed from your effective permissions.
+          {t("dashboard.description")}
         </Text>
         </Box>
         <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
-          {visibleWidgets.length} visible widgets
+          {t("dashboard.visibleWidgets", { count: visibleWidgets.length })}
         </Text>
       </HStack>
 

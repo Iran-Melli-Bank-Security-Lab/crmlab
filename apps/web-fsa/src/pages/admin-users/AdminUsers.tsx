@@ -4,6 +4,7 @@ import EmptyState from "@/shared/ui/feedback/EmptyState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import Card from "@/shared/ui/primitives/Card";
 import RolePermissionManager from "@/features/user-access/ui/RolePermissionManager";
+import { useLanguage } from "@/features/language/model";
 import { useGetUsersQuery } from "@/entities/user/api/usersApi";
 import type { User } from "@/shared/types";
 
@@ -26,6 +27,7 @@ function getUsersList(response: unknown): User[] {
 }
 
 export default function AdminUsers() {
+  const { t } = useLanguage();
   const { data: usersResponse, isLoading, error } = useGetUsersQuery();
   const users = getUsersList(usersResponse);
   const activeUsers = users.filter((user) => user.status !== "Inactive").length;
@@ -36,9 +38,9 @@ export default function AdminUsers() {
     <VStack align="stretch" gap={5}>
       <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
         <div>
-          <Heading>User Management</Heading>
+          <Heading>{t("adminUsers.title")}</Heading>
           <Text color="gray.600" mt={2}>
-            Manage users, role assignments, permissions, and account states.
+            {t("adminUsers.description")}
           </Text>
         </div>
       </HStack>
@@ -46,19 +48,19 @@ export default function AdminUsers() {
       <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
         <Card>
           <Stat.Root>
-            <Stat.Label>Total users</Stat.Label>
+            <Stat.Label>{t("adminUsers.totalUsers")}</Stat.Label>
             <Stat.ValueText>{users.length}</Stat.ValueText>
           </Stat.Root>
         </Card>
         <Card>
           <Stat.Root>
-            <Stat.Label>Active users</Stat.Label>
+            <Stat.Label>{t("adminUsers.activeUsers")}</Stat.Label>
             <Stat.ValueText>{activeUsers}</Stat.ValueText>
           </Stat.Root>
         </Card>
         <Card>
           <Stat.Root>
-            <Stat.Label>Restricted users</Stat.Label>
+            <Stat.Label>{t("adminUsers.restrictedUsers")}</Stat.Label>
             <Stat.ValueText>{restrictedUsers}</Stat.ValueText>
           </Stat.Root>
         </Card>
@@ -67,18 +69,18 @@ export default function AdminUsers() {
       {adminUsers > 1 && (
         <Card>
           <Text color="gray.600">
-            {adminUsers} users currently have administrator access.
+            {t("adminUsers.adminNotice", { count: adminUsers })}
           </Text>
         </Card>
       )}
 
-      {isLoading && <LoadingScreen text="Loading users..." />}
+      {isLoading && <LoadingScreen text={t("adminUsers.loading")} />}
       {error && <ErrorState error={error} />}
       {!isLoading && !error && users.length === 0 && (
-        <Card title="User Management">
+        <Card title={t("adminUsers.title")}>
           <EmptyState
-            title="No users loaded"
-            description="Connect the backend /users endpoint or enable MSW mocks."
+            title={t("adminUsers.emptyTitle")}
+            description={t("adminUsers.emptyDescription")}
           />
         </Card>
       )}

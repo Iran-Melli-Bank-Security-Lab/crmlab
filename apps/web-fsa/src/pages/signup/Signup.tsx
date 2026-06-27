@@ -1,4 +1,5 @@
 import { useDispatch } from "react-redux";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import toast from "react-hot-toast";
 import { Box, Heading, SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { loginSuccess } from "@/features/auth/model/authSlice";
 import { useRegisterUserMutation } from "@/features/auth/api/authApi";
+import { useLanguage } from "@/features/language/model";
 import { useUploadFileMutation } from "@/shared/api/uploadApi";
 import { getDashboardPathByPermissions } from "@/shared/lib/dashboard";
 import Input from "@/shared/ui/primitives/Input";
@@ -14,21 +16,6 @@ import Button from "@/shared/ui/primitives/Button";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-const signupSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  avatar: z
-    .any()
-    .refine((files) => files?.length === 1, "Avatar image is required")
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max image size is 2MB")
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      "Only JPG, PNG, or WEBP images are allowed"
-    ),
-});
 
 type SignupFormValues = {
   firstName: string;
@@ -39,10 +26,30 @@ type SignupFormValues = {
 };
 
 export default function Signup() {
+  const { t } = useLanguage();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
   const [registerUser, { isLoading: isRegistering }] = useRegisterUserMutation();
+
+  const signupSchema = useMemo(
+    () =>
+      z.object({
+        firstName: z.string().min(2, t("auth.validation.firstNameMin")),
+        lastName: z.string().min(2, t("auth.validation.lastNameMin")),
+        username: z.string().min(3, t("auth.validation.usernameMin")),
+        password: z.string().min(8, t("auth.validation.passwordMin", { count: 8 })),
+        avatar: z
+          .any()
+          .refine((files) => files?.length === 1, t("auth.validation.avatarRequired"))
+          .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, t("auth.validation.maxImageSize"))
+          .refine(
+            (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+            t("auth.validation.imageTypes")
+          ),
+      }),
+    [t]
+  );
 
   const {
     register,
@@ -68,10 +75,10 @@ export default function Signup() {
       }).unwrap();
 
       dispatch(loginSuccess(response));
-      toast.success("Account created successfully");
+      toast.success(t("auth.signup.success"));
       navigate(getDashboardPathByPermissions(response.user.permissions));
     } catch (error: any) {
-      toast.error(error?.data?.message || "Signup failed");
+      toast.error(error?.data?.message || t("auth.signup.error"));
     }
   };
 
@@ -88,49 +95,49 @@ export default function Signup() {
     >
       <VStack align="stretch" gap={6}>
         <Box>
-          <Heading size="lg">Create Account</Heading>
+          <Heading size="lg">{t("auth.signup.title")}</Heading>
           <Text color="var(--apple-muted)" mt={2}>
-            Create your profile with a username and avatar.
+            {t("auth.signup.description")}
           </Text>
         </Box>
 
         <VStack as="form" onSubmit={handleSubmit(onSubmit)} align="stretch" gap={4}>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
             <Input
-              label="First Name"
+              label={t("common.firstName")}
               autoComplete="given-name"
               {...register("firstName")}
               error={errors.firstName?.message}
             />
             <Input
-              label="Last Name"
+              label={t("common.lastName")}
               autoComplete="family-name"
               {...register("lastName")}
               error={errors.lastName?.message}
             />
           </SimpleGrid>
           <Input
-            label="Username"
+            label={t("common.username")}
             autoComplete="username"
             {...register("username")}
             error={errors.username?.message}
           />
           <Input
-            label="Password"
+            label={t("common.password")}
             type="password"
             {...register("password")}
             error={errors.password?.message}
           />
           <Input
-            label="Avatar Image"
+            label={t("common.avatarImage")}
             type="file"
             accept="image/png,image/jpeg,image/webp"
             {...register("avatar")}
             error={errors.avatar?.message as string | undefined}
           />
 
-          <Button type="submit" isLoading={isLoading} loadingText="Creating account...">
-            Signup
+          <Button type="submit" isLoading={isLoading} loadingText={t("auth.signup.loading")}>
+            {t("auth.signup.submit")}
           </Button>
         </VStack>
       </VStack>

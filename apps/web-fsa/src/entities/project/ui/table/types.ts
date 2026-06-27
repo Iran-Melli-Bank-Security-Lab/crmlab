@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { TranslationKey } from "@/features/language/model";
 import type { Project, ProjectAssignment } from "@/shared/types";
 
 export type Align = "start" | "center" | "end";
@@ -11,7 +12,11 @@ export type ProjectTableColumn = {
   minW?: string;
   align?: Align;
   sortable?: boolean;
-  render?: (project: ProjectTableRow) => ReactNode;
+  labelKey?: TranslationKey;
+  render?: (
+    project: ProjectTableRow,
+    t: (key: TranslationKey, values?: Record<string, string | number>) => string
+  ) => ReactNode;
   sortValue?: (project: ProjectTableRow) => string | number;
 };
 

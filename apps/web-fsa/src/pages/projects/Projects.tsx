@@ -6,6 +6,8 @@ import { useGetProjectsQuery } from "@/entities/project/api/projectsApi";
 import { projectViewRegistry } from "@/entities/project/model/projectViewRegistry";
 import { projectTableViewLoaders } from "@/entities/project/ui/table/projectTableViewLoaders";
 import { usePermission } from "@/features/access-control/model/usePermission";
+import { useLanguage } from "@/features/language/model";
+import type { TranslationKey } from "@/features/language/model";
 import EmptyState from "@/shared/ui/feedback/EmptyState";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
@@ -16,6 +18,7 @@ const PentesterAssignmentDock = lazy(
 );
 
 export default function Projects() {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { permissions } = usePermission();
@@ -66,6 +69,10 @@ export default function Projects() {
     setAssignmentProject(project);
     setIsAssignmentDockOpen(true);
   };
+  const projectViewKey = (
+    viewId: string,
+    field: "label" | "title" | "description" | "tableTitle"
+  ) => `projectViews.${viewId}.${field}` as TranslationKey;
 
   const closeAssignmentDock = () => {
     setIsAssignmentDockOpen(false);
@@ -105,7 +112,7 @@ export default function Projects() {
             textTransform="none"
             fontWeight="850"
           >
-            Permission-based project views
+            {t("projects.badge")}
           </Badge>
           <Heading
             color="var(--apple-text)"
@@ -114,15 +121,14 @@ export default function Projects() {
             letterSpacing="0"
             lineHeight="1.12"
           >
-            Projects
+            {t("projects.title")}
           </Heading>
           <Text color="var(--apple-muted)" mt={2} fontSize="md">
-            Work with the project views allowed by your permissions. Each table is
-            scoped to projects assigned to you or created by you.
+            {t("projects.description")}
           </Text>
         </Box>
         <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
-          {accessibleViews.length} available views
+          {t("projects.availableViews", { count: accessibleViews.length })}
         </Text>
       </HStack>
 
@@ -158,7 +164,7 @@ export default function Projects() {
                 _focusVisible={{ boxShadow: "var(--focus-ring)" }}
                 aria-pressed={selected}
               >
-                {view.label}
+                {t(projectViewKey(view.id, "label"))}
               </chakra.button>
             );
           })}
@@ -169,18 +175,18 @@ export default function Projects() {
         <VStack align="stretch" gap={4}>
           <Box>
             <Heading as="h2" size="lg" color="var(--apple-text)" fontWeight="850">
-              {activeView.title}
+              {t(projectViewKey(activeView.id, "title"))}
             </Heading>
             <Text color="var(--apple-muted)" mt={2}>
-              {activeView.description}
+              {t(projectViewKey(activeView.id, "description"))}
             </Text>
           </Box>
-          {isLoading && <LoadingScreen text="Loading projects..." />}
+          {isLoading && <LoadingScreen text={t("projects.loading")} />}
           {error && <ErrorState error={error} />}
           {!isLoading && !error && (
-            <Suspense fallback={<LoadingScreen text="Loading project table..." />}>
+            <Suspense fallback={<LoadingScreen text={t("projects.loadingTable")} />}>
               <ActiveProjectTable
-                title={activeView.tableTitle}
+                title={t(projectViewKey(activeView.id, "tableTitle"))}
                 projects={activeProjects}
                 onCreateFromProject={
                   activeView.canCreateFromExisting ? createFromProject : undefined
@@ -194,8 +200,8 @@ export default function Projects() {
         </VStack>
       ) : (
         <EmptyState
-          title="No project views available"
-          description="Your account does not have permission to view projects yet."
+          title={t("projects.emptyTitle")}
+          description={t("projects.emptyDescription")}
         />
       )}
 

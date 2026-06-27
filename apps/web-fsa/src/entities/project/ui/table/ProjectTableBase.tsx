@@ -12,24 +12,26 @@ import {
 import EmptyState from "@/shared/ui/feedback/EmptyState";
 import Button from "@/shared/ui/primitives/Button";
 import Input from "@/shared/ui/primitives/Input";
+import { useLanguage } from "@/features/language/model";
+import type { TranslationKey } from "@/features/language/model";
 import type { ProjectPriority, ProjectStatus } from "@/shared/types";
 import { getDefaultSortValue, normalize } from "./formatters";
 import { PlusIcon } from "./icons";
 import type { ProjectTableBaseProps, ProjectTableColumn, SortDirection } from "./types";
 
-const statusLabels: Record<ProjectStatus, string> = {
-  planning: "Planning",
-  active: "Active",
-  blocked: "Blocked",
-  review: "In review",
-  completed: "Completed",
+const statusLabelKeys: Record<ProjectStatus, TranslationKey> = {
+  planning: "projectTable.status.planning",
+  active: "projectTable.status.active",
+  blocked: "projectTable.status.blocked",
+  review: "projectTable.status.review",
+  completed: "projectTable.status.completed",
 };
 
-const priorityLabels: Record<ProjectPriority, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-  critical: "Critical",
+const priorityLabelKeys: Record<ProjectPriority, TranslationKey> = {
+  low: "projectTable.priority.low",
+  medium: "projectTable.priority.medium",
+  high: "projectTable.priority.high",
+  critical: "projectTable.priority.critical",
 };
 
 export default function ProjectTableBase({
@@ -42,6 +44,7 @@ export default function ProjectTableBase({
   onCreateFromProject,
   onAssignPentesters,
 }: ProjectTableBaseProps) {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "all">("all");
   const [priority, setPriority] = useState<ProjectPriority | "all">("all");
@@ -141,8 +144,11 @@ export default function ProjectTableBase({
               {title}
             </Text>
             <Text color="var(--apple-muted)" fontSize="sm" fontWeight="600">
-              {filteredProjects.length} shown · {activeProjects} active ·{" "}
-              {blockedProjects} blocked
+              {t("projectTable.shownSummary", {
+                shown: filteredProjects.length,
+                active: activeProjects,
+                blocked: blockedProjects,
+              })}
             </Text>
           </Box>
           <HStack gap={2} flexWrap="wrap">
@@ -157,7 +163,7 @@ export default function ProjectTableBase({
               fontWeight="800"
               textTransform="none"
             >
-              {projects.length} total
+              {t("projectTable.total", { count: projects.length })}
             </Badge>
             <Badge
               bg="var(--apple-danger-bg)"
@@ -170,7 +176,7 @@ export default function ProjectTableBase({
               fontWeight="800"
               textTransform="none"
             >
-              {blockedProjects} blocked
+              {t("projectTable.blocked", { count: blockedProjects })}
             </Badge>
           </HStack>
         </HStack>
@@ -178,10 +184,10 @@ export default function ProjectTableBase({
         <HStack gap={3} align="end" flexWrap="wrap">
           <Box flex="1" minW={{ base: "full", md: "280px" }}>
             <Input
-              label="Search"
+              label={t("common.search")}
               value={query}
               onChange={(event) => handleFilterChange(setQuery, event.target.value)}
-              placeholder="Search projects, clients, owners, repositories"
+              placeholder={t("projectTable.searchPlaceholder")}
             />
           </Box>
           <Box minW="160px">
@@ -193,7 +199,7 @@ export default function ProjectTableBase({
               color="var(--apple-secondary)"
               mb={2}
             >
-              Status
+              {t("projectTable.columns.status")}
             </Text>
             <NativeSelect.Root>
               <NativeSelect.Field
@@ -212,10 +218,10 @@ export default function ProjectTableBase({
                   boxShadow: "var(--focus-ring)",
                 }}
               >
-                <option value="all">All statuses</option>
-                {Object.entries(statusLabels).map(([value, label]) => (
+                <option value="all">{t("projectTable.allStatuses")}</option>
+                {Object.entries(statusLabelKeys).map(([value, labelKey]) => (
                   <option key={value} value={value}>
-                    {label}
+                    {t(labelKey)}
                   </option>
                 ))}
               </NativeSelect.Field>
@@ -231,7 +237,7 @@ export default function ProjectTableBase({
               color="var(--apple-secondary)"
               mb={2}
             >
-              Priority
+              {t("projectTable.columns.priority")}
             </Text>
             <NativeSelect.Root>
               <NativeSelect.Field
@@ -250,10 +256,10 @@ export default function ProjectTableBase({
                   boxShadow: "var(--focus-ring)",
                 }}
               >
-                <option value="all">All priorities</option>
-                {Object.entries(priorityLabels).map(([value, label]) => (
+                <option value="all">{t("projectTable.allPriorities")}</option>
+                {Object.entries(priorityLabelKeys).map(([value, labelKey]) => (
                   <option key={value} value={value}>
-                    {label}
+                    {t(labelKey)}
                   </option>
                 ))}
               </NativeSelect.Field>
@@ -267,7 +273,7 @@ export default function ProjectTableBase({
         <Box p={8}>
           <EmptyState
             title={emptyTitle}
-            description="Adjust the search or filters to see more projects."
+            description={t("projectTable.adjustFilters")}
           />
         </Box>
       ) : (
@@ -291,7 +297,7 @@ export default function ProjectTableBase({
                     borderColor="var(--apple-border-soft)"
                   >
                     <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
-                      <span>{column.label}</span>
+                      <span>{column.labelKey ? t(column.labelKey) : column.label}</span>
                       {column.sortable && sort.key === column.key && (
                         <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
                       )}
@@ -308,7 +314,7 @@ export default function ProjectTableBase({
                     textTransform="uppercase"
                     borderColor="var(--apple-border-soft)"
                   >
-                    Pentesters
+                    {t("projectTable.pentesters")}
                   </Table.ColumnHeader>
                 )}
                 {onAction && (
@@ -321,7 +327,7 @@ export default function ProjectTableBase({
                     textTransform="uppercase"
                     borderColor="var(--apple-border-soft)"
                   >
-                    Action
+                    {t("projectTable.action")}
                   </Table.ColumnHeader>
                 )}
               </Table.Row>
@@ -349,12 +355,12 @@ export default function ProjectTableBase({
                       >
                         <Box minW={0}>
                           {column.render
-                            ? column.render(project)
+                            ? column.render(project, t)
                             : getDefaultSortValue(project, column.key)}
                         </Box>
                         {column.key === "summary" && onCreateFromProject && (
                           <IconButton
-                            aria-label={`Create another project from ${project.name}`}
+                            aria-label={t("projectTable.createFrom", { name: project.name })}
                             size="xs"
                             minW="28px"
                             h="28px"
@@ -376,7 +382,7 @@ export default function ProjectTableBase({
                         variant="secondary"
                         onClick={() => onAssignPentesters(project)}
                       >
-                        Assign
+                        {t("projectTable.assign")}
                       </Button>
                     </Table.Cell>
                   )}
@@ -404,7 +410,7 @@ export default function ProjectTableBase({
         bg="var(--apple-surface-subtle)"
       >
         <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
-          Page {currentPage} of {totalPages}
+          {t("projectTable.pageOf", { page: currentPage, total: totalPages })}
         </Text>
         <HStack gap={3} flexWrap="wrap">
           <NativeSelect.Root width="100px">
@@ -422,9 +428,9 @@ export default function ProjectTableBase({
                 boxShadow: "var(--focus-ring)",
               }}
             >
-              <option value={5}>5 rows</option>
-              <option value={10}>10 rows</option>
-              <option value={20}>20 rows</option>
+              <option value={5}>{t("projectTable.rows", { count: 5 })}</option>
+              <option value={10}>{t("projectTable.rows", { count: 10 })}</option>
+              <option value={20}>{t("projectTable.rows", { count: 20 })}</option>
             </NativeSelect.Field>
             <NativeSelect.Indicator />
           </NativeSelect.Root>
@@ -433,14 +439,14 @@ export default function ProjectTableBase({
             onClick={() => setPage((value) => Math.max(1, value - 1))}
             disabled={currentPage === 1}
           >
-            Previous
+            {t("projectTable.previous")}
           </Button>
           <Button
             variant="secondary"
             onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
             disabled={currentPage === totalPages}
           >
-            Next
+            {t("projectTable.next")}
           </Button>
         </HStack>
       </HStack>

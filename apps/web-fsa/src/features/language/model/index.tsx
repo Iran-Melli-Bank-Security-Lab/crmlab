@@ -3,81 +3,7 @@ import type { ReactNode } from "react";
 
 export type Language = "en" | "fa";
 
-export type TranslationKey =
-  | "app.name"
-  | "common.active"
-  | "common.inactive"
-  | "common.language"
-  | "common.loading"
-  | "common.noUsers"
-  | "common.open"
-  | "common.read"
-  | "common.saveAccess"
-  | "common.user"
-  | "languages.en"
-  | "languages.fa"
-  | "nav.toggleSidebar"
-  | "nav.logout"
-  | "nav.loggedOut"
-  | "nav.console"
-  | "notifications.aria"
-  | "notifications.emptyDescription"
-  | "notifications.emptyTitle"
-  | "notifications.markAllRead"
-  | "notifications.realtimeStatus"
-  | "notifications.title"
-  | "sidebar.account"
-  | "sidebar.admin"
-  | "sidebar.createProject"
-  | "sidebar.dashboard"
-  | "sidebar.dashboards"
-  | "sidebar.profile"
-  | "sidebar.projects"
-  | "sidebar.roleDevops"
-  | "sidebar.rolePentester"
-  | "sidebar.roleQa"
-  | "sidebar.roleQualityManager"
-  | "sidebar.roleRepresentative"
-  | "sidebar.roleSecurityManager"
-  | "sidebar.settings"
-  | "sidebar.userManagement"
-  | "sidebar.workspace"
-  | "userAccess.directPermissions"
-  | "userAccess.empty"
-  | "userAccess.permissionsHelp"
-  | "userAccess.roles"
-  | "userAccess.saveError"
-  | "userAccess.saveSuccess"
-  | "userAccess.title"
-  | "userAccess.userState"
-  | "userAccess.users"
-  | "projectCreate.actions.cancel"
-  | "projectCreate.actions.submit"
-  | "projectCreate.description"
-  | "projectCreate.fields.client"
-  | "projectCreate.fields.discipline"
-  | "projectCreate.fields.dueDate"
-  | "projectCreate.fields.environment"
-  | "projectCreate.fields.name"
-  | "projectCreate.fields.owner"
-  | "projectCreate.fields.priority"
-  | "projectCreate.fields.repository"
-  | "projectCreate.fields.scope"
-  | "projectCreate.help"
-  | "projectCreate.options.devops"
-  | "projectCreate.options.high"
-  | "projectCreate.options.low"
-  | "projectCreate.options.medium"
-  | "projectCreate.options.platform"
-  | "projectCreate.options.quality"
-  | "projectCreate.options.security"
-  | "projectCreate.sections.delivery"
-  | "projectCreate.sections.identity"
-  | "projectCreate.success"
-  | "projectCreate.title";
-
-const translations: Record<Language, Record<TranslationKey, string>> = {
-  en: {
+const en = {
     "app.name": "Security Platform",
     "common.active": "Active",
     "common.inactive": "Inactive",
@@ -85,15 +11,100 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     "common.loading": "Loading...",
     "common.noUsers": "No users available.",
     "common.open": "Open",
+    "common.permissions": "Permissions",
     "common.read": "Read",
     "common.saveAccess": "Save Access",
+    "common.search": "Search",
     "common.user": "User",
+    "common.username": "Username",
+    "common.password": "Password",
+    "common.firstName": "First Name",
+    "common.lastName": "Last Name",
+    "common.avatarImage": "Avatar Image",
     "languages.en": "English",
     "languages.fa": "فارسی",
     "nav.toggleSidebar": "Toggle sidebar",
     "nav.logout": "Logout",
     "nav.loggedOut": "Logged out successfully",
     "nav.console": "Enterprise Console",
+    "auth.login.title": "Login",
+    "auth.login.description": "Sign in with your username and password.",
+    "auth.login.submit": "Login",
+    "auth.login.loading": "Logging in...",
+    "auth.login.success": "Login successful",
+    "auth.login.error": "Login failed",
+    "auth.signup.title": "Create Account",
+    "auth.signup.description": "Create your profile with a username and avatar.",
+    "auth.signup.submit": "Signup",
+    "auth.signup.loading": "Creating account...",
+    "auth.signup.success": "Account created successfully",
+    "auth.signup.error": "Signup failed",
+    "auth.forgot.title": "Forgot Password",
+    "auth.forgot.description":
+      "Connect this page to your password reset endpoint when your backend is ready.",
+    "auth.validation.avatarRequired": "Avatar image is required",
+    "auth.validation.firstNameMin": "First name must be at least 2 characters",
+    "auth.validation.lastNameMin": "Last name must be at least 2 characters",
+    "auth.validation.maxImageSize": "Max image size is 2MB",
+    "auth.validation.passwordMin": "Password must be at least {count} characters",
+    "auth.validation.usernameMin": "Username must be at least 3 characters",
+    "auth.validation.imageTypes": "Only JPG, PNG, or WEBP images are allowed",
+    "dashboard.badge": "Permission-composed workspace",
+    "dashboard.title": "Dashboard",
+    "dashboard.description":
+      "A single workspace composed from your effective permissions.",
+    "dashboard.visibleWidgets": "{count} visible widgets",
+    "dashboard.emptyTitle": "No dashboard widgets available",
+    "dashboard.emptyDescription":
+      "Your account does not have dashboard permissions yet.",
+    "dashboard.widgets.adminPlatform.title": "Platform Overview",
+    "dashboard.widgets.adminPlatform.projects": "Projects",
+    "dashboard.widgets.adminPlatform.createdByYou": "Created by you",
+    "dashboard.widgets.adminPlatform.projectViews": "Project views",
+    "dashboard.widgets.adminPlatform.permissionBased": "Permission-based",
+    "dashboard.widgets.adminPlatform.adminScope": "Admin scope",
+    "dashboard.widgets.adminPlatform.all": "All",
+    "dashboard.widgets.adminPlatform.systemWide": "System-wide access",
+    "dashboard.widgets.adminUsers.total": "Total users",
+    "dashboard.widgets.adminUsers.restricted": "Restricted",
+    "dashboard.widgets.adminUsers.description":
+      "Manage users, roles, permissions, and account state.",
+    "dashboard.widgets.adminUsers.manage": "Manage Users",
+    "dashboard.widgets.security.title": "Security Review",
+    "dashboard.widgets.security.description":
+      "Review security projects, assigned testing work, findings, and reports.",
+    "dashboard.widgets.security.open": "Open Security Projects",
+    "dashboard.widgets.security.assign": "Assign Project",
+    "dashboard.widgets.pentest.title": "Pentest Work",
+    "dashboard.widgets.pentest.description":
+      "{count} assigned pentest projects are available.",
+    "dashboard.widgets.pentest.open": "Open Pentest Queue",
+    "dashboard.widgets.pentest.addVulnerability": "Add Vulnerability",
+    "dashboard.widgets.pentest.exportReport": "Export Report",
+    "dashboard.widgets.devops.title": "Delivery",
+    "dashboard.widgets.devops.description":
+      "Track environments, repositories, pipelines, and deployment activity.",
+    "dashboard.widgets.devops.open": "Open Delivery Projects",
+    "dashboard.widgets.devops.start": "Start Deployment",
+    "dashboard.widgets.quality.title": "Quality Review",
+    "dashboard.widgets.quality.description":
+      "Assign quality projects, review QA results, and prepare quality reports.",
+    "dashboard.widgets.quality.open": "Open Quality Projects",
+    "dashboard.widgets.qa.title": "QA Work",
+    "dashboard.widgets.qa.description":
+      "Manage assigned test cases, bug reports, QA cycles, and release checks.",
+    "dashboard.widgets.qa.open": "Open QA Assignments",
+    "dashboard.widgets.qa.create": "Create Test Case",
+    "dashboard.widgets.customer.title": "Customer Work",
+    "dashboard.widgets.customer.description":
+      "Track customer-facing project status, tickets, and communication workflows.",
+    "dashboard.widgets.customer.open": "Open Customer Projects",
+    "dashboard.widgets.customer.create": "Create Ticket",
+    "errorBoundary.description":
+      "The page crashed safely instead of breaking the whole app.",
+    "errorBoundary.login": "Go to login",
+    "errorBoundary.retry": "Try again",
+    "errorBoundary.title": "Something went wrong",
     "notifications.aria": "Notifications, {count} unread",
     "notifications.emptyDescription":
       "New project, review, report, and system events will appear here.",
@@ -119,8 +130,13 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     "sidebar.workspace": "Workspace",
     "userAccess.directPermissions": "Permissions",
     "userAccess.empty": "No users available.",
+    "userAccess.loadingRoles": "Loading roles and permissions...",
+    "userAccess.noRolesDescription":
+      "The backend /users/roles endpoint did not return any roles.",
+    "userAccess.noRolesTitle": "No roles loaded",
     "userAccess.permissionsHelp":
       "Role changes auto-fill permissions from the role catalog. Saved permissions are the source of truth.",
+    "userAccess.requireRole": "Select at least one role before saving.",
     "userAccess.roles": "Roles",
     "userAccess.saveError": "Failed to update user",
     "userAccess.saveSuccess": "User access updated",
@@ -153,8 +169,158 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     "projectCreate.sections.identity": "Project identity",
     "projectCreate.success": "Project draft created",
     "projectCreate.title": "Create Project",
-  },
-  fa: {
+    "projects.badge": "Permission-based project views",
+    "projects.title": "Projects",
+    "projects.description":
+      "Work with the project views allowed by your permissions. Each table is scoped to projects assigned to you or created by you.",
+    "projects.availableViews": "{count} available views",
+    "projects.loading": "Loading projects...",
+    "projects.loadingTable": "Loading project table...",
+    "projects.emptyTitle": "No project views available",
+    "projects.emptyDescription":
+      "Your account does not have permission to view projects yet.",
+    "projectViews.admin.label": "Created",
+    "projectViews.admin.title": "Created Projects",
+    "projectViews.admin.description":
+      "Monitor the projects created by your admin account across delivery workspaces.",
+    "projectViews.admin.tableTitle": "My Created Projects",
+    "projectViews.security.label": "Security Management",
+    "projectViews.security.title": "My Security Projects",
+    "projectViews.security.description":
+      "Security projects assigned to you for coordination, assignment, and review.",
+    "projectViews.security.tableTitle": "Assigned Security Projects",
+    "projectViews.pentest.label": "Pentest",
+    "projectViews.pentest.title": "Pentest Assignments",
+    "projectViews.pentest.description":
+      "Pentest project assignments directly assigned to your user account.",
+    "projectViews.pentest.tableTitle": "My Pentest Assignments",
+    "projectViews.devops.label": "DevOps",
+    "projectViews.devops.title": "My Delivery Projects",
+    "projectViews.devops.description":
+      "Delivery projects assigned to you for environment, repository, and pipeline work.",
+    "projectViews.devops.tableTitle": "Assigned Delivery Projects",
+    "projectViews.quality.label": "Quality Management",
+    "projectViews.quality.title": "My Quality Projects",
+    "projectViews.quality.description":
+      "Quality projects assigned to you for QA coordination, result review, and approval.",
+    "projectViews.quality.tableTitle": "Assigned Quality Projects",
+    "projectViews.qa.label": "QA",
+    "projectViews.qa.title": "QA Assignments",
+    "projectViews.qa.description":
+      "QA project assignments directly assigned to your user account.",
+    "projectViews.qa.tableTitle": "My QA Assignments",
+    "projectViews.representative.label": "Customer",
+    "projectViews.representative.title": "My Customer Projects",
+    "projectViews.representative.description":
+      "Customer-facing projects assigned to you for representation and communication.",
+    "projectViews.representative.tableTitle": "Assigned Customer Projects",
+    "projectTable.status.planning": "Planning",
+    "projectTable.status.active": "Active",
+    "projectTable.status.blocked": "Blocked",
+    "projectTable.status.review": "In review",
+    "projectTable.status.completed": "Completed",
+    "projectTable.priority.low": "Low",
+    "projectTable.priority.medium": "Medium",
+    "projectTable.priority.high": "High",
+    "projectTable.priority.critical": "Critical",
+    "projectTable.assignment.assigned": "Assigned",
+    "projectTable.assignment.in_progress": "In progress",
+    "projectTable.assignment.submitted": "Submitted",
+    "projectTable.assignment.changes_requested": "Changes requested",
+    "projectTable.assignment.accepted": "Accepted",
+    "projectTable.discipline.security": "Security",
+    "projectTable.discipline.quality": "Quality",
+    "projectTable.discipline.devops": "DevOps",
+    "projectTable.discipline.platform": "Platform",
+    "projectTable.columns.summary": "Project",
+    "projectTable.columns.assignmentStatus": "Assignment",
+    "projectTable.columns.assignedAt": "Assigned",
+    "projectTable.columns.assignmentDueDate": "Assignment due",
+    "projectTable.columns.reviewer": "Reviewer",
+    "projectTable.columns.scope": "Scope",
+    "projectTable.columns.phase": "Phase",
+    "projectTable.columns.submittedItems": "Submitted",
+    "projectTable.columns.client": "Client",
+    "projectTable.columns.discipline": "Type",
+    "projectTable.columns.status": "Status",
+    "projectTable.columns.priority": "Priority",
+    "projectTable.columns.owner": "Owner",
+    "projectTable.columns.assignee": "Assignee",
+    "projectTable.columns.projectGroupId": "Group",
+    "projectTable.columns.version": "Version",
+    "projectTable.columns.letterNumber": "Letter",
+    "projectTable.columns.platform": "Platform",
+    "projectTable.columns.dueDate": "Due",
+    "projectTable.columns.testExpiresAt": "Test expires",
+    "projectTable.columns.createdAt": "Created",
+    "projectTable.columns.progress": "Progress",
+    "projectTable.columns.riskScore": "Risk",
+    "projectTable.columns.vulnerabilities": "Findings",
+    "projectTable.columns.testCoverage": "Coverage",
+    "projectTable.columns.openBugs": "Open bugs",
+    "projectTable.columns.environment": "Environment",
+    "projectTable.columns.repository": "Repository",
+    "projectTable.columns.pipeline": "Pipeline",
+    "projectTable.columns.lastActivity": "Updated",
+    "projectTable.shownSummary": "{shown} shown · {active} active · {blocked} blocked",
+    "projectTable.total": "{count} total",
+    "projectTable.blocked": "{count} blocked",
+    "projectTable.searchPlaceholder":
+      "Search projects, clients, owners, repositories",
+    "projectTable.allStatuses": "All statuses",
+    "projectTable.allPriorities": "All priorities",
+    "projectTable.adjustFilters":
+      "Adjust the search or filters to see more projects.",
+    "projectTable.pentesters": "Pentesters",
+    "projectTable.action": "Action",
+    "projectTable.assign": "Assign",
+    "projectTable.createFrom": "Create another project from {name}",
+    "projectTable.pageOf": "Page {page} of {total}",
+    "projectTable.rows": "{count} rows",
+    "projectTable.previous": "Previous",
+    "projectTable.next": "Next",
+    "pentesterAssignment.cancel": "Cancel",
+    "pentesterAssignment.description":
+      "Select the pentesters who should stay assigned to this project.",
+    "pentesterAssignment.emptyDescription":
+      "No active pentester users were returned by the backend.",
+    "pentesterAssignment.emptyTitle": "No pentesters available",
+    "pentesterAssignment.error": "Could not update pentester assignments.",
+    "pentesterAssignment.loading": "Loading pentesters...",
+    "pentesterAssignment.save": "Save assignments",
+    "pentesterAssignment.selected": "{count} selected",
+    "pentesterAssignment.success": "Pentester assignments updated.",
+    "pentesterAssignment.title": "Pentest Assignment Dock",
+    "profile.title": "Profile",
+    "profile.userInfo": "User Info",
+    "profile.name": "Name",
+    "settings.title": "Settings",
+    "settings.themeState": "Theme State Example",
+    "settings.currentTheme": "Current theme: {theme}",
+    "settings.toggleTheme": "Toggle Theme",
+    "adminUsers.title": "User Management",
+    "adminUsers.description":
+      "Manage users, role assignments, permissions, and account states.",
+    "adminUsers.totalUsers": "Total users",
+    "adminUsers.activeUsers": "Active users",
+    "adminUsers.restrictedUsers": "Restricted users",
+    "adminUsers.adminNotice":
+      "{count} users currently have administrator access.",
+    "adminUsers.loading": "Loading users...",
+    "adminUsers.emptyTitle": "No users loaded",
+    "adminUsers.emptyDescription":
+      "Connect the backend /users endpoint or enable MSW mocks.",
+    "notFound.title": "404 Not Found",
+    "notFound.description": "This page does not exist.",
+    "notFound.login": "Go to login",
+    "unauthorized.title": "403 Unauthorized",
+    "unauthorized.description":
+      "You do not have permission to access this page.",
+  } as const;
+
+export type TranslationKey = keyof typeof en;
+
+const fa: Record<TranslationKey, string> = {
     "app.name": "سامانه امنیت",
     "common.active": "فعال",
     "common.inactive": "غیرفعال",
@@ -162,15 +328,98 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     "common.loading": "در حال بارگذاری...",
     "common.noUsers": "کاربری موجود نیست.",
     "common.open": "باز کردن",
+    "common.permissions": "دسترسی‌ها",
     "common.read": "خوانده شد",
     "common.saveAccess": "ذخیره دسترسی",
+    "common.search": "جستجو",
     "common.user": "کاربر",
+    "common.username": "نام کاربری",
+    "common.password": "رمز عبور",
+    "common.firstName": "نام",
+    "common.lastName": "نام خانوادگی",
+    "common.avatarImage": "تصویر پروفایل",
     "languages.en": "English",
     "languages.fa": "فارسی",
     "nav.toggleSidebar": "باز و بسته کردن منو",
     "nav.logout": "خروج",
     "nav.loggedOut": "با موفقیت خارج شدید",
     "nav.console": "کنسول سازمانی",
+    "auth.login.title": "ورود",
+    "auth.login.description": "با نام کاربری و رمز عبور وارد شوید.",
+    "auth.login.submit": "ورود",
+    "auth.login.loading": "در حال ورود...",
+    "auth.login.success": "ورود با موفقیت انجام شد",
+    "auth.login.error": "ورود ناموفق بود",
+    "auth.signup.title": "ایجاد حساب",
+    "auth.signup.description": "پروفایل خود را با نام کاربری و تصویر بسازید.",
+    "auth.signup.submit": "ثبت نام",
+    "auth.signup.loading": "در حال ایجاد حساب...",
+    "auth.signup.success": "حساب با موفقیت ایجاد شد",
+    "auth.signup.error": "ثبت نام ناموفق بود",
+    "auth.forgot.title": "فراموشی رمز عبور",
+    "auth.forgot.description":
+      "پس از آماده شدن بک‌اند، این صفحه را به سرویس بازیابی رمز عبور متصل کنید.",
+    "auth.validation.avatarRequired": "تصویر پروفایل الزامی است",
+    "auth.validation.firstNameMin": "نام باید حداقل ۲ نویسه باشد",
+    "auth.validation.lastNameMin": "نام خانوادگی باید حداقل ۲ نویسه باشد",
+    "auth.validation.maxImageSize": "حداکثر حجم تصویر ۲ مگابایت است",
+    "auth.validation.passwordMin": "رمز عبور باید حداقل {count} نویسه باشد",
+    "auth.validation.usernameMin": "نام کاربری باید حداقل ۳ نویسه باشد",
+    "auth.validation.imageTypes": "فقط تصاویر JPG، PNG یا WEBP مجاز هستند",
+    "dashboard.badge": "فضای کاری مبتنی بر دسترسی‌ها",
+    "dashboard.title": "داشبورد",
+    "dashboard.description": "یک فضای کاری یکپارچه بر اساس دسترسی‌های موثر شما.",
+    "dashboard.visibleWidgets": "{count} ویجت قابل مشاهده",
+    "dashboard.emptyTitle": "ویجت داشبوردی در دسترس نیست",
+    "dashboard.emptyDescription": "حساب شما هنوز دسترسی داشبورد ندارد.",
+    "dashboard.widgets.adminPlatform.title": "نمای کلی پلتفرم",
+    "dashboard.widgets.adminPlatform.projects": "پروژه‌ها",
+    "dashboard.widgets.adminPlatform.createdByYou": "ایجاد شده توسط شما",
+    "dashboard.widgets.adminPlatform.projectViews": "نماهای پروژه",
+    "dashboard.widgets.adminPlatform.permissionBased": "مبتنی بر دسترسی",
+    "dashboard.widgets.adminPlatform.adminScope": "دامنه مدیریت",
+    "dashboard.widgets.adminPlatform.all": "همه",
+    "dashboard.widgets.adminPlatform.systemWide": "دسترسی سراسری سامانه",
+    "dashboard.widgets.adminUsers.total": "کل کاربران",
+    "dashboard.widgets.adminUsers.restricted": "محدود شده",
+    "dashboard.widgets.adminUsers.description":
+      "کاربران، نقش‌ها، دسترسی‌ها و وضعیت حساب را مدیریت کنید.",
+    "dashboard.widgets.adminUsers.manage": "مدیریت کاربران",
+    "dashboard.widgets.security.title": "بازبینی امنیت",
+    "dashboard.widgets.security.description":
+      "پروژه‌های امنیتی، کارهای تست تخصیص داده شده، یافته‌ها و گزارش‌ها را بررسی کنید.",
+    "dashboard.widgets.security.open": "باز کردن پروژه‌های امنیتی",
+    "dashboard.widgets.security.assign": "تخصیص پروژه",
+    "dashboard.widgets.pentest.title": "کارهای تست نفوذ",
+    "dashboard.widgets.pentest.description":
+      "{count} پروژه تست نفوذ تخصیص داده شده در دسترس است.",
+    "dashboard.widgets.pentest.open": "باز کردن صف تست نفوذ",
+    "dashboard.widgets.pentest.addVulnerability": "افزودن آسیب‌پذیری",
+    "dashboard.widgets.pentest.exportReport": "خروجی گزارش",
+    "dashboard.widgets.devops.title": "تحویل",
+    "dashboard.widgets.devops.description":
+      "محیط‌ها، مخزن‌ها، پایپ‌لاین‌ها و فعالیت استقرار را پیگیری کنید.",
+    "dashboard.widgets.devops.open": "باز کردن پروژه‌های تحویل",
+    "dashboard.widgets.devops.start": "شروع استقرار",
+    "dashboard.widgets.quality.title": "بازبینی کیفیت",
+    "dashboard.widgets.quality.description":
+      "پروژه‌های کیفیت را تخصیص دهید، نتایج QA را بازبینی کنید و گزارش‌های کیفیت را آماده کنید.",
+    "dashboard.widgets.quality.open": "باز کردن پروژه‌های کیفیت",
+    "dashboard.widgets.qa.title": "کارهای QA",
+    "dashboard.widgets.qa.description":
+      "تست‌کیس‌های تخصیص داده شده، گزارش باگ‌ها، چرخه‌های QA و کنترل‌های انتشار را مدیریت کنید.",
+    "dashboard.widgets.qa.open": "باز کردن تخصیص‌های QA",
+    "dashboard.widgets.qa.create": "ایجاد تست‌کیس",
+    "dashboard.widgets.customer.title": "کارهای مشتری",
+    "dashboard.widgets.customer.description":
+      "وضعیت پروژه‌های مشتری، تیکت‌ها و جریان‌های ارتباطی را پیگیری کنید.",
+    "dashboard.widgets.customer.open": "باز کردن پروژه‌های مشتری",
+    "dashboard.widgets.customer.create": "ایجاد تیکت",
+    "errorBoundary.description":
+      "صفحه با خطا متوقف شد، بدون اینکه کل برنامه از کار بیفتد.",
+    "errorBoundary.login": "رفتن به ورود",
+    "errorBoundary.retry": "تلاش دوباره",
+    "errorBoundary.title": "مشکلی پیش آمد",
     "notifications.aria": "اعلان ها، {count} خوانده نشده",
     "notifications.emptyDescription":
       "رویدادهای پروژه، بازبینی، گزارش و سیستم اینجا نمایش داده می شوند.",
@@ -196,8 +445,13 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     "sidebar.workspace": "فضای کاری",
     "userAccess.directPermissions": "دسترسی ها",
     "userAccess.empty": "کاربری موجود نیست.",
+    "userAccess.loadingRoles": "در حال بارگذاری نقش‌ها و دسترسی‌ها...",
+    "userAccess.noRolesDescription":
+      "اندپوینت /users/roles بک‌اند هیچ نقشی برنگرداند.",
+    "userAccess.noRolesTitle": "نقشی بارگذاری نشده است",
     "userAccess.permissionsHelp":
       "تغییر نقش ها دسترسی ها را از فهرست نقش ها پر می کند. دسترسی های ذخیره شده منبع اصلی هستند.",
+    "userAccess.requireRole": "قبل از ذخیره، حداقل یک نقش انتخاب کنید.",
     "userAccess.roles": "نقش ها",
     "userAccess.saveError": "به روزرسانی کاربر ناموفق بود",
     "userAccess.saveSuccess": "دسترسی کاربر به روز شد",
@@ -230,7 +484,155 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     "projectCreate.sections.identity": "مشخصات پروژه",
     "projectCreate.success": "پیش نویس پروژه ایجاد شد",
     "projectCreate.title": "ایجاد پروژه",
-  },
+    "projects.badge": "نماهای پروژه مبتنی بر دسترسی",
+    "projects.title": "پروژه‌ها",
+    "projects.description":
+      "با نماهای پروژه‌ای کار کنید که دسترسی شما اجازه می‌دهد. هر جدول به پروژه‌های تخصیص داده شده به شما یا ایجاد شده توسط شما محدود است.",
+    "projects.availableViews": "{count} نمای در دسترس",
+    "projects.loading": "در حال بارگذاری پروژه‌ها...",
+    "projects.loadingTable": "در حال بارگذاری جدول پروژه...",
+    "projects.emptyTitle": "نمای پروژه‌ای در دسترس نیست",
+    "projects.emptyDescription": "حساب شما هنوز مجوز مشاهده پروژه‌ها را ندارد.",
+    "projectViews.admin.label": "ایجاد شده",
+    "projectViews.admin.title": "پروژه‌های ایجاد شده",
+    "projectViews.admin.description":
+      "پروژه‌هایی را که با حساب مدیر خود در فضاهای کاری تحویل ایجاد کرده‌اید پایش کنید.",
+    "projectViews.admin.tableTitle": "پروژه‌های ایجاد شده من",
+    "projectViews.security.label": "مدیریت امنیت",
+    "projectViews.security.title": "پروژه‌های امنیتی من",
+    "projectViews.security.description":
+      "پروژه‌های امنیتی تخصیص داده شده برای هماهنگی، تخصیص و بازبینی.",
+    "projectViews.security.tableTitle": "پروژه‌های امنیتی تخصیص داده شده",
+    "projectViews.pentest.label": "تست نفوذ",
+    "projectViews.pentest.title": "تخصیص‌های تست نفوذ",
+    "projectViews.pentest.description":
+      "پروژه‌های تست نفوذی که مستقیما به حساب شما تخصیص داده شده‌اند.",
+    "projectViews.pentest.tableTitle": "تخصیص‌های تست نفوذ من",
+    "projectViews.devops.label": "دواپس",
+    "projectViews.devops.title": "پروژه‌های تحویل من",
+    "projectViews.devops.description":
+      "پروژه‌های تحویل تخصیص داده شده برای کار روی محیط، مخزن و پایپ‌لاین.",
+    "projectViews.devops.tableTitle": "پروژه‌های تحویل تخصیص داده شده",
+    "projectViews.quality.label": "مدیریت کیفیت",
+    "projectViews.quality.title": "پروژه‌های کیفیت من",
+    "projectViews.quality.description":
+      "پروژه‌های کیفیت تخصیص داده شده برای هماهنگی QA، بازبینی نتیجه و تایید.",
+    "projectViews.quality.tableTitle": "پروژه‌های کیفیت تخصیص داده شده",
+    "projectViews.qa.label": "QA",
+    "projectViews.qa.title": "تخصیص‌های QA",
+    "projectViews.qa.description":
+      "پروژه‌های QA که مستقیما به حساب شما تخصیص داده شده‌اند.",
+    "projectViews.qa.tableTitle": "تخصیص‌های QA من",
+    "projectViews.representative.label": "مشتری",
+    "projectViews.representative.title": "پروژه‌های مشتری من",
+    "projectViews.representative.description":
+      "پروژه‌های مشتری تخصیص داده شده برای نمایندگی و ارتباطات.",
+    "projectViews.representative.tableTitle": "پروژه‌های مشتری تخصیص داده شده",
+    "projectTable.status.planning": "در برنامه‌ریزی",
+    "projectTable.status.active": "فعال",
+    "projectTable.status.blocked": "مسدود",
+    "projectTable.status.review": "در بازبینی",
+    "projectTable.status.completed": "تکمیل شده",
+    "projectTable.priority.low": "کم",
+    "projectTable.priority.medium": "متوسط",
+    "projectTable.priority.high": "زیاد",
+    "projectTable.priority.critical": "بحرانی",
+    "projectTable.assignment.assigned": "تخصیص داده شده",
+    "projectTable.assignment.in_progress": "در حال انجام",
+    "projectTable.assignment.submitted": "ارسال شده",
+    "projectTable.assignment.changes_requested": "نیازمند اصلاح",
+    "projectTable.assignment.accepted": "پذیرفته شده",
+    "projectTable.discipline.security": "امنیت",
+    "projectTable.discipline.quality": "کیفیت",
+    "projectTable.discipline.devops": "دواپس",
+    "projectTable.discipline.platform": "پلتفرم",
+    "projectTable.columns.summary": "پروژه",
+    "projectTable.columns.assignmentStatus": "تخصیص",
+    "projectTable.columns.assignedAt": "تاریخ تخصیص",
+    "projectTable.columns.assignmentDueDate": "مهلت تخصیص",
+    "projectTable.columns.reviewer": "بازبین",
+    "projectTable.columns.scope": "محدوده",
+    "projectTable.columns.phase": "فاز",
+    "projectTable.columns.submittedItems": "ارسال‌شده‌ها",
+    "projectTable.columns.client": "کارفرما",
+    "projectTable.columns.discipline": "نوع",
+    "projectTable.columns.status": "وضعیت",
+    "projectTable.columns.priority": "اولویت",
+    "projectTable.columns.owner": "مالک",
+    "projectTable.columns.assignee": "مسئول",
+    "projectTable.columns.projectGroupId": "گروه",
+    "projectTable.columns.version": "نسخه",
+    "projectTable.columns.letterNumber": "نامه",
+    "projectTable.columns.platform": "پلتفرم",
+    "projectTable.columns.dueDate": "مهلت",
+    "projectTable.columns.testExpiresAt": "پایان اعتبار تست",
+    "projectTable.columns.createdAt": "ایجاد شده",
+    "projectTable.columns.progress": "پیشرفت",
+    "projectTable.columns.riskScore": "ریسک",
+    "projectTable.columns.vulnerabilities": "یافته‌ها",
+    "projectTable.columns.testCoverage": "پوشش",
+    "projectTable.columns.openBugs": "باگ‌های باز",
+    "projectTable.columns.environment": "محیط",
+    "projectTable.columns.repository": "مخزن",
+    "projectTable.columns.pipeline": "پایپ‌لاین",
+    "projectTable.columns.lastActivity": "به‌روزرسانی",
+    "projectTable.shownSummary": "{shown} نمایش · {active} فعال · {blocked} مسدود",
+    "projectTable.total": "{count} کل",
+    "projectTable.blocked": "{count} مسدود",
+    "projectTable.searchPlaceholder":
+      "جستجوی پروژه‌ها، کارفرماها، مالکان و مخزن‌ها",
+    "projectTable.allStatuses": "همه وضعیت‌ها",
+    "projectTable.allPriorities": "همه اولویت‌ها",
+    "projectTable.adjustFilters":
+      "برای دیدن پروژه‌های بیشتر، جستجو یا فیلترها را تغییر دهید.",
+    "projectTable.pentesters": "تست‌کننده‌ها",
+    "projectTable.action": "عملیات",
+    "projectTable.assign": "تخصیص",
+    "projectTable.createFrom": "ایجاد پروژه دیگر از {name}",
+    "projectTable.pageOf": "صفحه {page} از {total}",
+    "projectTable.rows": "{count} ردیف",
+    "projectTable.previous": "قبلی",
+    "projectTable.next": "بعدی",
+    "pentesterAssignment.cancel": "انصراف",
+    "pentesterAssignment.description":
+      "تست‌کننده‌هایی را انتخاب کنید که باید روی این پروژه باقی بمانند.",
+    "pentesterAssignment.emptyDescription":
+      "بک‌اند هیچ کاربر فعال تست نفوذی برنگرداند.",
+    "pentesterAssignment.emptyTitle": "تست‌کننده‌ای در دسترس نیست",
+    "pentesterAssignment.error": "به‌روزرسانی تخصیص‌های تست نفوذ انجام نشد.",
+    "pentesterAssignment.loading": "در حال بارگذاری تست‌کننده‌ها...",
+    "pentesterAssignment.save": "ذخیره تخصیص‌ها",
+    "pentesterAssignment.selected": "{count} انتخاب شده",
+    "pentesterAssignment.success": "تخصیص‌های تست نفوذ به‌روزرسانی شد.",
+    "pentesterAssignment.title": "پنل تخصیص تست نفوذ",
+    "profile.title": "پروفایل",
+    "profile.userInfo": "اطلاعات کاربر",
+    "profile.name": "نام",
+    "settings.title": "تنظیمات",
+    "settings.themeState": "نمونه وضعیت پوسته",
+    "settings.currentTheme": "پوسته فعلی: {theme}",
+    "settings.toggleTheme": "تغییر پوسته",
+    "adminUsers.title": "مدیریت کاربران",
+    "adminUsers.description":
+      "کاربران، تخصیص نقش‌ها، دسترسی‌ها و وضعیت حساب‌ها را مدیریت کنید.",
+    "adminUsers.totalUsers": "کل کاربران",
+    "adminUsers.activeUsers": "کاربران فعال",
+    "adminUsers.restrictedUsers": "کاربران محدود",
+    "adminUsers.adminNotice": "{count} کاربر در حال حاضر دسترسی مدیر دارند.",
+    "adminUsers.loading": "در حال بارگذاری کاربران...",
+    "adminUsers.emptyTitle": "کاربری بارگذاری نشده است",
+    "adminUsers.emptyDescription":
+      "اندپوینت /users بک‌اند را متصل کنید یا mockهای MSW را فعال کنید.",
+    "notFound.title": "۴۰۴ - پیدا نشد",
+    "notFound.description": "این صفحه وجود ندارد.",
+    "notFound.login": "رفتن به ورود",
+    "unauthorized.title": "۴۰۳ - غیرمجاز",
+    "unauthorized.description": "شما مجوز دسترسی به این صفحه را ندارید.",
+};
+
+const translations: Record<Language, Record<TranslationKey, string>> = {
+  en,
+  fa,
 };
 
 type Interpolation = Record<string, string | number>;

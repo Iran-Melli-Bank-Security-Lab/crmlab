@@ -27,6 +27,8 @@ export type ProjectTableBaseProps = {
   emptyTitle?: string;
   actionLabel?: string;
   onAction?: (project: ProjectTableRow) => void;
+  onRowClick?: (project: ProjectTableRow) => void;
+  onRowDoubleClick?: (project: ProjectTableRow) => void;
   onCreateFromProject?: (project: ProjectTableRow) => void;
   onAssignPentesters?: (project: ProjectTableRow) => void;
 };

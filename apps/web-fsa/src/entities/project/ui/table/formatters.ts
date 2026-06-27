@@ -14,10 +14,12 @@ export function formatCompactGroupId(value?: string) {
   return value.length > 10 ? `${value.slice(0, 8)}...` : value;
 }
 
-export function normalize(value: string | number | string[] | undefined) {
+export function normalize(value: unknown) {
   if (value === undefined) return "";
   if (Array.isArray(value)) return value.join(" ").toLowerCase();
-  return typeof value === "number" ? value : value.toLowerCase();
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return value.toLowerCase();
+  return "";
 }
 
 export function getDefaultSortValue(
@@ -25,5 +27,8 @@ export function getDefaultSortValue(
   key: ProjectTableColumn["key"]
 ) {
   if (key === "summary") return project.name;
-  return project[key] ?? "";
+  const value = project[key];
+  if (Array.isArray(value)) return value;
+  if (typeof value === "number" || typeof value === "string") return value;
+  return "";
 }

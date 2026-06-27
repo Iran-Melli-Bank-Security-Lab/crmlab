@@ -53,6 +53,15 @@ function normalizeStatus(value: string | undefined): Project["status"] {
 function normalizeProject(project: ApiProjectResponse): Project {
   const testExpiresAt = project.testExpiresAt || project.expireDay || project.expireDayQuality;
   const projectManagerId = project.projectManager ? String(project.projectManager) : undefined;
+  const devopsInfo = {
+    environment: project.devopsInfo?.environment || project.environment,
+    repository: project.devopsInfo?.repository || project.repository,
+    pipeline: project.devopsInfo?.pipeline || project.pipeline,
+    deploymentUrl: project.devopsInfo?.deploymentUrl,
+    serverInventory: project.devopsInfo?.serverInventory,
+    releaseBranch: project.devopsInfo?.releaseBranch,
+    notes: project.devopsInfo?.notes,
+  };
 
   return {
     id: project.id || project._id || "",
@@ -88,9 +97,10 @@ function normalizeProject(project: ApiProjectResponse): Project {
     vulnerabilities: 0,
     testCoverage: 0,
     openBugs: 0,
-    environment: "-",
-    repository: "-",
-    pipeline: "-",
+    environment: devopsInfo.environment || "-",
+    repository: devopsInfo.repository || "-",
+    pipeline: devopsInfo.pipeline || "-",
+    devopsInfo,
     lastActivity: project.updatedAt || project.createdAt || new Date().toISOString(),
   };
 }

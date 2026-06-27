@@ -23,6 +23,19 @@ const projectIdentifierSchema = new Schema(
   { _id: false }
 );
 
+const projectDevopsInfoSchema = new Schema(
+  {
+    environment: { type: String, trim: true },
+    repository: { type: String, trim: true },
+    pipeline: { type: String, trim: true },
+    deploymentUrl: { type: String, trim: true },
+    serverInventory: { type: String, trim: true },
+    releaseBranch: { type: String, trim: true },
+    notes: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
 const projectSchema = new Schema(
   {
     projectName: { type: String, required: true, trim: true },
@@ -48,6 +61,7 @@ const projectSchema = new Schema(
     },
     descriptions: { type: [String], default: undefined },
     identifier: projectIdentifierSchema,
+    devopsInfo: projectDevopsInfoSchema,
 
     // Project-level managers from the legacy model.
     projectManager: { type: Schema.Types.ObjectId, ref: "User" },

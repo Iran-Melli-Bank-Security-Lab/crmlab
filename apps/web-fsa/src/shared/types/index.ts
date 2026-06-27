@@ -75,6 +75,15 @@ export type Project = {
   environment: string;
   repository: string;
   pipeline: string;
+  devopsInfo?: {
+    environment?: string;
+    repository?: string;
+    pipeline?: string;
+    deploymentUrl?: string;
+    serverInventory?: string;
+    releaseBranch?: string;
+    notes?: string;
+  };
   lastActivity: string;
 };
 

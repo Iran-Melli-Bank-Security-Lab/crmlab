@@ -38,6 +38,18 @@ export type ApiProjectResponse = {
   id: string;
   _id?: string;
   projectName: string;
+  devopsInfo?: {
+    environment?: string;
+    repository?: string;
+    pipeline?: string;
+    deploymentUrl?: string;
+    serverInventory?: string;
+    releaseBranch?: string;
+    notes?: string;
+  };
+  environment?: string;
+  repository?: string;
+  pipeline?: string;
   projectGroupId?: string;
   canonicalName?: string;
   version?: string;

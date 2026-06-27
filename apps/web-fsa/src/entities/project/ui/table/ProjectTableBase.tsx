@@ -41,6 +41,8 @@ export default function ProjectTableBase({
   emptyTitle = "No projects found",
   actionLabel = "Open",
   onAction,
+  onRowClick,
+  onRowDoubleClick,
   onCreateFromProject,
   onAssignPentesters,
 }: ProjectTableBaseProps) {
@@ -338,6 +340,9 @@ export default function ProjectTableBase({
                   key={project.id}
                   bg="var(--apple-surface-raised)"
                   transition="background 120ms ease"
+                  cursor={onRowClick || onRowDoubleClick ? "pointer" : "default"}
+                  onClick={() => onRowClick?.(project)}
+                  onDoubleClick={() => onRowDoubleClick?.(project)}
                   _hover={{ bg: "var(--apple-surface-hover)" }}
                 >
                   {columns.map((column) => (
@@ -368,7 +373,10 @@ export default function ProjectTableBase({
                             color="var(--apple-blue)"
                             bg="var(--apple-blue-soft)"
                             _hover={{ bg: "rgba(0, 113, 227, 0.14)" }}
-                            onClick={() => onCreateFromProject(project)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onCreateFromProject(project);
+                            }}
                           >
                             <PlusIcon />
                           </IconButton>
@@ -380,7 +388,10 @@ export default function ProjectTableBase({
                     <Table.Cell textAlign="end" borderColor="var(--apple-border-soft)">
                       <Button
                         variant="secondary"
-                        onClick={() => onAssignPentesters(project)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onAssignPentesters(project);
+                        }}
                       >
                         {t("projectTable.assign")}
                       </Button>
@@ -388,7 +399,13 @@ export default function ProjectTableBase({
                   )}
                   {onAction && (
                     <Table.Cell textAlign="end" borderColor="var(--apple-border-soft)">
-                      <Button variant="secondary" onClick={() => onAction(project)}>
+                      <Button
+                        variant="secondary"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onAction(project);
+                        }}
+                      >
                         {actionLabel}
                       </Button>
                     </Table.Cell>

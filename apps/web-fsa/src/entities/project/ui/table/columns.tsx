@@ -22,29 +22,29 @@ const statusStyles: Record<
   { bg: string; color: string; borderColor: string }
 > = {
   planning: {
-    bg: "#f5f5f7",
-    color: "#424245",
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    bg: "var(--apple-surface-hover)",
+    color: "var(--apple-secondary)",
+    borderColor: "var(--apple-border-soft)",
   },
   active: {
-    bg: "rgba(0, 113, 227, 0.08)",
-    color: "#0071e3",
-    borderColor: "rgba(0, 113, 227, 0.16)",
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    borderColor: "var(--apple-blue-border)",
   },
   blocked: {
-    bg: "#fff1f0",
-    color: "#b42318",
-    borderColor: "rgba(180, 35, 24, 0.2)",
+    bg: "var(--apple-danger-bg)",
+    color: "var(--apple-danger-text)",
+    borderColor: "var(--apple-danger-border)",
   },
   review: {
-    bg: "#f5f5f7",
-    color: "#424245",
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    bg: "var(--apple-surface-hover)",
+    color: "var(--apple-secondary)",
+    borderColor: "var(--apple-border-soft)",
   },
   completed: {
-    bg: "#eef8f2",
-    color: "#1d7f43",
-    borderColor: "rgba(29, 127, 67, 0.18)",
+    bg: "var(--apple-success-bg)",
+    color: "var(--apple-success-text)",
+    borderColor: "var(--apple-success-border)",
   },
 };
 
@@ -60,24 +60,24 @@ const priorityStyles: Record<
   { bg: string; color: string; borderColor: string }
 > = {
   low: {
-    bg: "#f5f5f7",
-    color: "#424245",
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    bg: "var(--apple-surface-hover)",
+    color: "var(--apple-secondary)",
+    borderColor: "var(--apple-border-soft)",
   },
   medium: {
-    bg: "rgba(0, 113, 227, 0.08)",
-    color: "#0071e3",
-    borderColor: "rgba(0, 113, 227, 0.16)",
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    borderColor: "var(--apple-blue-border)",
   },
   high: {
-    bg: "#fff8e1",
-    color: "#7a5b00",
-    borderColor: "rgba(122, 91, 0, 0.18)",
+    bg: "var(--apple-warning-bg)",
+    color: "var(--apple-warning-text)",
+    borderColor: "var(--apple-warning-border)",
   },
   critical: {
-    bg: "#fff1f0",
-    color: "#b42318",
-    borderColor: "rgba(180, 35, 24, 0.2)",
+    bg: "var(--apple-danger-bg)",
+    color: "var(--apple-danger-text)",
+    borderColor: "var(--apple-danger-border)",
   },
 };
 
@@ -94,29 +94,29 @@ const assignmentStatusStyles: Record<
   { bg: string; color: string; borderColor: string }
 > = {
   assigned: {
-    bg: "#f5f5f7",
-    color: "#424245",
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    bg: "var(--apple-surface-hover)",
+    color: "var(--apple-secondary)",
+    borderColor: "var(--apple-border-soft)",
   },
   in_progress: {
-    bg: "rgba(0, 113, 227, 0.08)",
-    color: "#0071e3",
-    borderColor: "rgba(0, 113, 227, 0.16)",
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    borderColor: "var(--apple-blue-border)",
   },
   submitted: {
-    bg: "#f5f5f7",
-    color: "#424245",
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    bg: "var(--apple-surface-hover)",
+    color: "var(--apple-secondary)",
+    borderColor: "var(--apple-border-soft)",
   },
   changes_requested: {
-    bg: "#fff8e1",
-    color: "#7a5b00",
-    borderColor: "rgba(122, 91, 0, 0.18)",
+    bg: "var(--apple-warning-bg)",
+    color: "var(--apple-warning-text)",
+    borderColor: "var(--apple-warning-border)",
   },
   accepted: {
-    bg: "#eef8f2",
-    color: "#1d7f43",
-    borderColor: "rgba(29, 127, 67, 0.18)",
+    bg: "var(--apple-success-bg)",
+    color: "var(--apple-success-text)",
+    borderColor: "var(--apple-success-border)",
   },
 };
 
@@ -128,14 +128,19 @@ const disciplineLabels: Record<ProjectDiscipline, string> = {
 };
 
 function ProgressMeter({ value }: { value: number }) {
-  const palette = value >= 80 ? "#1d1d1f" : value >= 50 ? "#0071e3" : "#86868b";
+  const palette =
+    value >= 80
+      ? "var(--apple-text)"
+      : value >= 50
+        ? "var(--apple-blue)"
+        : "var(--apple-muted)";
 
   return (
     <HStack gap={3} minW="140px">
-      <Box flex="1" h="2" bg="#ececf0" borderRadius="full" overflow="hidden">
+      <Box flex="1" h="2" bg="var(--apple-surface-hover)" borderRadius="full" overflow="hidden">
         <Box h="full" width={`${value}%`} bg={palette} borderRadius="full" />
       </Box>
-      <Text fontSize="sm" color="#424245" fontWeight="700" minW="9">
+      <Text fontSize="sm" color="var(--apple-secondary)" fontWeight="700" minW="9">
         {value}%
       </Text>
     </HStack>
@@ -252,7 +257,7 @@ export const projectTableColumns = {
     minW: "120px",
     sortable: true,
     render: (project) => (
-      <Text color="#6e6e73" fontSize="sm" fontWeight="700">
+      <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
         {formatCompactGroupId(project.projectGroupId)}
       </Text>
     ),

@@ -119,11 +119,11 @@ export default function ProjectTableBase({
 
   return (
     <Box
-      bg="rgba(255, 255, 255, 0.92)"
+      bg="var(--apple-surface-raised)"
       border="1px solid"
-      borderColor="rgba(0, 0, 0, 0.12)"
+      borderColor="var(--apple-border)"
       borderRadius="md"
-      boxShadow="0 1px 2px rgba(0, 0, 0, 0.04), 0 10px 28px rgba(0, 0, 0, 0.06)"
+      boxShadow="var(--surface-shadow)"
       overflow="hidden"
       backdropFilter="blur(18px)"
     >
@@ -132,25 +132,25 @@ export default function ProjectTableBase({
         gap={5}
         p={5}
         borderBottom="1px solid"
-        borderColor="rgba(0, 0, 0, 0.08)"
-        bg="rgba(255, 255, 255, 0.72)"
+        borderColor="var(--apple-border-soft)"
+        bg="var(--apple-surface-glass)"
       >
         <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
           <Box>
-            <Text as="h2" fontSize="lg" fontWeight="850" color="#1d1d1f">
+            <Text as="h2" fontSize="lg" fontWeight="850" color="var(--apple-text)">
               {title}
             </Text>
-            <Text color="#6e6e73" fontSize="sm" fontWeight="600">
+            <Text color="var(--apple-muted)" fontSize="sm" fontWeight="600">
               {filteredProjects.length} shown · {activeProjects} active ·{" "}
               {blockedProjects} blocked
             </Text>
           </Box>
           <HStack gap={2} flexWrap="wrap">
             <Badge
-              bg="rgba(0, 113, 227, 0.08)"
-              color="#0071e3"
+              bg="var(--apple-blue-soft)"
+              color="var(--apple-blue)"
               border="1px solid"
-              borderColor="rgba(0, 113, 227, 0.16)"
+              borderColor="var(--apple-blue-border)"
               borderRadius="full"
               px={3}
               py={1}
@@ -160,10 +160,10 @@ export default function ProjectTableBase({
               {projects.length} total
             </Badge>
             <Badge
-              bg="#fff1f0"
-              color="#b42318"
+              bg="var(--apple-danger-bg)"
+              color="var(--apple-danger-text)"
               border="1px solid"
-              borderColor="rgba(180, 35, 24, 0.2)"
+              borderColor="var(--apple-danger-border)"
               borderRadius="full"
               px={3}
               py={1}
@@ -190,7 +190,7 @@ export default function ProjectTableBase({
               display="block"
               fontSize="sm"
               fontWeight="650"
-              color="#424245"
+              color="var(--apple-secondary)"
               mb={2}
             >
               Status
@@ -205,11 +205,11 @@ export default function ProjectTableBase({
                   )
                 }
                 borderRadius="md"
-                bg="#ffffff"
-                borderColor="rgba(0, 0, 0, 0.12)"
+                bg="var(--apple-surface)"
+                borderColor="var(--apple-border)"
                 _focusVisible={{
-                  borderColor: "#0071e3",
-                  boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)",
+                  borderColor: "var(--apple-blue)",
+                  boxShadow: "var(--focus-ring)",
                 }}
               >
                 <option value="all">All statuses</option>
@@ -228,7 +228,7 @@ export default function ProjectTableBase({
               display="block"
               fontSize="sm"
               fontWeight="650"
-              color="#424245"
+              color="var(--apple-secondary)"
               mb={2}
             >
               Priority
@@ -243,11 +243,11 @@ export default function ProjectTableBase({
                   )
                 }
                 borderRadius="md"
-                bg="#ffffff"
-                borderColor="rgba(0, 0, 0, 0.12)"
+                bg="var(--apple-surface)"
+                borderColor="var(--apple-border)"
                 _focusVisible={{
-                  borderColor: "#0071e3",
-                  boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)",
+                  borderColor: "var(--apple-blue)",
+                  boxShadow: "var(--focus-ring)",
                 }}
               >
                 <option value="all">All priorities</option>
@@ -271,10 +271,10 @@ export default function ProjectTableBase({
           />
         </Box>
       ) : (
-        <Table.ScrollArea borderTop="1px solid" borderColor="rgba(0, 0, 0, 0.08)">
+        <Table.ScrollArea borderTop="1px solid" borderColor="var(--apple-border-soft)">
           <Table.Root size="sm" variant="outline" interactive stickyHeader>
             <Table.Header>
-              <Table.Row bg="#fbfbfd">
+              <Table.Row bg="var(--apple-surface-subtle)">
                 {columns.map((column) => (
                   <Table.ColumnHeader
                     key={column.key}
@@ -283,12 +283,12 @@ export default function ProjectTableBase({
                     cursor={column.sortable ? "pointer" : "default"}
                     onClick={() => handleSort(column)}
                     userSelect="none"
-                    color="#6e6e73"
+                    color="var(--apple-muted)"
                     fontWeight="800"
                     fontSize="xs"
                     letterSpacing="0"
                     textTransform="uppercase"
-                    borderColor="rgba(0, 0, 0, 0.08)"
+                    borderColor="var(--apple-border-soft)"
                   >
                     <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
                       <span>{column.label}</span>
@@ -302,11 +302,11 @@ export default function ProjectTableBase({
                   <Table.ColumnHeader
                     minW="150px"
                     textAlign="end"
-                    color="#6e6e73"
+                    color="var(--apple-muted)"
                     fontWeight="800"
                     fontSize="xs"
                     textTransform="uppercase"
-                    borderColor="rgba(0, 0, 0, 0.08)"
+                    borderColor="var(--apple-border-soft)"
                   >
                     Pentesters
                   </Table.ColumnHeader>
@@ -315,11 +315,11 @@ export default function ProjectTableBase({
                   <Table.ColumnHeader
                     minW="100px"
                     textAlign="end"
-                    color="#6e6e73"
+                    color="var(--apple-muted)"
                     fontWeight="800"
                     fontSize="xs"
                     textTransform="uppercase"
-                    borderColor="rgba(0, 0, 0, 0.08)"
+                    borderColor="var(--apple-border-soft)"
                   >
                     Action
                   </Table.ColumnHeader>
@@ -330,18 +330,18 @@ export default function ProjectTableBase({
               {visibleProjects.map((project) => (
                 <Table.Row
                   key={project.id}
-                  bg="rgba(255, 255, 255, 0.86)"
+                  bg="var(--apple-surface-raised)"
                   transition="background 120ms ease"
-                  _hover={{ bg: "#f5f5f7" }}
+                  _hover={{ bg: "var(--apple-surface-hover)" }}
                 >
                   {columns.map((column) => (
                     <Table.Cell
                       key={column.key}
                       textAlign={column.align}
                       verticalAlign="middle"
-                      color="#1d1d1f"
+                      color="var(--apple-text)"
                       fontWeight="600"
-                      borderColor="rgba(0, 0, 0, 0.06)"
+                      borderColor="var(--apple-border-soft)"
                     >
                       <HStack
                         justify={column.align === "end" ? "end" : "start"}
@@ -359,8 +359,8 @@ export default function ProjectTableBase({
                             minW="28px"
                             h="28px"
                             borderRadius="md"
-                            color="#0071e3"
-                            bg="rgba(0, 113, 227, 0.08)"
+                            color="var(--apple-blue)"
+                            bg="var(--apple-blue-soft)"
                             _hover={{ bg: "rgba(0, 113, 227, 0.14)" }}
                             onClick={() => onCreateFromProject(project)}
                           >
@@ -371,7 +371,7 @@ export default function ProjectTableBase({
                     </Table.Cell>
                   ))}
                   {onAssignPentesters && (
-                    <Table.Cell textAlign="end" borderColor="rgba(0, 0, 0, 0.06)">
+                    <Table.Cell textAlign="end" borderColor="var(--apple-border-soft)">
                       <Button
                         variant="secondary"
                         onClick={() => onAssignPentesters(project)}
@@ -381,7 +381,7 @@ export default function ProjectTableBase({
                     </Table.Cell>
                   )}
                   {onAction && (
-                    <Table.Cell textAlign="end" borderColor="rgba(0, 0, 0, 0.06)">
+                    <Table.Cell textAlign="end" borderColor="var(--apple-border-soft)">
                       <Button variant="secondary" onClick={() => onAction(project)}>
                         {actionLabel}
                       </Button>
@@ -400,10 +400,10 @@ export default function ProjectTableBase({
         flexWrap="wrap"
         p={4}
         borderTop="1px solid"
-        borderColor="rgba(0, 0, 0, 0.08)"
-        bg="#fbfbfd"
+        borderColor="var(--apple-border-soft)"
+        bg="var(--apple-surface-subtle)"
       >
-        <Text color="#6e6e73" fontSize="sm" fontWeight="700">
+        <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
           Page {currentPage} of {totalPages}
         </Text>
         <HStack gap={3} flexWrap="wrap">
@@ -415,11 +415,11 @@ export default function ProjectTableBase({
                 setPage(1);
               }}
               borderRadius="md"
-              bg="#ffffff"
-              borderColor="rgba(0, 0, 0, 0.12)"
+              bg="var(--apple-surface)"
+              borderColor="var(--apple-border)"
               _focusVisible={{
-                borderColor: "#0071e3",
-                boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)",
+                borderColor: "var(--apple-blue)",
+                boxShadow: "var(--focus-ring)",
               }}
             >
               <option value={5}>5 rows</option>

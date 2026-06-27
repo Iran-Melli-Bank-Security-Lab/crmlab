@@ -205,12 +205,12 @@ function Section({
 }) {
   return (
     <Box
-      bg="rgba(255, 255, 255, 0.92)"
+      bg="var(--apple-surface-raised)"
       border="1px solid"
-      borderColor="rgba(0, 0, 0, 0.12)"
+      borderColor="var(--apple-border)"
       borderRadius="md"
       overflow="hidden"
-      boxShadow="0 1px 2px rgba(0, 0, 0, 0.04), 0 10px 28px rgba(0, 0, 0, 0.06)"
+      boxShadow="var(--surface-shadow)"
       backdropFilter="blur(18px)"
     >
       <Flex
@@ -219,15 +219,15 @@ function Section({
         px={{ base: 5, md: 7 }}
         py={5}
         borderBottom="1px solid"
-        borderColor="rgba(0, 0, 0, 0.08)"
-        bg="#fbfbfd"
+        borderColor="var(--apple-border-soft)"
+        bg="var(--apple-surface-subtle)"
       >
         <Flex
           w="42px"
           h="42px"
           borderRadius="md"
-          bg="#1d1d1f"
-          color="white"
+          bg="var(--apple-text)"
+          color="var(--apple-surface)"
           align="center"
           justify="center"
           fontWeight="800"
@@ -238,7 +238,7 @@ function Section({
           <Heading as="h2" size="md">
             {title}
           </Heading>
-          <Text color="#6e6e73" fontSize="sm" mt={1}>
+          <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
             {hint}
           </Text>
         </Box>
@@ -269,23 +269,23 @@ function ChoiceCard({
       w="100%"
       p={compact ? 4 : 5}
       border="1px solid"
-      borderColor={selected ? "rgba(0, 113, 227, 0.28)" : "rgba(0, 0, 0, 0.12)"}
-      bg={selected ? "rgba(0, 113, 227, 0.08)" : "white"}
+      borderColor={selected ? "var(--apple-blue-border-strong)" : "var(--apple-border)"}
+      bg={selected ? "var(--apple-blue-soft)" : "var(--apple-surface)"}
       borderRadius="md"
       transition="all .18s ease"
       _hover={{
-        borderColor: selected ? "rgba(0, 113, 227, 0.28)" : "rgba(0, 0, 0, 0.18)",
-        boxShadow: "0 4px 14px rgba(0, 0, 0, 0.06)",
+        borderColor: selected ? "var(--apple-blue-border-strong)" : "var(--apple-border)",
+        boxShadow: "0 4px 14px var(--apple-border-soft)",
       }}
       aria-pressed={selected}
     >
       <Flex align="start" justify="space-between" gap={3}>
         <Box>
-          <Text fontWeight="800" color={selected ? "#0071e3" : "#1d1d1f"}>
+          <Text fontWeight="800" color={selected ? "var(--apple-blue)" : "var(--apple-text)"}>
             {title}
           </Text>
           {hint && (
-            <Text color="#6e6e73" fontSize="sm" mt={1}>
+            <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
               {hint}
             </Text>
           )}
@@ -296,11 +296,11 @@ function ChoiceCard({
           h="22px"
           borderRadius="full"
           border="2px solid"
-          borderColor={selected ? "#0071e3" : "rgba(0, 0, 0, 0.18)"}
+          borderColor={selected ? "var(--apple-blue)" : "var(--apple-border)"}
           align="center"
           justify="center"
         >
-          {selected && <Box w="10px" h="10px" borderRadius="full" bg="#0071e3" />}
+          {selected && <Box w="10px" h="10px" borderRadius="full" bg="var(--apple-blue)" />}
         </Flex>
       </Flex>
     </chakra.button>
@@ -349,15 +349,15 @@ function UserPicker({
   return (
     <Box
       border="1px solid"
-      borderColor="rgba(0, 0, 0, 0.12)"
+      borderColor="var(--apple-border)"
       borderRadius="md"
       p={5}
-      bg="#fbfbfd"
+      bg="var(--apple-surface-subtle)"
     >
       <Text fontWeight="800" fontSize="lg">
         {title}
       </Text>
-      <Text color="#6e6e73" fontSize="sm" mt={1} mb={4}>
+      <Text color="var(--apple-muted)" fontSize="sm" mt={1} mb={4}>
         {hint}
       </Text>
       <Input
@@ -365,17 +365,17 @@ function UserPicker({
         placeholder={labels.search}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        bg="white"
+        bg="var(--apple-surface)"
       />
       <VStack align="stretch" gap={2} mt={4} maxH="310px" overflowY="auto">
         {loading && (
-          <Flex align="center" gap={3} color="#6e6e73" py={5} justify="center">
+          <Flex align="center" gap={3} color="var(--apple-muted)" py={5} justify="center">
             <Spinner size="sm" />
             {labels.loadingUsers}
           </Flex>
         )}
         {!loading && visibleUsers.length === 0 && (
-          <Text color="#6e6e73" textAlign="center" py={5}>
+          <Text color="var(--apple-muted)" textAlign="center" py={5}>
             {labels.unavailable}
           </Text>
         )}
@@ -397,21 +397,21 @@ function UserPicker({
               p={3}
               border="1px solid"
               borderColor={
-                selected ? "rgba(0, 113, 227, 0.28)" : "rgba(0, 0, 0, 0.12)"
+                selected ? "var(--apple-blue-border-strong)" : "var(--apple-border)"
               }
-              bg={selected ? "rgba(0, 113, 227, 0.08)" : "white"}
+              bg={selected ? "var(--apple-blue-soft)" : "var(--apple-surface)"}
               borderRadius="md"
               opacity={active ? 1 : 0.55}
               cursor={active ? "pointer" : "not-allowed"}
-              _hover={active ? { borderColor: "rgba(0, 113, 227, 0.24)" } : undefined}
+              _hover={active ? { borderColor: "var(--apple-blue-border)" } : undefined}
             >
               <Flex
                 flex="0 0 auto"
                 w="44px"
                 h="44px"
                 borderRadius="md"
-                bg={selected ? "#0071e3" : "#1d1d1f"}
-                color="white"
+                bg={selected ? "var(--apple-blue)" : "var(--apple-text)"}
+                color="var(--apple-surface)"
                 align="center"
                 justify="center"
                 fontWeight="800"
@@ -422,7 +422,7 @@ function UserPicker({
                 <Text fontWeight="800" lineClamp={1}>
                   {displayName}
                 </Text>
-                <Text fontSize="sm" color="#6e6e73" lineClamp={1}>
+                <Text fontSize="sm" color="var(--apple-muted)" lineClamp={1}>
                   @{user.username || user.id}
                 </Text>
               </Box>
@@ -432,8 +432,8 @@ function UserPicker({
                 borderRadius="full"
                 fontSize="xs"
                 fontWeight="800"
-                bg={active ? "#eef8f2" : "#f5f5f7"}
-                color={active ? "#1d7f43" : "#6e6e73"}
+                bg={active ? "var(--apple-success-bg)" : "var(--apple-surface-hover)"}
+                color={active ? "var(--apple-success-text)" : "var(--apple-muted)"}
               >
                 {selected ? labels.selected : active ? labels.active : labels.inactive}
               </Box>
@@ -550,12 +550,12 @@ const devopsUsers = useMemo(
       <Flex mb={7} justify="space-between" align="start" gap={5} flexWrap="wrap">
         <Box>
           <HStack gap={3} mb={3}>
-            <Text color="#0071e3" fontSize="xs" letterSpacing="0" fontWeight="900">
+            <Text color="var(--apple-blue)" fontSize="xs" letterSpacing="0" fontWeight="900">
               {labels.eyebrow}
             </Text>
             <Box
-              bg="rgba(0, 113, 227, 0.08)"
-              color="#0071e3"
+              bg="var(--apple-blue-soft)"
+              color="var(--apple-blue)"
               px={2.5}
               py={1}
               borderRadius="full"
@@ -568,7 +568,7 @@ const devopsUsers = useMemo(
           <Heading size={{ base: "2xl", md: "3xl" }} letterSpacing="0">
             {labels.title}
           </Heading>
-          <Text color="#6e6e73" mt={3} maxW="720px" fontSize={{ base: "md", md: "lg" }}>
+          <Text color="var(--apple-muted)" mt={3} maxW="720px" fontSize={{ base: "md", md: "lg" }}>
             {labels.description}
           </Text>
         </Box>
@@ -726,7 +726,7 @@ const devopsUsers = useMemo(
                   onChange={(event) => update("testEndDate", event.target.value)}
                   required
                 />
-                <Text color="#6e6e73" fontSize="sm" mt={2}>
+                <Text color="var(--apple-muted)" fontSize="sm" mt={2}>
                   {labels.testEndDateHint}
                 </Text>
               </Box>
@@ -735,8 +735,8 @@ const devopsUsers = useMemo(
 
           <Box position={{ xl: "sticky" }} top={{ xl: "96px" }}>
             <Box
-              bg="#1d1d1f"
-              color="white"
+              bg="var(--apple-text)"
+              color="var(--apple-surface)"
               borderRadius="md"
               p={6}
               boxShadow="0 24px 60px rgba(0, 0, 0, .18)"

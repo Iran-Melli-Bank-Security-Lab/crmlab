@@ -3,12 +3,12 @@ import { Center, HStack, Spinner, Text } from "@chakra-ui/react";
 export default function LoadingScreen({ text = "Loading..." }) {
   return (
     <Center
-      bg="rgba(255, 255, 255, 0.92)"
+      bg="var(--apple-surface-raised)"
       border="1px solid"
-      borderColor="rgba(0, 0, 0, 0.12)"
+      borderColor="var(--apple-border)"
       borderRadius="md"
       p={8}
-      boxShadow="0 1px 2px rgba(0, 0, 0, 0.04)"
+      boxShadow="var(--surface-shadow)"
     >
       <HStack>
         <Spinner />

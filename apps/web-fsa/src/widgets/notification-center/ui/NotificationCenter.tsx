@@ -35,22 +35,34 @@ const priorityStyles: Record<
     border: string;
   }
 > = {
-  low: { color: "#424245", bg: "#f5f5f7", border: "rgba(0, 0, 0, 0.1)" },
-  medium: {
-    color: "#0071e3",
-    bg: "rgba(0, 113, 227, 0.08)",
-    border: "rgba(0, 113, 227, 0.16)",
+  low: {
+    color: "var(--apple-secondary)",
+    bg: "var(--apple-surface-hover)",
+    border: "var(--apple-border-soft)",
   },
-  high: { color: "#7a5b00", bg: "#fff8e1", border: "rgba(122, 91, 0, 0.18)" },
-  critical: { color: "#b42318", bg: "#fff1f0", border: "rgba(180, 35, 24, 0.2)" },
+  medium: {
+    color: "var(--apple-blue)",
+    bg: "var(--apple-blue-soft)",
+    border: "var(--apple-blue-border)",
+  },
+  high: {
+    color: "var(--apple-warning-text)",
+    bg: "var(--apple-warning-bg)",
+    border: "var(--apple-warning-border)",
+  },
+  critical: {
+    color: "var(--apple-danger-text)",
+    bg: "var(--apple-danger-bg)",
+    border: "var(--apple-danger-border)",
+  },
 };
 
 const connectionColors: Record<NotificationConnectionStatus, string> = {
   idle: "#86868b",
-  connecting: "#7a5b00",
-  connected: "#1d7f43",
+  connecting: "var(--apple-warning-text)",
+  connected: "var(--apple-success-text)",
   disconnected: "#86868b",
-  error: "#b42318",
+  error: "var(--apple-danger-text)",
 };
 
 const osNotificationLabels: Record<BrowserNotificationPermission, string> = {
@@ -208,19 +220,19 @@ function NotificationItem({
 
   return (
     <Box
-      bg={notification.isRead ? "white" : "rgba(0, 113, 227, 0.04)"}
-      borderBottomColor="rgba(0, 0, 0, 0.06)"
+      bg={notification.isRead ? "var(--apple-surface)" : "var(--apple-blue-soft)"}
+      borderBottomColor="var(--apple-border-soft)"
       borderBottomWidth="1px"
       position="relative"
       px={{ base: 3, sm: 4 }}
       py={3.5}
       transition="background 0.2s ease"
-      _hover={{ bg: notification.isRead ? "#f5f5f7" : "rgba(0, 113, 227, 0.08)" }}
+      _hover={{ bg: notification.isRead ? "var(--apple-surface-hover)" : "var(--apple-blue-soft)" }}
     >
       {!notification.isRead && (
         <Box
           aria-hidden="true"
-          bg="#0071e3"
+          bg="var(--apple-blue)"
           borderRadius="full"
           h="7px"
           insetStart="7px"
@@ -250,7 +262,7 @@ function NotificationItem({
           <Flex align="flex-start" gap={2} justify="space-between">
             <Box minW={0}>
               <Text
-                color="#1d1d1f"
+                color="var(--apple-text)"
                 fontSize="sm"
                 fontWeight={notification.isRead ? "700" : "800"}
                 lineClamp={1}
@@ -258,7 +270,7 @@ function NotificationItem({
                 {notification.title}
               </Text>
               {notification.actor?.name && (
-                <Text color="#6e6e73" fontSize="xs" mt={0.5} truncate>
+                <Text color="var(--apple-muted)" fontSize="xs" mt={0.5} truncate>
                   {notification.actor.name}
                   {notification.actor.role ? ` / ${notification.actor.role}` : ""}
                 </Text>
@@ -278,7 +290,7 @@ function NotificationItem({
             </Badge>
           </Flex>
 
-          <Text color="#424245" fontSize="sm" lineClamp={2} lineHeight="1.55" mt={1.5}>
+          <Text color="var(--apple-secondary)" fontSize="sm" lineClamp={2} lineHeight="1.55" mt={1.5}>
             {notification.message}
           </Text>
 
@@ -290,13 +302,13 @@ function NotificationItem({
               {!notification.isRead && (
                 <IconButton
                   aria-label={t("common.read")}
-                  color="#6e6e73"
+                  color="var(--apple-muted)"
                   h="28px"
                   minW="28px"
                   size="xs"
                   variant="ghost"
                   onClick={handleMarkRead}
-                  _hover={{ bg: "#eef8f2", color: "#1d7f43" }}
+                  _hover={{ bg: "var(--apple-success-bg)", color: "var(--apple-success-text)" }}
                 >
                   <CheckIcon />
                 </IconButton>
@@ -305,12 +317,12 @@ function NotificationItem({
                 <ChakraLink
                   asChild
                   borderRadius="md"
-                  color="#0071e3"
+                  color="var(--apple-blue)"
                   fontSize="xs"
                   fontWeight="800"
                   px={2}
                   py={1}
-                  _hover={{ bg: "rgba(0, 113, 227, 0.08)", textDecoration: "none" }}
+                  _hover={{ bg: "var(--apple-blue-soft)", textDecoration: "none" }}
                 >
                   <RouterLink to={notification.actionUrl}>
                     <HStack gap={1}>
@@ -371,7 +383,7 @@ export default function NotificationCenter() {
           bg="transparent"
           border="none"
           borderRadius="full"
-          color={unreadCount > 0 ? "#0071e3" : "#6e6e73"}
+          color={unreadCount > 0 ? "var(--apple-blue)" : "var(--apple-muted)"}
           h="46px"
           minW="46px"
           position="relative"
@@ -379,25 +391,25 @@ export default function NotificationCenter() {
           variant="ghost"
           _hover={{
             bg: "transparent",
-            color: "#0071e3",
+            color: "var(--apple-blue)",
             transform: "scale(1.05)",
           }}
           _open={{
             bg: "transparent",
-            color: "#0071e3",
+            color: "var(--apple-blue)",
             transform: "scale(1.05)",
           }}
-          _focusVisible={{ boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)" }}
+          _focusVisible={{ boxShadow: "var(--focus-ring)" }}
         >
           <BellIcon />
           {unreadCount > 0 && (
             <Flex
               align="center"
-              bg="#b42318"
-              borderColor="white"
+              bg="var(--apple-danger-text)"
+              borderColor="var(--apple-surface)"
               borderRadius="full"
               borderWidth="2px"
-              color="white"
+              color="var(--apple-surface)"
               fontSize="9px"
               fontWeight="800"
               h="20px"
@@ -417,18 +429,18 @@ export default function NotificationCenter() {
       <Portal>
         <Popover.Positioner>
           <Popover.Content
-            bg="rgba(255, 255, 255, 0.94)"
-            borderColor="rgba(0, 0, 0, 0.12)"
+            bg="var(--apple-surface-raised)"
+            borderColor="var(--apple-border)"
             borderRadius="md"
             borderWidth="1px"
-            boxShadow="0 24px 55px rgba(0, 0, 0, 0.12)"
+            boxShadow="0 24px 55px var(--apple-border)"
             backdropFilter="blur(20px) saturate(180%)"
             maxH="min(680px, calc(100vh - 96px))"
             overflow="hidden"
             width={{ base: "calc(100vw - 24px)", sm: "430px" }}
           >
             <Popover.Header
-              borderBottomColor="rgba(0, 0, 0, 0.08)"
+              borderBottomColor="var(--apple-border-soft)"
               borderBottomWidth="1px"
               px={4}
               py={3.5}
@@ -436,15 +448,15 @@ export default function NotificationCenter() {
               <Flex align="center" gap={3} justify="space-between">
                 <Box minW={0}>
                   <HStack gap={2}>
-                    <Popover.Title color="#1d1d1f" fontSize="md" fontWeight="800">
+                    <Popover.Title color="var(--apple-text)" fontSize="md" fontWeight="800">
                       {t("notifications.title")}
                     </Popover.Title>
                     {unreadCount > 0 && (
                       <Badge
-                        bg="rgba(0, 113, 227, 0.08)"
+                        bg="var(--apple-blue-soft)"
                         border="1px solid"
-                        borderColor="rgba(0, 113, 227, 0.16)"
-                        color="#0071e3"
+                        borderColor="var(--apple-blue-border)"
+                        color="var(--apple-blue)"
                         size="sm"
                         variant="subtle"
                       >
@@ -459,7 +471,7 @@ export default function NotificationCenter() {
                       h="7px"
                       w="7px"
                     />
-                    <Text color="#6e6e73" fontSize="xs">
+                    <Text color="var(--apple-muted)" fontSize="xs">
                       {t("notifications.realtimeStatus", { status: connectionStatus })}
                     </Text>
                   </HStack>
@@ -468,7 +480,7 @@ export default function NotificationCenter() {
                 <HStack gap={1} flexShrink={0}>
                   {browserPermission === "default" && (
                     <ChakraButton
-                      color="#0071e3"
+                      color="var(--apple-blue)"
                       fontSize="xs"
                       fontWeight="800"
                       h="32px"
@@ -476,17 +488,17 @@ export default function NotificationCenter() {
                       size="sm"
                       variant="ghost"
                       onClick={handleEnableBrowserNotifications}
-                      _hover={{ bg: "rgba(0, 113, 227, 0.08)" }}
+                      _hover={{ bg: "var(--apple-blue-soft)" }}
                     >
                       {osNotificationLabels[browserPermission]}
                     </ChakraButton>
                   )}
                   {browserPermission !== "default" && (
                     <Badge
-                      bg={browserPermission === "granted" ? "#eef8f2" : "#f5f5f7"}
+                      bg={browserPermission === "granted" ? "var(--apple-success-bg)" : "var(--apple-surface-hover)"}
                       border="1px solid"
-                      borderColor={browserPermission === "granted" ? "#c9ead7" : "rgba(0, 0, 0, 0.08)"}
-                      color={browserPermission === "granted" ? "#1d7f43" : "#6e6e73"}
+                      borderColor={browserPermission === "granted" ? "var(--apple-success-border)" : "var(--apple-border-soft)"}
+                      color={browserPermission === "granted" ? "var(--apple-success-text)" : "var(--apple-muted)"}
                       size="sm"
                       variant="subtle"
                     >
@@ -495,7 +507,7 @@ export default function NotificationCenter() {
                   )}
                   {unreadCount > 0 && (
                     <ChakraButton
-                      color="#0071e3"
+                      color="var(--apple-blue)"
                       disabled={isMarkingAllRead}
                       fontSize="xs"
                       fontWeight="800"
@@ -504,7 +516,7 @@ export default function NotificationCenter() {
                       size="sm"
                       variant="ghost"
                       onClick={handleMarkAllRead}
-                      _hover={{ bg: "rgba(0, 113, 227, 0.08)" }}
+                      _hover={{ bg: "var(--apple-blue-soft)" }}
                     >
                       {isMarkingAllRead ? <Spinner size="xs" /> : <CheckIcon />}
                       {t("notifications.markAllRead")}
@@ -517,8 +529,8 @@ export default function NotificationCenter() {
             <Popover.Body p={0}>
               {isLoading ? (
                 <VStack gap={3} justify="center" minH="220px">
-                  <Spinner color="#0071e3" size="md" />
-                  <Text color="#6e6e73" fontSize="sm">
+                  <Spinner color="var(--apple-blue)" size="md" />
+                  <Text color="var(--apple-muted)" fontSize="sm">
                     {t("common.loading")}
                   </Text>
                 </VStack>
@@ -526,11 +538,11 @@ export default function NotificationCenter() {
                 <VStack gap={3} justify="center" minH="280px" px={8} textAlign="center">
                   <Flex
                     align="center"
-                    bg="rgba(0, 113, 227, 0.08)"
-                    borderColor="rgba(0, 113, 227, 0.16)"
+                    bg="var(--apple-blue-soft)"
+                    borderColor="var(--apple-blue-border)"
                     borderRadius="md"
                     borderWidth="1px"
-                    color="#0071e3"
+                    color="var(--apple-blue)"
                     h="64px"
                     justify="center"
                     w="64px"
@@ -538,10 +550,10 @@ export default function NotificationCenter() {
                     <BellIcon size={28} />
                   </Flex>
                   <Box>
-                    <Text color="#1d1d1f" fontWeight="800">
+                    <Text color="var(--apple-text)" fontWeight="800">
                       {t("notifications.emptyTitle")}
                     </Text>
-                    <Text color="#6e6e73" fontSize="sm" lineHeight="1.6" mt={1}>
+                    <Text color="var(--apple-muted)" fontSize="sm" lineHeight="1.6" mt={1}>
                       {t("notifications.emptyDescription")}
                     </Text>
                   </Box>

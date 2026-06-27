@@ -94,10 +94,10 @@ export default function Projects() {
       <HStack justify="space-between" align="end" flexWrap="wrap" gap={4}>
         <Box>
           <Badge
-            bg="rgba(0, 113, 227, 0.08)"
-            color="#0071e3"
+            bg="var(--apple-blue-soft)"
+            color="var(--apple-blue)"
             border="1px solid"
-            borderColor="rgba(0, 113, 227, 0.16)"
+            borderColor="var(--apple-blue-border)"
             borderRadius="full"
             px={3}
             py={1}
@@ -108,7 +108,7 @@ export default function Projects() {
             Permission-based project views
           </Badge>
           <Heading
-            color="#1d1d1f"
+            color="var(--apple-text)"
             fontSize={{ base: "2xl", md: "3xl" }}
             fontWeight="850"
             letterSpacing="0"
@@ -116,12 +116,12 @@ export default function Projects() {
           >
             Projects
           </Heading>
-          <Text color="#6e6e73" mt={2} fontSize="md">
+          <Text color="var(--apple-muted)" mt={2} fontSize="md">
             Work with the project views allowed by your permissions. Each table is
             scoped to projects assigned to you or created by you.
           </Text>
         </Box>
-        <Text color="#6e6e73" fontSize="sm" fontWeight="700">
+        <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
           {accessibleViews.length} available views
         </Text>
       </HStack>
@@ -130,12 +130,12 @@ export default function Projects() {
         <HStack
           gap={2}
           flexWrap="wrap"
-          bg="rgba(255, 255, 255, 0.86)"
+          bg="var(--apple-surface-raised)"
           border="1px solid"
-          borderColor="rgba(0, 0, 0, 0.12)"
+          borderColor="var(--apple-border)"
           borderRadius="md"
           p={2}
-          boxShadow="0 1px 2px rgba(0, 0, 0, 0.04)"
+          boxShadow="var(--surface-shadow)"
           backdropFilter="blur(18px)"
         >
           {accessibleViews.map((view) => {
@@ -148,14 +148,14 @@ export default function Projects() {
                 minH="38px"
                 px={4}
                 borderRadius="md"
-                bg={selected ? "#1d1d1f" : "transparent"}
-                color={selected ? "white" : "gray.700"}
+                bg={selected ? "var(--apple-text)" : "transparent"}
+                color={selected ? "var(--apple-surface)" : "var(--apple-secondary)"}
                 fontSize="sm"
                 fontWeight="800"
                 boxShadow={selected ? "0 1px 2px rgba(0, 0, 0, 0.14)" : "none"}
                 transition="background 120ms ease, color 120ms ease, box-shadow 120ms ease"
-                _hover={{ bg: selected ? "#1d1d1f" : "rgba(0, 0, 0, 0.05)" }}
-                _focusVisible={{ boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)" }}
+                _hover={{ bg: selected ? "var(--apple-text)" : "var(--apple-surface-hover)" }}
+                _focusVisible={{ boxShadow: "var(--focus-ring)" }}
                 aria-pressed={selected}
               >
                 {view.label}
@@ -168,10 +168,10 @@ export default function Projects() {
       {activeView && ActiveProjectTable ? (
         <VStack align="stretch" gap={4}>
           <Box>
-            <Heading as="h2" size="lg" color="#1d1d1f" fontWeight="850">
+            <Heading as="h2" size="lg" color="var(--apple-text)" fontWeight="850">
               {activeView.title}
             </Heading>
-            <Text color="#6e6e73" mt={2}>
+            <Text color="var(--apple-muted)" mt={2}>
               {activeView.description}
             </Text>
           </Box>

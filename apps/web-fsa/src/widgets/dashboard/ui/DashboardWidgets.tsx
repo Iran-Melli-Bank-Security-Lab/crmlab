@@ -15,9 +15,9 @@ import type { User } from "@/shared/types";
 import type { ProjectListView } from "@/shared/types/api/projects";
 import type { DashboardWidgetId } from "@/widgets/dashboard/model/dashboardWidgetRegistry";
 
-const appleBlue = "#0071e3";
-const appleText = "#1d1d1f";
-const appleMuted = "#6e6e73";
+const appleBlue = "var(--apple-blue)";
+const appleText = "var(--apple-text)";
+const appleMuted = "var(--apple-muted)";
 
 function getUsersList(response: unknown): User[] {
   if (Array.isArray(response)) return response;

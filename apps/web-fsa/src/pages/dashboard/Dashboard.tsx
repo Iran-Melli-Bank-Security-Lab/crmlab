@@ -18,10 +18,10 @@ export default function Dashboard() {
       <HStack justify="space-between" align="end" flexWrap="wrap" gap={4}>
         <Box>
           <Badge
-            bg="rgba(0, 113, 227, 0.08)"
-            color="#0071e3"
+            bg="var(--apple-blue-soft)"
+            color="var(--apple-blue)"
             border="1px solid"
-            borderColor="rgba(0, 113, 227, 0.16)"
+            borderColor="var(--apple-blue-border)"
             borderRadius="full"
             px={3}
             py={1}
@@ -32,7 +32,7 @@ export default function Dashboard() {
             Permission-composed workspace
           </Badge>
           <Heading
-            color="#1d1d1f"
+            color="var(--apple-text)"
             fontSize={{ base: "2xl", md: "3xl" }}
             fontWeight="850"
             letterSpacing="0"
@@ -40,11 +40,11 @@ export default function Dashboard() {
           >
             Dashboard
           </Heading>
-          <Text color="#6e6e73" mt={2} fontSize="md">
+          <Text color="var(--apple-muted)" mt={2} fontSize="md">
           A single workspace composed from your effective permissions.
         </Text>
         </Box>
-        <Text color="#6e6e73" fontSize="sm" fontWeight="700">
+        <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
           {visibleWidgets.length} visible widgets
         </Text>
       </HStack>

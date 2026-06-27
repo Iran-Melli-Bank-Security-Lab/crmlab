@@ -4,10 +4,10 @@ import type { ProjectTableRow } from "./types";
 export default function ProjectSummary({ project }: { project: ProjectTableRow }) {
   return (
     <VStack align="start" gap={1} minW="220px">
-      <Text fontWeight="850" color="#1d1d1f">
+      <Text fontWeight="850" color="var(--apple-text)">
         {project.name}
       </Text>
-      <Text color="#6e6e73" fontSize="sm" fontWeight="600">
+      <Text color="var(--apple-muted)" fontSize="sm" fontWeight="600">
         {project.client}
       </Text>
     </VStack>

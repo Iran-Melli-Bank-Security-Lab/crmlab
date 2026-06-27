@@ -38,13 +38,13 @@ const statusStyles: Record<
   { bg: string; color: string; borderColor: string }
 > = {
   Active: {
-    bg: "#eef8f2",
-    color: "#1d7f43",
+    bg: "var(--apple-success-bg)",
+    color: "var(--apple-success-text)",
     borderColor: "rgba(29, 127, 67, 0.18)",
   },
   Inactive: {
-    bg: "#fff1f0",
-    color: "#b42318",
+    bg: "var(--apple-danger-bg)",
+    color: "var(--apple-danger-text)",
     borderColor: "rgba(180, 35, 24, 0.2)",
   },
 };
@@ -196,7 +196,7 @@ function RolePermissionEditor({
         <Box
           borderRight={{ base: 0, lg: "1px solid" }}
           borderBottom={{ base: "1px solid", lg: 0 }}
-          borderColor="rgba(0, 0, 0, 0.08)"
+          borderColor="var(--apple-border-soft)"
           pr={{ base: 0, lg: 4 }}
           pb={{ base: 4, lg: 0 }}
         >
@@ -214,14 +214,14 @@ function RolePermissionEditor({
                 border="1px solid"
                 borderColor={
                   user.id === selectedUser.id
-                    ? "rgba(0, 113, 227, 0.28)"
-                    : "rgba(0, 0, 0, 0.12)"
+                    ? "var(--apple-blue-border-strong)"
+                    : "var(--apple-border)"
                 }
-                bg={user.id === selectedUser.id ? "rgba(0, 113, 227, 0.08)" : "white"}
+                bg={user.id === selectedUser.id ? "var(--apple-blue-soft)" : "var(--apple-surface)"}
                 borderRadius="md"
                 _hover={{
-                  borderColor: "rgba(0, 113, 227, 0.22)",
-                  bg: "rgba(0, 113, 227, 0.06)",
+                  borderColor: "var(--apple-blue-border)",
+                  bg: "var(--apple-blue-soft)",
                 }}
               >
                 <HStack justify="space-between" align="start" gap={2}>
@@ -238,10 +238,10 @@ function RolePermissionEditor({
                     {getStatusLabel(user.status || "Active", t)}
                   </ChakraBadge>
                 </HStack>
-                <Text color="#424245" fontSize="sm">
+                <Text color="var(--apple-secondary)" fontSize="sm">
                   {user.username}
                 </Text>
-                <Text color="#6e6e73" fontSize="xs">
+                <Text color="var(--apple-muted)" fontSize="xs">
                   {user.roles.join(", ")}
                 </Text>
               </Box>
@@ -255,7 +255,7 @@ function RolePermissionEditor({
               <Heading as="h3" size="md">
                 {selectedUser.name}
               </Heading>
-              <Text color="#424245">{selectedUser.username}</Text>
+              <Text color="var(--apple-secondary)">{selectedUser.username}</Text>
             </Box>
             <Button
               onClick={handleSave}
@@ -276,11 +276,11 @@ function RolePermissionEditor({
                 value={draftStatus}
                 onChange={(event) => setDraftStatus(event.target.value as UserStatus)}
                 borderRadius="md"
-                bg="white"
-                borderColor="rgba(0, 0, 0, 0.12)"
+                bg="var(--apple-surface)"
+                borderColor="var(--apple-border)"
                 _focusVisible={{
-                  borderColor: "#0071e3",
-                  boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)",
+                  borderColor: "var(--apple-blue)",
+                  boxShadow: "var(--focus-ring)",
                 }}
               >
                 {userStatuses.map((status) => (
@@ -307,10 +307,10 @@ function RolePermissionEditor({
                   gap={3}
                   p={3}
                   border="1px solid"
-                  borderColor="rgba(0, 0, 0, 0.12)"
+                  borderColor="var(--apple-border)"
                   borderRadius="md"
                   cursor="pointer"
-                  _hover={{ bg: "#f5f5f7" }}
+                  _hover={{ bg: "var(--apple-surface-hover)" }}
                 >
                   <input
                     type="checkbox"
@@ -330,7 +330,7 @@ function RolePermissionEditor({
             <Heading as="h4" size="sm" mb={2}>
               {t("userAccess.directPermissions")}
             </Heading>
-            <Text color="#424245" mb={4}>
+            <Text color="var(--apple-secondary)" mb={4}>
               {t("userAccess.permissionsHelp")}
             </Text>
             <VStack align="stretch" gap={4}>
@@ -338,7 +338,7 @@ function RolePermissionEditor({
                 <Box
                   key={group}
                   border="1px solid"
-                  borderColor="rgba(0, 0, 0, 0.12)"
+                  borderColor="var(--apple-border)"
                   borderRadius="md"
                   p={4}
                 >
@@ -356,7 +356,7 @@ function RolePermissionEditor({
                         p={2}
                         borderRadius="md"
                         cursor="pointer"
-                        _hover={{ bg: "#f5f5f7" }}
+                        _hover={{ bg: "var(--apple-surface-hover)" }}
                       >
                         <input
                           type="checkbox"

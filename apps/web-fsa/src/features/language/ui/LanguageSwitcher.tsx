@@ -52,7 +52,7 @@ export default function LanguageSwitcher() {
           bg="transparent"
           border="none"
           borderRadius="md"
-          color="#424245"
+          color="var(--apple-secondary)"
           h="44px"
           minW={{ base: "44px", sm: "auto" }}
           px={{ base: 0, sm: 1.5 }}
@@ -60,22 +60,22 @@ export default function LanguageSwitcher() {
           variant="ghost"
           _hover={{
             bg: "transparent",
-            color: "#0071e3",
+            color: "var(--apple-blue)",
             transform: "scale(1.02)",
           }}
           _open={{
             bg: "transparent",
-            color: "#0071e3",
+            color: "var(--apple-blue)",
             transform: "scale(1.02)",
           }}
-          _focusVisible={{ boxShadow: "0 0 0 3px rgba(0, 113, 227, 0.18)" }}
+          _focusVisible={{ boxShadow: "var(--focus-ring)" }}
         >
           <Flex align="center" gap={2}>
             <Flex
               align="center"
-              bg="rgba(0, 113, 227, 0.08)"
+              bg="var(--apple-blue-soft)"
               borderRadius="md"
-              color="#0071e3"
+              color="var(--apple-blue)"
               flexShrink={0}
               h="30px"
               justify="center"
@@ -86,7 +86,7 @@ export default function LanguageSwitcher() {
 
             <Box display={{ base: "none", sm: "block" }} textAlign="start">
               <Text
-                color="#6e6e73"
+                color="var(--apple-muted)"
                 fontSize="10px"
                 fontWeight="700"
                 lineHeight="1"
@@ -95,7 +95,7 @@ export default function LanguageSwitcher() {
                 {t("common.language").toUpperCase()}
               </Text>
               <Text
-                color="#1d1d1f"
+                color="var(--apple-text)"
                 fontSize="sm"
                 fontWeight="700"
                 lineHeight="1"
@@ -111,25 +111,25 @@ export default function LanguageSwitcher() {
       <Portal>
         <Menu.Positioner>
           <Menu.Content
-            bg="rgba(255, 255, 255, 0.94)"
-            borderColor="rgba(0, 0, 0, 0.12)"
+            bg="var(--apple-surface-raised)"
+            borderColor="var(--apple-border)"
             borderRadius="md"
             borderWidth="1px"
-            boxShadow="0 20px 45px rgba(0, 0, 0, 0.12)"
+            boxShadow="0 20px 45px var(--apple-border)"
             backdropFilter="blur(20px) saturate(180%)"
             minW="240px"
             p={2}
           >
             <Box px={2.5} pb={2} pt={1.5}>
-              <Text color="#1d1d1f" fontSize="sm" fontWeight="800">
+              <Text color="var(--apple-text)" fontSize="sm" fontWeight="800">
                 {t("common.language")}
               </Text>
-              <Text color="#6e6e73" fontSize="xs" mt={0.5}>
+              <Text color="var(--apple-muted)" fontSize="xs" mt={0.5}>
                 {selectedLanguage.shortLabel} / {selectedLanguage.direction}
               </Text>
             </Box>
 
-            <Menu.Separator borderColor="rgba(0, 0, 0, 0.08)" mb={1.5} />
+            <Menu.Separator borderColor="var(--apple-border-soft)" mb={1.5} />
 
             <Menu.RadioItemGroup
               value={language}
@@ -147,13 +147,13 @@ export default function LanguageSwitcher() {
                     minH="54px"
                     px={2.5}
                     value={item.value}
-                    _highlighted={{ bg: "rgba(0, 113, 227, 0.08)" }}
+                    _highlighted={{ bg: "var(--apple-blue-soft)" }}
                   >
                     <Flex
                       align="center"
-                      bg={isSelected ? "#1d1d1f" : "#f5f5f7"}
+                      bg={isSelected ? "var(--apple-text)" : "var(--apple-surface-hover)"}
                       borderRadius="md"
-                      color={isSelected ? "white" : "#6e6e73"}
+                      color={isSelected ? "var(--apple-surface)" : "var(--apple-muted)"}
                       flexShrink={0}
                       fontSize="xs"
                       fontWeight="800"
@@ -166,21 +166,21 @@ export default function LanguageSwitcher() {
                     </Flex>
 
                     <Box flex="1">
-                      <Text color="#1d1d1f" fontSize="sm" fontWeight="700">
+                      <Text color="var(--apple-text)" fontSize="sm" fontWeight="700">
                         {t(`languages.${item.value}`)}
                       </Text>
-                      <Text color="#6e6e73" fontSize="xs" mt={0.5}>
+                      <Text color="var(--apple-muted)" fontSize="xs" mt={0.5}>
                         {item.shortLabel} / {item.direction}
                       </Text>
                     </Box>
 
                     <Flex
                       align="center"
-                      bg={isSelected ? "#0071e3" : "transparent"}
-                      borderColor={isSelected ? "#0071e3" : "rgba(0, 0, 0, 0.18)"}
+                      bg={isSelected ? "var(--apple-blue)" : "transparent"}
+                      borderColor={isSelected ? "var(--apple-blue)" : "var(--apple-border)"}
                       borderRadius="full"
                       borderWidth="1px"
-                      color="white"
+                      color="var(--apple-surface)"
                       flexShrink={0}
                       h="22px"
                       justify="center"

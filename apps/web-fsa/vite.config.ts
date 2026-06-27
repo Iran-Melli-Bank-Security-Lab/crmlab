@@ -37,6 +37,50 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: "../../dist/web-fsa",
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) {
+              return "vendor-react";
+            }
+
+            if (
+              id.includes("node_modules/@chakra-ui") ||
+              id.includes("node_modules/@emotion") ||
+              id.includes("node_modules/framer-motion")
+            ) {
+              return "vendor-ui";
+            }
+
+            if (
+              id.includes("node_modules/@reduxjs") ||
+              id.includes("node_modules/react-redux")
+            ) {
+              return "vendor-state";
+            }
+
+            if (id.includes("node_modules/react-router-dom")) {
+              return "vendor-router";
+            }
+
+            if (id.includes("node_modules/zod")) {
+              return "vendor-validation";
+            }
+
+            if (id.includes("node_modules/socket.io-client")) {
+              return "vendor-realtime";
+            }
+
+            if (id.includes("packages/authz") || id.includes("packages/contracts")) {
+              return "role-packages";
+            }
+
+            if (id.includes("node_modules")) {
+              return "vendor-misc";
+            }
+          },
+        },
+      },
     },
 
     server: {
@@ -64,6 +108,12 @@ export default defineConfig(({ mode }) => {
           ws: true,
         },
       },
+    },
+
+    preview: {
+      host: "0.0.0.0",
+      port: 5173,
+      strictPort: true,
     },
   };
 });

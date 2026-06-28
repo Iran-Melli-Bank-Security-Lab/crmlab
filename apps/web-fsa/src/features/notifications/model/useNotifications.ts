@@ -87,6 +87,8 @@ export function useNotifications() {
         },
         onNotificationUpdated: (notification) =>
           dispatch(notificationUpdated(notification)),
+        onNotificationRead: (id) => dispatch(notificationMarkedRead(id)),
+        onNotificationsReadAll: () => dispatch(allNotificationsMarkedRead()),
         onNotificationDeleted: (id) => dispatch(notificationDeleted(id)),
         onNotificationsSync: (items) => dispatch(notificationsLoaded(items)),
         onUnreadCount: (count) => dispatch(unreadCountReceived(count)),

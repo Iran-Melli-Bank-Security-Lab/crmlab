@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Badge,
   Box,
@@ -7,7 +7,6 @@ import {
   Flex,
   HStack,
   IconButton,
-  Link as ChakraLink,
   Popover,
   Portal,
   Spinner,
@@ -154,20 +153,6 @@ function NotificationTypeIcon({ notification }: { notification: AppNotification 
   return <BellIcon size={18} />;
 }
 
-function ArrowIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="15" viewBox="0 0 24 24" width="15">
-      <path
-        d="m9 18 6-6-6-6"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
@@ -202,15 +187,21 @@ const formatTime = (value: string) => {
 
 function NotificationItem({
   notification,
+  onClose,
   onMarkRead,
 }: {
   notification: AppNotification;
+  onClose: () => void;
   onMarkRead: (id: string) => Promise<unknown>;
 }) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const style = priorityStyles[notification.priority];
+  const isClickable = Boolean(notification.actionUrl);
 
-  const handleMarkRead = async () => {
+  const markReadIfNeeded = async () => {
+    if (notification.isRead) return;
+
     try {
       await onMarkRead(notification.id);
     } catch {
@@ -218,16 +209,44 @@ function NotificationItem({
     }
   };
 
+  const handleActivate = () => {
+    void markReadIfNeeded();
+    if (notification.actionUrl) {
+      onClose();
+      navigate(notification.actionUrl);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    handleActivate();
+  };
+
+  const handleMarkReadClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    void markReadIfNeeded();
+  };
+
   return (
     <Box
+      role={isClickable ? "link" : "button"}
+      tabIndex={0}
       bg={notification.isRead ? "var(--apple-surface)" : "var(--apple-blue-soft)"}
       borderBottomColor="var(--apple-border-soft)"
       borderBottomWidth="1px"
+      cursor="pointer"
       position="relative"
       px={{ base: 3, sm: 4 }}
       py={3.5}
-      transition="background 0.2s ease"
-      _hover={{ bg: notification.isRead ? "var(--apple-surface-hover)" : "var(--apple-blue-soft)" }}
+      transition="background 0.2s ease, box-shadow 0.2s ease"
+      onClick={handleActivate}
+      onKeyDown={handleKeyDown}
+      _hover={{
+        bg: notification.isRead ? "var(--apple-surface-hover)" : "var(--apple-blue-soft)",
+        boxShadow: isClickable ? "inset 3px 0 0 var(--apple-blue)" : undefined,
+      }}
+      _focusVisible={{ boxShadow: "var(--focus-ring)" }}
     >
       {!notification.isRead && (
         <Box
@@ -307,30 +326,11 @@ function NotificationItem({
                   minW="28px"
                   size="xs"
                   variant="ghost"
-                  onClick={handleMarkRead}
+                  onClick={handleMarkReadClick}
                   _hover={{ bg: "var(--apple-success-bg)", color: "var(--apple-success-text)" }}
                 >
                   <CheckIcon />
                 </IconButton>
-              )}
-              {notification.actionUrl && (
-                <ChakraLink
-                  asChild
-                  borderRadius="md"
-                  color="var(--apple-blue)"
-                  fontSize="xs"
-                  fontWeight="800"
-                  px={2}
-                  py={1}
-                  _hover={{ bg: "var(--apple-blue-soft)", textDecoration: "none" }}
-                >
-                  <RouterLink to={notification.actionUrl}>
-                    <HStack gap={1}>
-                      <Text>{t("common.open")}</Text>
-                      <ArrowIcon />
-                    </HStack>
-                  </RouterLink>
-                </ChakraLink>
               )}
             </HStack>
           </Flex>
@@ -342,6 +342,7 @@ function NotificationItem({
 
 export default function NotificationCenter() {
   const { t } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
   const [browserPermission, setBrowserPermission] =
     useState<BrowserNotificationPermission>(() => getBrowserNotificationPermission());
   const {
@@ -373,6 +374,8 @@ export default function NotificationCenter() {
 
   return (
     <Popover.Root
+      open={isOpen}
+      onOpenChange={(details) => setIsOpen(details.open)}
       positioning={{ placement: "bottom-end", gutter: 8 }}
       lazyMount
       unmountOnExit
@@ -564,6 +567,7 @@ export default function NotificationCenter() {
                     <NotificationItem
                       key={notification.id}
                       notification={notification}
+                      onClose={() => setIsOpen(false)}
                       onMarkRead={markRead}
                     />
                   ))}

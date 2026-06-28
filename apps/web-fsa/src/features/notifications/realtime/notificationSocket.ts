@@ -8,6 +8,8 @@ type NotificationSocketHandlers = {
   onError?: (message: string) => void;
   onNotification?: (notification: AppNotification) => void;
   onNotificationUpdated?: (notification: AppNotification) => void;
+  onNotificationRead?: (id: string) => void;
+  onNotificationsReadAll?: () => void;
   onNotificationDeleted?: (id: string) => void;
   onNotificationsSync?: (notifications: AppNotification[]) => void;
   onUnreadCount?: (count: number) => void;
@@ -38,6 +40,9 @@ class NotificationSocket {
       handlers.onNotification?.(notification);
     const handleNotificationUpdated = (notification: AppNotification) =>
       handlers.onNotificationUpdated?.(notification);
+    const handleNotificationRead = (payload: { id: string }) =>
+      handlers.onNotificationRead?.(payload.id);
+    const handleNotificationsReadAll = () => handlers.onNotificationsReadAll?.();
     const handleNotificationDeleted = (payload: { id: string }) =>
       handlers.onNotificationDeleted?.(payload.id);
     const handleNotificationsSync = (notifications: AppNotification[]) =>
@@ -54,6 +59,8 @@ class NotificationSocket {
     socket.on("connect_error", handleConnectError);
     socket.on("notification:new", handleNotificationNew);
     socket.on("notification:updated", handleNotificationUpdated);
+    socket.on("notification:read", handleNotificationRead);
+    socket.on("notification:read-all", handleNotificationsReadAll);
     socket.on("notification:deleted", handleNotificationDeleted);
     socket.on("notifications:sync", handleNotificationsSync);
     socket.on("notifications:unread_count", handleUnreadCount);
@@ -66,6 +73,8 @@ class NotificationSocket {
       socket.off("connect_error", handleConnectError);
       socket.off("notification:new", handleNotificationNew);
       socket.off("notification:updated", handleNotificationUpdated);
+      socket.off("notification:read", handleNotificationRead);
+      socket.off("notification:read-all", handleNotificationsReadAll);
       socket.off("notification:deleted", handleNotificationDeleted);
       socket.off("notifications:sync", handleNotificationsSync);
       socket.off("notifications:unread_count", handleUnreadCount);

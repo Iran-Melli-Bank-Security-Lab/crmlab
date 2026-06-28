@@ -10,6 +10,9 @@ import type {
 type ProjectResponse =
   | CreateProjectResponse
   | { data?: CreateProjectResponse; project?: CreateProjectResponse };
+type ProjectDetailResponse =
+  | ApiProjectResponse
+  | { data?: ApiProjectResponse; project?: ApiProjectResponse };
 type ProjectListResponse =
   | ApiProjectResponse[]
   | { data?: ApiProjectResponse[]; projects?: ApiProjectResponse[] };
@@ -113,12 +116,26 @@ function normalizeProjectsResponse(response: ProjectListResponse): Project[] {
   return projects.map(normalizeProject);
 }
 
+function normalizeProjectDetailResponse(response: ProjectDetailResponse): Project {
+  if ("project" in response && response.project) return normalizeProject(response.project);
+  if ("data" in response && response.data) return normalizeProject(response.data);
+  return normalizeProject(response as ApiProjectResponse);
+}
+
 export const projectsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getProjects: builder.query<Project[], ProjectListView>({
       query: (view) => ({ url: "/projects", params: { view } }),
       transformResponse: normalizeProjectsResponse,
       providesTags: ["Projects"],
+    }),
+    getProject: builder.query<Project, string>({
+      query: (projectId) => ({ url: `/projects/${projectId}` }),
+      transformResponse: normalizeProjectDetailResponse,
+      providesTags: (_result, _error, projectId) => [
+        "Projects",
+        { type: "Projects", id: projectId },
+      ],
     }),
     getProjectAssignees: builder.query<User[], { projectId: string; role: "pentester" }>({
       query: ({ projectId, role }) => ({
@@ -155,6 +172,7 @@ export const projectsApi = api.injectEndpoints({
 export const {
   useAssignProjectUsersMutation,
   useCreateProjectMutation,
+  useGetProjectQuery,
   useGetProjectAssigneesQuery,
   useGetProjectsQuery,
 } = projectsApi;

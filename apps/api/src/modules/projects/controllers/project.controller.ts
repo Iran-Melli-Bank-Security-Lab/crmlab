@@ -283,6 +283,21 @@ export const getProjects: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const getProject: RequestHandler = async (req, res, next) => {
+  try {
+    const projectId = String(req.params.id);
+    const project = await ProjectModel.findById(projectId).lean();
+
+    if (!project) {
+      throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    }
+
+    sendSuccess(res, { ...project, id: String(project._id) });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createProject: RequestHandler = async (req, res, next) => {
   try {
     const request = createProjectRequestSchema.parse(req.body);

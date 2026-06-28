@@ -10,12 +10,42 @@ import {
   mockUsers,
   upsertMockUser,
 } from "@/shared/mocks/data";
+import { mockProjects } from "@/shared/mocks/projects";
 import type { User } from "@/shared/types";
 import type { CreateProjectRequest } from "@/shared/types/api/projects";
 
 const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
 const endpoint = (path: string) => `${apiUrl}${path}`;
 let authenticatedUserId = mockUsers[0]?.id;
+
+function toApiProject(project: (typeof mockProjects)[number]) {
+  return {
+    id: project.id,
+    _id: project.id,
+    projectName: project.name,
+    projectGroupId: project.projectGroupId,
+    canonicalName: project.canonicalName,
+    version: project.version,
+    letterNumber: project.letterNumber,
+    type: project.discipline === "platform" ? "devops" : project.discipline,
+    platform: project.platform,
+    status: project.status,
+    ownerId: project.createdByUserId,
+    projectManager: project.securityManagerId,
+    qualityManager: project.qualityManagerId,
+    devops: project.devopsAssigneeId,
+    representative: project.representativeId,
+    assignedUserIds: project.assignedUserIds,
+    testExpiresAt: project.testExpiresAt || project.dueDate,
+    createdAt: project.createdAt,
+    updatedAt: project.lastActivity,
+    devopsInfo: project.devopsInfo || {
+      environment: project.environment,
+      repository: project.repository,
+      pipeline: project.pipeline,
+    },
+  };
+}
 
 export const handlers = [
   http.post(endpoint("/auth/login"), async ({ request }) => {
@@ -155,6 +185,15 @@ export const handlers = [
       url: "https://placehold.co/256x256?text=Avatar",
       fileId: crypto.randomUUID(),
     });
+  }),
+
+  http.get(endpoint("/projects/:id"), ({ params }) => {
+    const project = mockProjects.find((item) => item.id === params.id);
+    if (!project) {
+      return HttpResponse.json({ message: "Project not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json({ data: toApiProject(project) });
   }),
 
   http.post(endpoint("/projects"), async ({ request }) => {

@@ -10,6 +10,7 @@ import {
   assignUsersToProject,
   createProject,
   getEligibleProjectAssignees,
+  getProject,
   getProjects,
 } from "../controllers/project.controller";
 
@@ -29,6 +30,19 @@ router.get(
   getProjects
 );
 router.post(ROUTES.ROOT, requirePermission(PERMISSIONS.ADMIN_PROJECTS_CREATE), validate(createProjectSchema), createProject);
+router.get(
+  ROUTES.PARAM_ID,
+  requireAnyPermission(
+    PERMISSIONS.PENTEST_PROJECTS_READ,
+    PERMISSIONS.QA_PROJECTS_READ,
+    PERMISSIONS.DEVOPS_PROJECTS_READ,
+    PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.QUALITY_PROJECTS_READ
+  ),
+  requireProjectAccess("params.id"),
+  getProject
+);
 router.get(
   ROUTES.PROJECTS.ELIGIBLE_ASSIGNEES,
   requireProjectAccess("params.id"),

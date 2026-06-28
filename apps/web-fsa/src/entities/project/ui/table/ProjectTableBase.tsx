@@ -1,7 +1,14 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import {
   Badge,
   Box,
+  Center,
   HStack,
   IconButton,
   NativeSelect,
@@ -34,9 +41,48 @@ const priorityLabelKeys: Record<ProjectPriority, TranslationKey> = {
   critical: "projectTable.priority.critical",
 };
 
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 10, 20];
+const PROJECT_TABLE_PAGINATION_KEY_PREFIX = "crmlab:project-table-pagination:v1";
+
+type StoredPagination = {
+  page: number;
+  pageSize: number;
+};
+
+function getStoredPagination(storageKey: string): StoredPagination {
+  if (typeof window === "undefined") {
+    return { page: 1, pageSize: DEFAULT_PAGE_SIZE };
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(storageKey);
+    if (!storedValue) {
+      return { page: 1, pageSize: DEFAULT_PAGE_SIZE };
+    }
+
+    const parsedValue = JSON.parse(storedValue) as Partial<StoredPagination>;
+    const storedPageSize = Number(parsedValue.pageSize);
+    const storedPage = Number(parsedValue.page);
+
+    return {
+      page:
+        Number.isInteger(storedPage) && storedPage > 0
+          ? storedPage
+          : 1,
+      pageSize: PAGE_SIZE_OPTIONS.includes(storedPageSize)
+        ? storedPageSize
+        : DEFAULT_PAGE_SIZE,
+    };
+  } catch {
+    return { page: 1, pageSize: DEFAULT_PAGE_SIZE };
+  }
+}
+
 export default function ProjectTableBase({
   projects,
   columns,
+  paginationId = "default",
   title = "Projects",
   emptyTitle = "No projects found",
   actionLabel = "Open",
@@ -47,11 +93,16 @@ export default function ProjectTableBase({
   onAssignPentesters,
 }: ProjectTableBaseProps) {
   const { t } = useLanguage();
+  const paginationStorageKey = `${PROJECT_TABLE_PAGINATION_KEY_PREFIX}:${paginationId}`;
+  const initialPagination = useMemo(
+    () => getStoredPagination(paginationStorageKey),
+    [paginationStorageKey]
+  );
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "all">("all");
   const [priority, setPriority] = useState<ProjectPriority | "all">("all");
-  const [pageSize, setPageSize] = useState(5);
-  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPagination.pageSize);
+  const [page, setPage] = useState(initialPagination.page);
   const [sort, setSort] = useState<{
     key: ProjectTableColumn["key"];
     direction: SortDirection;
@@ -105,6 +156,21 @@ export default function ProjectTableBase({
     (project) => project.status === "blocked"
   ).length;
 
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(
+      paginationStorageKey,
+      JSON.stringify({ page: currentPage, pageSize })
+    );
+  }, [currentPage, pageSize, paginationStorageKey]);
+
   const handleSort = (column: ProjectTableColumn) => {
     if (!column.sortable) return;
     setSort((current) => ({
@@ -131,6 +197,8 @@ export default function ProjectTableBase({
       boxShadow="var(--surface-shadow)"
       overflow="hidden"
       backdropFilter="blur(18px)"
+      transition="box-shadow 160ms ease, border-color 160ms ease"
+      _hover={{ boxShadow: "var(--surface-shadow-hover)" }}
     >
       <VStack
         align="stretch"
@@ -219,6 +287,7 @@ export default function ProjectTableBase({
                   borderColor: "var(--apple-blue)",
                   boxShadow: "var(--focus-ring)",
                 }}
+                h="40px"
               >
                 <option value="all">{t("projectTable.allStatuses")}</option>
                 {Object.entries(statusLabelKeys).map(([value, labelKey]) => (
@@ -257,6 +326,7 @@ export default function ProjectTableBase({
                   borderColor: "var(--apple-blue)",
                   boxShadow: "var(--focus-ring)",
                 }}
+                h="40px"
               >
                 <option value="all">{t("projectTable.allPriorities")}</option>
                 {Object.entries(priorityLabelKeys).map(([value, labelKey]) => (
@@ -279,8 +349,28 @@ export default function ProjectTableBase({
           />
         </Box>
       ) : (
-        <Table.ScrollArea borderTop="1px solid" borderColor="var(--apple-border-soft)">
-          <Table.Root size="sm" variant="outline" interactive stickyHeader>
+        <Table.ScrollArea
+          borderTop="1px solid"
+          borderColor="var(--apple-border-soft)"
+          maxH="620px"
+          css={{
+            "&::-webkit-scrollbar": { height: "10px", width: "10px" },
+            "&::-webkit-scrollbar-thumb": {
+              background: "var(--apple-border)",
+              borderRadius: "999px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "var(--apple-surface-subtle)",
+            },
+          }}
+        >
+          <Table.Root
+            size="sm"
+            variant="line"
+            interactive
+            stickyHeader
+            bg="var(--apple-surface-raised)"
+          >
             <Table.Header>
               <Table.Row bg="var(--apple-surface-subtle)">
                 {columns.map((column) => (
@@ -297,6 +387,18 @@ export default function ProjectTableBase({
                     letterSpacing="0"
                     textTransform="uppercase"
                     borderColor="var(--apple-border-soft)"
+                    py={3}
+                    px={4}
+                    position="relative"
+                    _after={{
+                      content: '""',
+                      position: "absolute",
+                      insetInlineEnd: 0,
+                      top: "28%",
+                      bottom: "28%",
+                      width: "1px",
+                      bg: "var(--apple-border-soft)",
+                    }}
                   >
                     <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
                       <span>{column.labelKey ? t(column.labelKey) : column.label}</span>
@@ -315,6 +417,8 @@ export default function ProjectTableBase({
                     fontSize="xs"
                     textTransform="uppercase"
                     borderColor="var(--apple-border-soft)"
+                    py={3}
+                    px={4}
                   >
                     {t("projectTable.pentesters")}
                   </Table.ColumnHeader>
@@ -328,6 +432,8 @@ export default function ProjectTableBase({
                     fontSize="xs"
                     textTransform="uppercase"
                     borderColor="var(--apple-border-soft)"
+                    py={3}
+                    px={4}
                   >
                     {t("projectTable.action")}
                   </Table.ColumnHeader>
@@ -339,11 +445,14 @@ export default function ProjectTableBase({
                 <Table.Row
                   key={project.id}
                   bg="var(--apple-surface-raised)"
-                  transition="background 120ms ease"
+                  transition="background 120ms ease, box-shadow 120ms ease"
                   cursor={onRowClick || onRowDoubleClick ? "pointer" : "default"}
                   onClick={() => onRowClick?.(project)}
                   onDoubleClick={() => onRowDoubleClick?.(project)}
-                  _hover={{ bg: "var(--apple-surface-hover)" }}
+                  _hover={{
+                    bg: "var(--apple-surface-hover)",
+                    boxShadow: "inset 3px 0 0 var(--apple-blue)",
+                  }}
                 >
                   {columns.map((column) => (
                     <Table.Cell
@@ -353,6 +462,8 @@ export default function ProjectTableBase({
                       color="var(--apple-text)"
                       fontWeight="600"
                       borderColor="var(--apple-border-soft)"
+                      px={4}
+                      py={4}
                     >
                       <HStack
                         justify={column.align === "end" ? "end" : "start"}
@@ -385,7 +496,12 @@ export default function ProjectTableBase({
                     </Table.Cell>
                   ))}
                   {onAssignPentesters && (
-                    <Table.Cell textAlign="end" borderColor="var(--apple-border-soft)">
+                    <Table.Cell
+                      textAlign="end"
+                      borderColor="var(--apple-border-soft)"
+                      px={4}
+                      py={4}
+                    >
                       <Button
                         variant="secondary"
                         onClick={(event) => {
@@ -398,7 +514,12 @@ export default function ProjectTableBase({
                     </Table.Cell>
                   )}
                   {onAction && (
-                    <Table.Cell textAlign="end" borderColor="var(--apple-border-soft)">
+                    <Table.Cell
+                      textAlign="end"
+                      borderColor="var(--apple-border-soft)"
+                      px={4}
+                      py={4}
+                    >
                       <Button
                         variant="secondary"
                         onClick={(event) => {
@@ -426,9 +547,23 @@ export default function ProjectTableBase({
         borderColor="var(--apple-border-soft)"
         bg="var(--apple-surface-subtle)"
       >
-        <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
-          {t("projectTable.pageOf", { page: currentPage, total: totalPages })}
-        </Text>
+        <HStack gap={3} flexWrap="wrap">
+          <Center
+            minW="38px"
+            h="38px"
+            borderRadius="md"
+            bg="var(--apple-blue-soft)"
+            border="1px solid"
+            borderColor="var(--apple-blue-border)"
+            color="var(--apple-blue)"
+            fontWeight="850"
+          >
+            {currentPage}
+          </Center>
+          <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
+            {t("projectTable.pageOf", { page: currentPage, total: totalPages })}
+          </Text>
+        </HStack>
         <HStack gap={3} flexWrap="wrap">
           <NativeSelect.Root width="100px">
             <NativeSelect.Field
@@ -444,10 +579,13 @@ export default function ProjectTableBase({
                 borderColor: "var(--apple-blue)",
                 boxShadow: "var(--focus-ring)",
               }}
+              h="38px"
             >
-              <option value={5}>{t("projectTable.rows", { count: 5 })}</option>
-              <option value={10}>{t("projectTable.rows", { count: 10 })}</option>
-              <option value={20}>{t("projectTable.rows", { count: 20 })}</option>
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  {t("projectTable.rows", { count: size })}
+                </option>
+              ))}
             </NativeSelect.Field>
             <NativeSelect.Indicator />
           </NativeSelect.Root>

@@ -221,7 +221,8 @@ export let mockNotifications: AppNotification[] = [
     isRead: false,
     createdAt: new Date().toISOString(),
     entity: { id: "p1", type: "project", label: "Security Assessment" },
-    actionUrl: "/security-manager",
+    projectId: "prj-001",
+    actionUrl: "/projects/prj-001",
   },
   {
     id: "n2",
@@ -232,7 +233,8 @@ export let mockNotifications: AppNotification[] = [
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     entity: { id: "q1", type: "qa_result", label: "Regression Cycle" },
-    actionUrl: "/quality-manager",
+    projectId: "prj-002",
+    actionUrl: "/projects/prj-002",
   },
 ];
 

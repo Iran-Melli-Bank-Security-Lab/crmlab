@@ -23,6 +23,7 @@ export type ProjectTableColumn = {
 export type ProjectTableBaseProps = {
   projects: ProjectTableRow[];
   columns: ProjectTableColumn[];
+  paginationId?: string;
   title?: string;
   emptyTitle?: string;
   actionLabel?: string;

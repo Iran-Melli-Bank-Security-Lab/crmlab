@@ -442,3 +442,33 @@ export const projectTablePresets = {
     projectTableColumns.dueDate,
   ],
 } satisfies Record<string, ProjectTableColumn[]>;
+
+export const projectTableColumnContexts = [
+  { paginationId: "admin", labelKey: "projectViews.admin.label", columns: projectTablePresets.admin },
+  {
+    paginationId: "security-manager",
+    labelKey: "projectViews.security.label",
+    columns: projectTablePresets.securityManager,
+  },
+  {
+    paginationId: "pentest",
+    labelKey: "projectViews.pentest.label",
+    columns: projectTablePresets.pentester,
+  },
+  { paginationId: "devops", labelKey: "projectViews.devops.label", columns: projectTablePresets.devops },
+  {
+    paginationId: "quality-manager",
+    labelKey: "projectViews.quality.label",
+    columns: projectTablePresets.qualityManager,
+  },
+  { paginationId: "qa", labelKey: "projectViews.qa.label", columns: projectTablePresets.qa },
+  {
+    paginationId: "representative",
+    labelKey: "projectViews.representative.label",
+    columns: projectTablePresets.admin,
+  },
+] satisfies Array<{
+  paginationId: string;
+  labelKey: TranslationKey;
+  columns: ProjectTableColumn[];
+}>;

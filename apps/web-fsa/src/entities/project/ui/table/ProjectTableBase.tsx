@@ -17,6 +17,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import EmptyState from "@/shared/ui/feedback/EmptyState";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/app/store/store";
 import Button from "@/shared/ui/primitives/Button";
 import Input from "@/shared/ui/primitives/Input";
 import { useLanguage } from "@/features/language/model";
@@ -93,6 +95,16 @@ export default function ProjectTableBase({
   onAssignPentesters,
 }: ProjectTableBaseProps) {
   const { t } = useLanguage();
+  const configuredColumnKeys = useSelector(
+    (state: RootState) => state.ui.visibleProjectColumns[paginationId]
+  );
+  const visibleColumns = useMemo(
+    () =>
+      configuredColumnKeys
+        ? columns.filter((column) => configuredColumnKeys.includes(String(column.key)))
+        : columns,
+    [columns, configuredColumnKeys]
+  );
   const paginationStorageKey = `${PROJECT_TABLE_PAGINATION_KEY_PREFIX}:${paginationId}`;
   const initialPagination = useMemo(
     () => getStoredPagination(paginationStorageKey),
@@ -373,7 +385,7 @@ export default function ProjectTableBase({
           >
             <Table.Header>
               <Table.Row bg="var(--apple-surface-subtle)">
-                {columns.map((column) => (
+                {visibleColumns.map((column) => (
                   <Table.ColumnHeader
                     key={column.key}
                     minW={column.minW}
@@ -454,7 +466,7 @@ export default function ProjectTableBase({
                     boxShadow: "inset 3px 0 0 var(--apple-blue)",
                   }}
                 >
-                  {columns.map((column) => (
+                  {visibleColumns.map((column) => (
                     <Table.Cell
                       key={column.key}
                       textAlign={column.align}

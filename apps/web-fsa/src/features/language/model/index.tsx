@@ -394,6 +394,10 @@ const en = {
     "settings.themeState": "Theme State Example",
     "settings.currentTheme": "Current theme: {theme}",
     "settings.toggleTheme": "Toggle Theme",
+    "settings.projectTables.title": "Project Table Settings",
+    "settings.projectTables.description":
+      "Choose the visible columns for each project table.",
+    "settings.projectTables.reset": "Reset to default",
     "adminUsers.title": "User Management",
     "adminUsers.description":
       "Manage users, role assignments, permissions, and account states.",
@@ -804,6 +808,10 @@ const fa: Record<TranslationKey, string> = {
     "settings.themeState": "نمونه وضعیت پوسته",
     "settings.currentTheme": "پوسته فعلی: {theme}",
     "settings.toggleTheme": "تغییر پوسته",
+    "settings.projectTables.title": "تنظیمات جدول پروژه‌ها",
+    "settings.projectTables.description":
+      "ستون‌های قابل نمایش را برای هر جدول پروژه انتخاب کنید.",
+    "settings.projectTables.reset": "بازنشانی به پیش‌فرض",
     "adminUsers.title": "مدیریت کاربران",
     "adminUsers.description":
       "کاربران، تخصیص نقش‌ها، دسترسی‌ها و وضعیت حساب‌ها را مدیریت کنید.",

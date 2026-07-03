@@ -98,13 +98,25 @@ export default function ProjectTableBase({
   const configuredColumnKeys = useSelector(
     (state: RootState) => state.ui.visibleProjectColumns[paginationId]
   );
-  const visibleColumns = useMemo(
-    () =>
-      configuredColumnKeys
-        ? columns.filter((column) => configuredColumnKeys.includes(String(column.key)))
-        : columns,
-    [columns, configuredColumnKeys]
+  const configuredColumnOrder = useSelector(
+    (state: RootState) => state.ui.projectTableColumnOrder[paginationId]
   );
+  const visibleColumns = useMemo(() => {
+    const enabledColumns = configuredColumnKeys
+        ? columns.filter((column) => configuredColumnKeys.includes(String(column.key)))
+        : columns;
+
+    if (!configuredColumnOrder) return enabledColumns;
+
+    const positions = new Map(
+      configuredColumnOrder.map((key, index) => [key, index])
+    );
+    return [...enabledColumns].sort(
+      (left, right) =>
+        (positions.get(String(left.key)) ?? columns.length) -
+        (positions.get(String(right.key)) ?? columns.length)
+    );
+  }, [columns, configuredColumnKeys, configuredColumnOrder]);
   const paginationStorageKey = `${PROJECT_TABLE_PAGINATION_KEY_PREFIX}:${paginationId}`;
   const initialPagination = useMemo(
     () => getStoredPagination(paginationStorageKey),

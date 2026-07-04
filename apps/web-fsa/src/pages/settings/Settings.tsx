@@ -40,22 +40,37 @@ export default function Settings() {
   return (
     <VStack align="stretch" gap={5}>
       <Heading>{t("settings.title")}</Heading>
-      <Card title={t("settings.themeState")}>
-        <VStack align="start" gap={3}>
-          <Text>{t("settings.currentTheme", { theme })}</Text>
-          <Button
-            variant="secondary"
-            onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
-          >
-            {t("settings.toggleTheme")}
-          </Button>
-        </VStack>
-      </Card>
-      <Card title={t("settings.projectTables.title")}>
-        <VStack align="stretch" gap={5}>
-          <Text color="var(--apple-muted)">
+      <Box as="section" aria-labelledby="appearance-settings-title">
+        <Heading id="appearance-settings-title" size="md" mb={3}>
+          {t("settings.appearance.title")}
+        </Heading>
+        <Card title={t("settings.appearance.theme")}>
+          <VStack align="start" gap={3}>
+            <Text>
+              {t("settings.currentTheme", {
+                theme: t(theme === "light" ? "settings.theme.light" : "settings.theme.dark"),
+              })}
+            </Text>
+            <Button
+              variant="secondary"
+              onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
+            >
+              {t(theme === "light" ? "settings.switchToDark" : "settings.switchToLight")}
+            </Button>
+          </VStack>
+        </Card>
+      </Box>
+
+      <Box as="section" aria-labelledby="project-table-settings-title">
+        <Box mb={4}>
+          <Heading id="project-table-settings-title" size="md">
+            {t("settings.projectTables.title")}
+          </Heading>
+          <Text color="var(--apple-muted)" mt={1}>
             {t("settings.projectTables.description")}
           </Text>
+        </Box>
+        <VStack align="stretch" gap={5}>
           {projectTableColumnContexts.map((context) => {
             const defaultKeys = context.columns.map((column) => String(column.key));
             const enabledKeys = visibleProjectColumns[context.paginationId] ?? defaultKeys;
@@ -77,9 +92,19 @@ export default function Settings() {
                 borderColor="var(--apple-border-soft)"
                 borderRadius="md"
                 p={4}
+                bg="var(--apple-surface-raised)"
+                boxShadow="var(--surface-shadow)"
               >
                 <HStack justify="space-between" mb={3} gap={3}>
-                  <Text fontWeight="800">{t(context.labelKey)}</Text>
+                  <Box>
+                    <Text fontWeight="800">{t(context.labelKey)}</Text>
+                    <Text color="var(--apple-muted)" fontSize="sm">
+                      {t("settings.projectTables.visibleCount", {
+                        selected: enabledKeys.length,
+                        total: defaultKeys.length,
+                      })}
+                    </Text>
+                  </Box>
                   <Button
                     variant="secondary"
                     onClick={() => dispatch(resetProjectTableVisibleColumns(context.paginationId))}
@@ -200,7 +225,7 @@ export default function Settings() {
             );
           })}
         </VStack>
-      </Card>
+      </Box>
     </VStack>
   );
 }

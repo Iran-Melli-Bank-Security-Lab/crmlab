@@ -1,17 +1,18 @@
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { projectTablePresets } from "../columns";
 import ProjectTableBase from "../ProjectTableBase";
 import type { ProjectTableRow, ProjectTableViewProps } from "../types";
 
-export default function SecurityProjectsTable({
+function SecurityProjectsTable({
   projects,
   title,
   onAssignPentesters,
 }: ProjectTableViewProps) {
   const navigate = useNavigate();
-  const openDetails = (project: ProjectTableRow) => {
+  const openDetails = useCallback((project: ProjectTableRow) => {
     navigate(`/projects/${project.id}`);
-  };
+  }, [navigate]);
 
   return (
     <ProjectTableBase
@@ -26,3 +27,5 @@ export default function SecurityProjectsTable({
     />
   );
 }
+
+export default memo(SecurityProjectsTable);

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Box, chakra, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { hasAnyExplicitPermissionGrant } from "@/entities/permission/model/permissionGrants";
@@ -12,17 +12,14 @@ import EmptyState from "@/shared/ui/feedback/EmptyState";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project } from "@/shared/types";
-
-const PentesterAssignmentDock = lazy(
-  () => import("@/entities/project/ui/assignment/PentesterAssignmentDock")
-);
+import PentesterAssignmentDock from "@/entities/project/ui/assignment/PentesterAssignmentDock";
 
 export default function Projects() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { permissions } = usePermission();
-  const [assignmentProject, setAssignmentProject] = useState<Project | null>(null);
+  const [assignmentProjectId, setAssignmentProjectId] = useState<string | null>(null);
   const [isAssignmentDockOpen, setIsAssignmentDockOpen] = useState(false);
   const assignmentCloseTimer = useRef<ReturnType<typeof globalThis.setTimeout> | undefined>(
     undefined
@@ -50,31 +47,35 @@ export default function Projects() {
   } = useGetProjectsQuery(activeView.id, {
     skip: !activeView,
   });
+  const assignmentProject = useMemo(
+    () => activeProjects.find((project) => project.id === assignmentProjectId),
+    [activeProjects, assignmentProjectId]
+  );
 
-  const selectView = (viewId: string) => {
+  const selectView = useCallback((viewId: string) => {
     setSearchParams({ view: viewId });
-  };
+  }, [setSearchParams]);
 
-  const createFromProject = (project: Project) => {
+  const createFromProject = useCallback((project: Project) => {
     const params = new globalThis.URLSearchParams({ sourceProjectId: project.id });
     if (project.projectGroupId) params.set("projectGroupId", project.projectGroupId);
     navigate(`/projects/create?${params.toString()}`);
-  };
+  }, [navigate]);
 
-  const openAssignmentDock = (project: Project) => {
+  const openAssignmentDock = useCallback((project: Project) => {
     if (assignmentCloseTimer.current) {
       globalThis.clearTimeout(assignmentCloseTimer.current);
     }
 
-    setAssignmentProject(project);
+    setAssignmentProjectId(project.id);
     setIsAssignmentDockOpen(true);
-  };
+  }, []);
   const projectViewKey = (
     viewId: string,
     field: "label" | "title" | "description" | "tableTitle"
   ) => `projectViews.${viewId}.${field}` as TranslationKey;
 
-  const closeAssignmentDock = () => {
+  const closeAssignmentDock = useCallback(() => {
     setIsAssignmentDockOpen(false);
 
     if (assignmentCloseTimer.current) {
@@ -82,10 +83,10 @@ export default function Projects() {
     }
 
     assignmentCloseTimer.current = globalThis.setTimeout(() => {
-      setAssignmentProject(null);
+      setAssignmentProjectId(null);
       assignmentCloseTimer.current = undefined;
     }, 240);
-  };
+  }, []);
 
   useEffect(
     () => () => {
@@ -205,16 +206,11 @@ export default function Projects() {
         />
       )}
 
-      {assignmentProject && (
-        <Suspense fallback={null}>
-          <PentesterAssignmentDock
-            key={assignmentProject.id}
-            open={isAssignmentDockOpen}
-            project={assignmentProject}
-            onClose={closeAssignmentDock}
-          />
-        </Suspense>
-      )}
+      <PentesterAssignmentDock
+        open={isAssignmentDockOpen}
+        project={assignmentProject}
+        onClose={closeAssignmentDock}
+      />
     </VStack>
   );
 }

@@ -59,10 +59,20 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
   const normalizedDraft = draft.trim();
 
   return (
-    <HStack dir={dir} gap={2} gridColumn={{ base: "1 / -1", md: "auto" }}>
+    <Box
+      dir={dir}
+      display="grid"
+      gridTemplateColumns={{ base: "minmax(0, 1fr) auto", lg: "minmax(0, 1fr) auto auto" }}
+      gap={2}
+      gridColumn={{ base: "1 / -1", lg: "auto" }}
+      alignItems="center"
+      width="full"
+    >
       <Input
         dir={dir}
         textAlign={dir === "rtl" ? "right" : "left"}
+        gridColumn={{ base: "1 / -1", lg: "auto" }}
+        minW={0}
         size="sm"
         value={draft}
         placeholder={placeholder}
@@ -72,6 +82,7 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
       <Button
         colorPalette="blue"
         size="xs"
+        whiteSpace="nowrap"
         disabled={normalizedDraft === value}
         onClick={() => {
           setDraft(normalizedDraft);
@@ -83,6 +94,7 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
       <Button
         variant="ghost"
         size="xs"
+        whiteSpace="nowrap"
         disabled={!draft}
         onClick={() => {
           setDraft("");
@@ -91,7 +103,7 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
       >
         {clearLabel}
       </Button>
-    </HStack>
+    </Box>
   );
 });
 
@@ -222,6 +234,8 @@ export default function Settings() {
                 key={context.paginationId}
                 value={context.paginationId}
                 flexShrink={0}
+                whiteSpace="nowrap"
+                textAlign="center"
               >
                 {t(context.labelKey)}
               </Tabs.Trigger>
@@ -248,8 +262,10 @@ export default function Settings() {
                 value={context.paginationId}
                 pt={4}
                 dir={dir}
+                textAlign={dir === "rtl" ? "right" : "left"}
               >
               <Box
+                dir={dir}
                 border="1px solid"
                 borderColor="var(--apple-border-soft)"
                 borderRadius="md"
@@ -279,7 +295,7 @@ export default function Settings() {
                   </Button>
                 </HStack>
                 <Box
-                  display={{ base: "none", md: "grid" }}
+                  display={{ base: "none", lg: "grid" }}
                   gridTemplateColumns="minmax(180px, 1fr) minmax(240px, 360px) 64px"
                   gap={3}
                   px={3}
@@ -306,8 +322,10 @@ export default function Settings() {
                         display="grid"
                         gridTemplateColumns={{
                           base: "minmax(0, 1fr) auto",
-                          md: "minmax(180px, 1fr) minmax(240px, 360px) 64px",
+                          lg: "minmax(180px, 1fr) minmax(240px, 360px) 64px",
                         }}
+                        dir={dir}
+                        textAlign={dir === "rtl" ? "right" : "left"}
                         alignItems="center"
                         gap={3}
                         px={3}
@@ -351,6 +369,7 @@ export default function Settings() {
                         }}
                       >
                         <Checkbox.Root
+                          dir={dir}
                           display="flex"
                           alignItems="center"
                           gap={2}
@@ -436,6 +455,7 @@ export default function Settings() {
                           px={2}
                           py={1}
                           borderRadius="sm"
+                          justifySelf="end"
                           _hover={{ bg: "var(--apple-surface-hover)" }}
                           userSelect="none"
                           onDragStart={(event) => {

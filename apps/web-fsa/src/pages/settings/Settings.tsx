@@ -1,5 +1,17 @@
 import { useState } from "react";
-import { Box, Checkbox, Heading, HStack, Input, Tabs, Text, VStack } from "@chakra-ui/react";
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  Heading,
+  HStack,
+  Input,
+  Tabs,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   resetProjectTableVisibleColumns,
@@ -18,8 +30,6 @@ import {
   useSaveProjectTableSettingsMutation,
   useSyncProjectTableSettings,
 } from "@/features/ui-state/api/projectTableSettingsApi";
-import Card from "@/shared/ui/primitives/Card";
-import Button from "@/shared/ui/primitives/Button";
 
 export default function Settings() {
   const { t } = useLanguage();
@@ -83,21 +93,29 @@ export default function Settings() {
         <Heading id="appearance-settings-title" size="md" mb={3}>
           {t("settings.appearance.title")}
         </Heading>
-        <Card title={t("settings.appearance.theme")}>
-          <VStack align="start" gap={3}>
-            <Text>
-              {t("settings.currentTheme", {
-                theme: t(theme === "light" ? "settings.theme.light" : "settings.theme.dark"),
-              })}
-            </Text>
+        <Card.Root variant="outline" size="sm">
+          <Card.Body>
+            <HStack justify="space-between" gap={4} flexWrap="wrap">
+              <Box>
+                <Text fontWeight="700">{t("settings.appearance.theme")}</Text>
+                <Text color="var(--apple-muted)" fontSize="sm">
+                  {t("settings.currentTheme", {
+                    theme: t(
+                      theme === "light" ? "settings.theme.light" : "settings.theme.dark"
+                    ),
+                  })}
+                </Text>
+              </Box>
             <Button
-              variant="secondary"
+              variant="outline"
+              size="sm"
               onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
             >
               {t(theme === "light" ? "settings.switchToDark" : "settings.switchToLight")}
             </Button>
-          </VStack>
-        </Card>
+            </HStack>
+          </Card.Body>
+        </Card.Root>
       </Box>
 
       <Box as="section" aria-labelledby="project-table-settings-title">
@@ -105,11 +123,8 @@ export default function Settings() {
           <Heading id="project-table-settings-title" size="md">
             {t("settings.projectTables.title")}
           </Heading>
-          <Text color="var(--apple-muted)" mt={1}>
+          <Text color="var(--apple-muted)" fontSize="sm" mt={1} maxW="3xl">
             {t("settings.projectTables.description")}
-          </Text>
-          <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
-            {t("settings.projectTables.aliasHelp")}
           </Text>
         </Box>
         <Text fontSize="sm" fontWeight="700" mb={2}>
@@ -120,8 +135,8 @@ export default function Settings() {
             {t("settings.projectTables.noContexts")}
           </Text>
         ) : (
-        <Tabs.Root defaultValue={allowedContexts[0].paginationId} variant="enclosed">
-          <Tabs.List overflowX="auto" overflowY="hidden" flexWrap="nowrap">
+        <Tabs.Root defaultValue={allowedContexts[0].paginationId} variant="enclosed" size="sm">
+          <Tabs.List overflowX="auto" overflowY="hidden" flexWrap="nowrap" gap={1}>
             {allowedContexts.map((context) => (
               <Tabs.Trigger
                 key={context.paginationId}
@@ -161,38 +176,61 @@ export default function Settings() {
                 bg="var(--apple-surface-raised)"
                 boxShadow="var(--surface-shadow)"
               >
-                <HStack justify="space-between" mb={3} gap={3}>
+                <HStack justify="space-between" mb={4} gap={3} flexWrap="wrap">
                   <Box>
                     <Text fontWeight="800">{t(context.labelKey)}</Text>
-                    <Text color="var(--apple-muted)" fontSize="sm">
+                    <Badge variant="subtle" colorPalette="blue" mt={1}>
                       {t("settings.projectTables.visibleCount", {
                         selected: enabledKeys.length,
                         total: defaultKeys.length,
                       })}
-                    </Text>
+                    </Badge>
                   </Box>
                   <Button
-                    variant="secondary"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       dispatch(resetProjectTableVisibleColumns(context.paginationId));
                       void resetProjectTableSettings(context.paginationId);
                     }}
                   >
-                    {t("settings.projectTables.reset")}
+                    {t("settings.projectTables.restoreDefaults")}
                   </Button>
                 </HStack>
+                <Box
+                  display={{ base: "none", md: "grid" }}
+                  gridTemplateColumns="minmax(180px, 1fr) minmax(240px, 360px) 64px"
+                  gap={3}
+                  px={3}
+                  pb={2}
+                >
+                  <Text color="var(--apple-muted)" fontSize="xs" fontWeight="700">
+                    {t("settings.projectTables.column")}
+                  </Text>
+                  <Text color="var(--apple-muted)" fontSize="xs" fontWeight="700">
+                    {t("settings.projectTables.displayLabel")}
+                  </Text>
+                  <Text color="var(--apple-muted)" fontSize="xs" fontWeight="700">
+                    {t("settings.projectTables.order")}
+                  </Text>
+                </Box>
                 <VStack align="stretch" gap={2}>
                   {orderedColumns.map((column, index) => {
                     const key = String(column.key);
                     const dropTargetId = `${context.paginationId}:${key}`;
                     const label = column.labelKey ? t(column.labelKey) : column.label;
                     return (
-                      <HStack
+                      <Box
                         key={key}
-                        justify="space-between"
+                        display="grid"
+                        gridTemplateColumns={{
+                          base: "minmax(0, 1fr) auto",
+                          md: "minmax(180px, 1fr) minmax(240px, 360px) 64px",
+                        }}
+                        alignItems="center"
                         gap={3}
-                        flexWrap={{ base: "wrap", md: "nowrap" }}
-                        p={2}
+                        px={3}
+                        py={2}
                         border="1px solid"
                         borderColor={
                           dropTargetKey === dropTargetId
@@ -261,7 +299,7 @@ export default function Settings() {
                         </Checkbox.Root>
                         <HStack
                           gap={2}
-                          flex={{ base: "1 0 100%", md: "0 1 360px" }}
+                          gridColumn={{ base: "1 / -1", md: "auto" }}
                         >
                           <Input
                             size="sm"
@@ -293,7 +331,8 @@ export default function Settings() {
                             }}
                           />
                           <Button
-                            variant="secondary"
+                            variant="ghost"
+                            size="xs"
                             disabled={!aliases[key]}
                             onClick={() => {
                               const nextAliases = { ...aliases };
@@ -303,7 +342,7 @@ export default function Settings() {
                                   paginationId: context.paginationId,
                                   columnKey: key,
                                 })
-                              )
+                              );
                               persistContext(
                                 context.paginationId,
                                 enabledKeys,
@@ -312,7 +351,7 @@ export default function Settings() {
                               );
                             }}
                           >
-                            {t("settings.projectTables.resetAlias")}
+                            {t("settings.projectTables.clearAlias")}
                           </Button>
                         </HStack>
                         <Box
@@ -326,6 +365,9 @@ export default function Settings() {
                           fontSize="xl"
                           lineHeight="1"
                           px={2}
+                          py={1}
+                          borderRadius="sm"
+                          _hover={{ bg: "var(--apple-surface-hover)" }}
                           userSelect="none"
                           onDragStart={(event) => {
                             event.dataTransfer.effectAllowed = "move";
@@ -356,9 +398,14 @@ export default function Settings() {
                             }
                           }}
                         >
-                          ⋮⋮
+                          <HStack gap={1} justify="end">
+                            <Text fontSize="xs" fontWeight="700">
+                              {index + 1}
+                            </Text>
+                            <Text aria-hidden>⋮⋮</Text>
+                          </HStack>
                         </Box>
-                      </HStack>
+                      </Box>
                     );
                   })}
                 </VStack>

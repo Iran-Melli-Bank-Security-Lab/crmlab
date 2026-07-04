@@ -400,7 +400,7 @@ const en = {
     "settings.switchToLight": "Switch to light theme",
     "settings.projectTables.title": "Project Table Settings",
     "settings.projectTables.description":
-      "Choose visible columns and drag the handle to reorder them.",
+      "Choose visible columns, add optional display labels, and drag rows into order. Changes apply only to your account.",
     "settings.projectTables.selectContext": "Select a project table",
     "settings.projectTables.noContexts":
       "You do not have permission to configure any project tables.",
@@ -408,9 +408,12 @@ const en = {
       "Aliases change display labels only; project data and API fields stay unchanged.",
     "settings.projectTables.aliasPlaceholder": "Optional display alias",
     "settings.projectTables.aliasLabel": "Display alias for {column}",
-    "settings.projectTables.resetAlias": "Reset alias",
+    "settings.projectTables.clearAlias": "Clear",
+    "settings.projectTables.column": "Column",
+    "settings.projectTables.displayLabel": "Display label (optional)",
+    "settings.projectTables.order": "Order",
     "settings.projectTables.visibleCount": "{selected} of {total} columns visible",
-    "settings.projectTables.reset": "Reset to default",
+    "settings.projectTables.restoreDefaults": "Restore defaults",
     "settings.projectTables.reorder": "Drag to reorder {column}",
     "adminUsers.title": "User Management",
     "adminUsers.description":
@@ -828,7 +831,7 @@ const fa: Record<TranslationKey, string> = {
     "settings.switchToLight": "تغییر به پوسته روشن",
     "settings.projectTables.title": "تنظیمات جدول پروژه‌ها",
     "settings.projectTables.description":
-      "ستون‌های قابل نمایش را انتخاب کنید و برای تغییر ترتیب، دستگیره را بکشید.",
+      "ستون‌های قابل نمایش و نام نمایشی اختیاری را انتخاب کنید و ردیف‌ها را برای مرتب‌سازی بکشید. تغییرات فقط برای حساب شما اعمال می‌شوند.",
     "settings.projectTables.selectContext": "یک جدول پروژه را انتخاب کنید",
     "settings.projectTables.noContexts":
       "شما اجازه تنظیم هیچ‌یک از جدول‌های پروژه را ندارید.",
@@ -836,9 +839,12 @@ const fa: Record<TranslationKey, string> = {
       "نام‌های سفارشی فقط برچسب نمایشی را تغییر می‌دهند؛ داده پروژه و فیلدهای API بدون تغییر می‌مانند.",
     "settings.projectTables.aliasPlaceholder": "نام نمایشی اختیاری",
     "settings.projectTables.aliasLabel": "نام نمایشی برای {column}",
-    "settings.projectTables.resetAlias": "بازنشانی نام",
+    "settings.projectTables.clearAlias": "پاک کردن",
+    "settings.projectTables.column": "ستون",
+    "settings.projectTables.displayLabel": "نام نمایشی (اختیاری)",
+    "settings.projectTables.order": "ترتیب",
     "settings.projectTables.visibleCount": "{selected} ستون از {total} ستون قابل نمایش است",
-    "settings.projectTables.reset": "بازنشانی به پیش‌فرض",
+    "settings.projectTables.restoreDefaults": "بازیابی پیش‌فرض‌ها",
     "settings.projectTables.reorder": "برای تغییر جایگاه {column} بکشید",
     "adminUsers.title": "مدیریت کاربران",
     "adminUsers.description":

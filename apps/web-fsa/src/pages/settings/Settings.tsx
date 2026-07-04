@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Box, Checkbox, Heading, HStack, Tabs, Text, VStack } from "@chakra-ui/react";
+import { Box, Checkbox, Heading, HStack, Input, Tabs, Text, VStack } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   resetProjectTableVisibleColumns,
+  resetProjectTableColumnAlias,
+  setProjectTableColumnAlias,
   setProjectTableColumnOrder,
   setProjectTableVisibleColumns,
   setTheme,
@@ -21,9 +23,12 @@ export default function Settings() {
     key: string;
   } | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
-  const { theme, visibleProjectColumns, projectTableColumnOrder } = useSelector(
-    (state: RootState) => state.ui
-  );
+  const {
+    theme,
+    visibleProjectColumns,
+    projectTableColumnOrder,
+    projectTableColumnAliases,
+  } = useSelector((state: RootState) => state.ui);
 
   const moveColumn = (
     paginationId: string,
@@ -69,6 +74,9 @@ export default function Settings() {
           <Text color="var(--apple-muted)" mt={1}>
             {t("settings.projectTables.description")}
           </Text>
+          <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
+            {t("settings.projectTables.aliasHelp")}
+          </Text>
         </Box>
         <Text fontSize="sm" fontWeight="700" mb={2}>
           {t("settings.projectTables.selectContext")}
@@ -89,6 +97,7 @@ export default function Settings() {
             const defaultKeys = context.columns.map((column) => String(column.key));
             const enabledKeys = visibleProjectColumns[context.paginationId] ?? defaultKeys;
             const savedOrder = projectTableColumnOrder[context.paginationId] ?? defaultKeys;
+            const aliases = projectTableColumnAliases[context.paginationId] ?? {};
             const orderedKeys = [
               ...savedOrder.filter((key) => defaultKeys.includes(key)),
               ...defaultKeys.filter((key) => !savedOrder.includes(key)),
@@ -140,6 +149,7 @@ export default function Settings() {
                         key={key}
                         justify="space-between"
                         gap={3}
+                        flexWrap={{ base: "wrap", md: "nowrap" }}
                         p={2}
                         border="1px solid"
                         borderColor={
@@ -198,6 +208,42 @@ export default function Settings() {
                           <Checkbox.Control />
                           <Checkbox.Label>{label}</Checkbox.Label>
                         </Checkbox.Root>
+                        <HStack
+                          gap={2}
+                          flex={{ base: "1 0 100%", md: "0 1 360px" }}
+                        >
+                          <Input
+                            size="sm"
+                            value={aliases[key] ?? ""}
+                            placeholder={t("settings.projectTables.aliasPlaceholder")}
+                            aria-label={t("settings.projectTables.aliasLabel", {
+                              column: label,
+                            })}
+                            onChange={(event) =>
+                              dispatch(
+                                setProjectTableColumnAlias({
+                                  paginationId: context.paginationId,
+                                  columnKey: key,
+                                  alias: event.target.value,
+                                })
+                              )
+                            }
+                          />
+                          <Button
+                            variant="secondary"
+                            disabled={!aliases[key]}
+                            onClick={() =>
+                              dispatch(
+                                resetProjectTableColumnAlias({
+                                  paginationId: context.paginationId,
+                                  columnKey: key,
+                                })
+                              )
+                            }
+                          >
+                            {t("settings.projectTables.resetAlias")}
+                          </Button>
+                        </HStack>
                         <Box
                           draggable
                           role="button"

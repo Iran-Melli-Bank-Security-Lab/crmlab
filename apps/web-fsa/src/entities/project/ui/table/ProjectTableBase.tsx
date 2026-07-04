@@ -101,6 +101,9 @@ export default function ProjectTableBase({
   const configuredColumnOrder = useSelector(
     (state: RootState) => state.ui.projectTableColumnOrder[paginationId]
   );
+  const columnAliases = useSelector(
+    (state: RootState) => state.ui.projectTableColumnAliases[paginationId]
+  );
   const visibleColumns = useMemo(() => {
     const enabledColumns = configuredColumnKeys
         ? columns.filter((column) => configuredColumnKeys.includes(String(column.key)))
@@ -425,7 +428,10 @@ export default function ProjectTableBase({
                     }}
                   >
                     <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
-                      <span>{column.labelKey ? t(column.labelKey) : column.label}</span>
+                      <span>
+                        {columnAliases?.[String(column.key)]?.trim() ||
+                          (column.labelKey ? t(column.labelKey) : column.label)}
+                      </span>
                       {column.sortable && sort.key === column.key && (
                         <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
                       )}

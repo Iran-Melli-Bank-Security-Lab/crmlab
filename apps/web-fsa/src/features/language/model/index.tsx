@@ -402,6 +402,11 @@ const en = {
     "settings.projectTables.description":
       "Choose visible columns and drag the handle to reorder them.",
     "settings.projectTables.selectContext": "Select a project table",
+    "settings.projectTables.aliasHelp":
+      "Aliases change display labels only; project data and API fields stay unchanged.",
+    "settings.projectTables.aliasPlaceholder": "Optional display alias",
+    "settings.projectTables.aliasLabel": "Display alias for {column}",
+    "settings.projectTables.resetAlias": "Reset alias",
     "settings.projectTables.visibleCount": "{selected} of {total} columns visible",
     "settings.projectTables.reset": "Reset to default",
     "settings.projectTables.reorder": "Drag to reorder {column}",
@@ -823,6 +828,11 @@ const fa: Record<TranslationKey, string> = {
     "settings.projectTables.description":
       "ستون‌های قابل نمایش را انتخاب کنید و برای تغییر ترتیب، دستگیره را بکشید.",
     "settings.projectTables.selectContext": "یک جدول پروژه را انتخاب کنید",
+    "settings.projectTables.aliasHelp":
+      "نام‌های سفارشی فقط برچسب نمایشی را تغییر می‌دهند؛ داده پروژه و فیلدهای API بدون تغییر می‌مانند.",
+    "settings.projectTables.aliasPlaceholder": "نام نمایشی اختیاری",
+    "settings.projectTables.aliasLabel": "نام نمایشی برای {column}",
+    "settings.projectTables.resetAlias": "بازنشانی نام",
     "settings.projectTables.visibleCount": "{selected} ستون از {total} ستون قابل نمایش است",
     "settings.projectTables.reset": "بازنشانی به پیش‌فرض",
     "settings.projectTables.reorder": "برای تغییر جایگاه {column} بکشید",

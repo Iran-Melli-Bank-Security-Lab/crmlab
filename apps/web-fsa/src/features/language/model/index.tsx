@@ -179,7 +179,7 @@ const en = {
     "projects.emptyTitle": "No project views available",
     "projects.emptyDescription":
       "Your account does not have permission to view projects yet.",
-    "projectViews.admin.label": "Created",
+    "projectViews.admin.label": "Admin",
     "projectViews.admin.title": "Created Projects",
     "projectViews.admin.description":
       "Monitor the projects created by your admin account across delivery workspaces.",
@@ -611,7 +611,7 @@ const fa: Record<TranslationKey, string> = {
     "projects.loadingTable": "در حال بارگذاری جدول پروژه...",
     "projects.emptyTitle": "نمای پروژه‌ای در دسترس نیست",
     "projects.emptyDescription": "حساب شما هنوز مجوز مشاهده پروژه‌ها را ندارد.",
-    "projectViews.admin.label": "ایجاد شده",
+    "projectViews.admin.label": "ادمین",
     "projectViews.admin.title": "پروژه‌های ایجاد شده",
     "projectViews.admin.description":
       "پروژه‌هایی را که با حساب مدیر خود در فضاهای کاری تحویل ایجاد کرده‌اید پایش کنید.",

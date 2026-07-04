@@ -32,6 +32,7 @@ import {
 } from "@/features/ui-state/api/projectTableSettingsApi";
 
 type ColumnAliasEditorProps = {
+  dir: "ltr" | "rtl";
   value: string;
   placeholder: string;
   ariaLabel: string;
@@ -42,6 +43,7 @@ type ColumnAliasEditorProps = {
 };
 
 const ColumnAliasEditor = memo(function ColumnAliasEditor({
+  dir,
   value,
   placeholder,
   ariaLabel,
@@ -57,8 +59,10 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
   const normalizedDraft = draft.trim();
 
   return (
-    <HStack gap={2} gridColumn={{ base: "1 / -1", md: "auto" }}>
+    <HStack dir={dir} gap={2} gridColumn={{ base: "1 / -1", md: "auto" }}>
       <Input
+        dir={dir}
+        textAlign={dir === "rtl" ? "right" : "left"}
         size="sm"
         value={draft}
         placeholder={placeholder}
@@ -92,7 +96,7 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
 });
 
 export default function Settings() {
-  const { t } = useLanguage();
+  const { dir, t } = useLanguage();
   const { hasPermission } = usePermission();
   const dispatch = useDispatch();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -178,7 +182,12 @@ export default function Settings() {
         </Card.Root>
       </Box>
 
-      <Box as="section" aria-labelledby="project-table-settings-title">
+      <Box
+        as="section"
+        aria-labelledby="project-table-settings-title"
+        dir={dir}
+        textAlign={dir === "rtl" ? "right" : "left"}
+      >
         <Box mb={4}>
           <Heading id="project-table-settings-title" size="md">
             {t("settings.projectTables.title")}
@@ -195,8 +204,19 @@ export default function Settings() {
             {t("settings.projectTables.noContexts")}
           </Text>
         ) : (
-        <Tabs.Root defaultValue={allowedContexts[0].paginationId} variant="enclosed" size="sm">
-          <Tabs.List overflowX="auto" overflowY="hidden" flexWrap="nowrap" gap={1}>
+        <Tabs.Root
+          defaultValue={allowedContexts[0].paginationId}
+          variant="enclosed"
+          size="sm"
+          dir={dir}
+        >
+          <Tabs.List
+            dir={dir}
+            overflowX="auto"
+            overflowY="hidden"
+            flexWrap="nowrap"
+            gap={1}
+          >
             {allowedContexts.map((context) => (
               <Tabs.Trigger
                 key={context.paginationId}
@@ -227,6 +247,7 @@ export default function Settings() {
                 key={context.paginationId}
                 value={context.paginationId}
                 pt={4}
+                dir={dir}
               >
               <Box
                 border="1px solid"
@@ -358,6 +379,7 @@ export default function Settings() {
                           <Checkbox.Label>{label}</Checkbox.Label>
                         </Checkbox.Root>
                         <ColumnAliasEditor
+                          dir={dir}
                           value={aliases[key] ?? ""}
                           placeholder={t("settings.projectTables.aliasPlaceholder")}
                           ariaLabel={t("settings.projectTables.aliasLabel", {

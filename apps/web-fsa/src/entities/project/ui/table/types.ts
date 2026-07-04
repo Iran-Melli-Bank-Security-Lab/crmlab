@@ -4,12 +4,23 @@ import type { Project, ProjectAssignment } from "@/shared/types";
 
 export type Align = "start" | "center" | "end";
 export type SortDirection = "asc" | "desc";
+export type ProjectTableColumnKind =
+  | "text"
+  | "longText"
+  | "date"
+  | "user"
+  | "link"
+  | "number"
+  | "percent";
 export type ProjectTableRow = Project & Partial<ProjectAssignment>;
 
 export type ProjectTableColumn = {
   key: keyof ProjectTableRow | "summary";
   label: string;
   minW?: string;
+  maxW?: string;
+  kind?: ProjectTableColumnKind;
+  wrap?: boolean;
   align?: Align;
   sortable?: boolean;
   labelKey?: TranslationKey;

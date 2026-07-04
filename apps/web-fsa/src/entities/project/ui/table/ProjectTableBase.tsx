@@ -11,6 +11,7 @@ import {
   Center,
   HStack,
   IconButton,
+  Link,
   NativeSelect,
   Table,
   Text,
@@ -25,9 +26,14 @@ import Input from "@/shared/ui/primitives/Input";
 import { useLanguage } from "@/features/language/model";
 import type { TranslationKey } from "@/features/language/model";
 import type { ProjectPriority, ProjectStatus } from "@/shared/types";
-import { getDefaultSortValue, normalize } from "./formatters";
+import { formatDate, getDefaultSortValue, normalize } from "./formatters";
 import { PlusIcon } from "./icons";
-import type { ProjectTableBaseProps, ProjectTableColumn, SortDirection } from "./types";
+import type {
+  ProjectTableBaseProps,
+  ProjectTableColumn,
+  ProjectTableRow,
+  SortDirection,
+} from "./types";
 
 const statusLabelKeys: Record<ProjectStatus, TranslationKey> = {
   planning: "projectTable.status.planning",
@@ -47,6 +53,73 @@ const priorityLabelKeys: Record<ProjectPriority, TranslationKey> = {
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
 const PROJECT_TABLE_PAGINATION_KEY_PREFIX = "crmlab:project-table-pagination:v1";
+
+function getDisplayText(value: unknown, column: ProjectTableColumn) {
+  if (value === undefined || value === null || value === "") return "";
+  if (Array.isArray(value)) {
+    return value.map((item) => getDisplayText(item, column)).filter(Boolean).join(", ");
+  }
+  if (column.kind === "date" && typeof value === "string") return formatDate(value);
+  if (column.kind === "percent" && typeof value === "number") return `${value}%`;
+  if (typeof value === "number") return value.toLocaleString();
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "object") {
+    const user = value as Record<string, unknown>;
+    const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+    return String(user.name || name || user.username || user.email || "");
+  }
+  return String(value);
+}
+
+function DefaultProjectCell({
+  project,
+  column,
+}: {
+  project: ProjectTableRow;
+  column: ProjectTableColumn;
+}) {
+  const rawValue = column.key === "summary" ? project.name : project[column.key];
+  const text = getDisplayText(rawValue, column);
+
+  if (!text) {
+    return <Text color="var(--apple-muted)">—</Text>;
+  }
+
+  const isUrl = /^https?:\/\//i.test(text);
+  if (column.kind === "link" && isUrl) {
+    return (
+      <Link
+        href={text}
+        target="_blank"
+        rel="noreferrer"
+        color="var(--apple-blue)"
+        maxW="full"
+        overflow="hidden"
+        textOverflow="ellipsis"
+        whiteSpace="nowrap"
+        title={text}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {text}
+      </Link>
+    );
+  }
+
+  return (
+    <Text
+      maxW="full"
+      overflow="hidden"
+      textOverflow={column.wrap ? undefined : "ellipsis"}
+      whiteSpace={column.wrap ? "normal" : "nowrap"}
+      overflowWrap={column.wrap ? "anywhere" : undefined}
+      lineClamp={column.wrap ? 2 : undefined}
+      title={text}
+      fontWeight={column.kind === "user" ? "700" : undefined}
+    >
+      {text}
+    </Text>
+  );
+}
 
 type StoredPagination = {
   page: number;
@@ -412,10 +485,15 @@ export default function ProjectTableBase({
           >
             <Table.Header>
               <Table.Row bg="var(--apple-surface-subtle)">
-                {visibleColumns.map((column) => (
+                {visibleColumns.map((column) => {
+                  const headerLabel =
+                    columnAliases?.[String(column.key)]?.trim() ||
+                    (column.labelKey ? t(column.labelKey) : column.label);
+                  return (
                   <Table.ColumnHeader
                     key={column.key}
                     minW={column.minW}
+                    maxW={column.maxW ?? "280px"}
                     textAlign={column.align}
                     cursor={column.sortable ? "pointer" : "default"}
                     onClick={() => handleSort(column)}
@@ -440,16 +518,16 @@ export default function ProjectTableBase({
                     }}
                   >
                     <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
-                      <span>
-                        {columnAliases?.[String(column.key)]?.trim() ||
-                          (column.labelKey ? t(column.labelKey) : column.label)}
-                      </span>
+                      <Text as="span" truncate title={headerLabel}>
+                        {headerLabel}
+                      </Text>
                       {column.sortable && sort.key === column.key && (
                         <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
                       )}
                     </HStack>
                   </Table.ColumnHeader>
-                ))}
+                  );
+                })}
                 {onAssignPentesters && (
                   <Table.ColumnHeader
                     minW="150px"
@@ -499,6 +577,8 @@ export default function ProjectTableBase({
                   {visibleColumns.map((column) => (
                     <Table.Cell
                       key={column.key}
+                      minW={column.minW}
+                      maxW={column.maxW ?? "280px"}
                       textAlign={column.align}
                       verticalAlign="middle"
                       color="var(--apple-text)"
@@ -510,11 +590,12 @@ export default function ProjectTableBase({
                       <HStack
                         justify={column.align === "end" ? "end" : "start"}
                         gap={2}
+                        width="full"
                       >
-                        <Box minW={0}>
+                        <Box minW={0} maxW="full" flex="1">
                           {column.render
                             ? column.render(project, t)
-                            : getDefaultSortValue(project, column.key)}
+                            : <DefaultProjectCell project={project} column={column} />}
                         </Box>
                         {column.key === "summary" && onCreateFromProject && (
                           <IconButton

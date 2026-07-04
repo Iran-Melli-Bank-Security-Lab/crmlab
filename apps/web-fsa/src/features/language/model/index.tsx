@@ -396,10 +396,9 @@ const en = {
     "settings.toggleTheme": "Toggle Theme",
     "settings.projectTables.title": "Project Table Settings",
     "settings.projectTables.description":
-      "Choose the visible columns for each project table.",
+      "Choose visible columns and drag the handle to reorder them.",
     "settings.projectTables.reset": "Reset to default",
-    "settings.projectTables.moveUp": "Move {column} up",
-    "settings.projectTables.moveDown": "Move {column} down",
+    "settings.projectTables.reorder": "Drag to reorder {column}",
     "adminUsers.title": "User Management",
     "adminUsers.description":
       "Manage users, role assignments, permissions, and account states.",
@@ -812,10 +811,9 @@ const fa: Record<TranslationKey, string> = {
     "settings.toggleTheme": "تغییر پوسته",
     "settings.projectTables.title": "تنظیمات جدول پروژه‌ها",
     "settings.projectTables.description":
-      "ستون‌های قابل نمایش را برای هر جدول پروژه انتخاب کنید.",
+      "ستون‌های قابل نمایش را انتخاب کنید و برای تغییر ترتیب، دستگیره را بکشید.",
     "settings.projectTables.reset": "بازنشانی به پیش‌فرض",
-    "settings.projectTables.moveUp": "انتقال {column} به بالا",
-    "settings.projectTables.moveDown": "انتقال {column} به پایین",
+    "settings.projectTables.reorder": "برای تغییر جایگاه {column} بکشید",
     "adminUsers.title": "مدیریت کاربران",
     "adminUsers.description":
       "کاربران، تخصیص نقش‌ها، دسترسی‌ها و وضعیت حساب‌ها را مدیریت کنید.",

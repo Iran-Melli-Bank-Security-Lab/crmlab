@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Badge,
   Box,
@@ -31,6 +31,66 @@ import {
   useSyncProjectTableSettings,
 } from "@/features/ui-state/api/projectTableSettingsApi";
 
+type ColumnAliasEditorProps = {
+  value: string;
+  placeholder: string;
+  ariaLabel: string;
+  saveLabel: string;
+  clearLabel: string;
+  onSave: (alias: string) => void;
+  onClear: () => void;
+};
+
+const ColumnAliasEditor = memo(function ColumnAliasEditor({
+  value,
+  placeholder,
+  ariaLabel,
+  saveLabel,
+  clearLabel,
+  onSave,
+  onClear,
+}: ColumnAliasEditorProps) {
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => setDraft(value), [value]);
+
+  const normalizedDraft = draft.trim();
+
+  return (
+    <HStack gap={2} gridColumn={{ base: "1 / -1", md: "auto" }}>
+      <Input
+        size="sm"
+        value={draft}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        onChange={(event) => setDraft(event.target.value)}
+      />
+      <Button
+        colorPalette="blue"
+        size="xs"
+        disabled={normalizedDraft === value}
+        onClick={() => {
+          setDraft(normalizedDraft);
+          onSave(normalizedDraft);
+        }}
+      >
+        {saveLabel}
+      </Button>
+      <Button
+        variant="ghost"
+        size="xs"
+        disabled={!draft}
+        onClick={() => {
+          setDraft("");
+          onClear();
+        }}
+      >
+        {clearLabel}
+      </Button>
+    </HStack>
+  );
+});
+
 export default function Settings() {
   const { t } = useLanguage();
   const { hasPermission } = usePermission();
@@ -44,7 +104,6 @@ export default function Settings() {
     key: string;
   } | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
-  const [aliasDrafts, setAliasDrafts] = useState<Record<string, string>>({});
   const {
     theme,
     visibleProjectColumns,
@@ -219,8 +278,6 @@ export default function Settings() {
                   {orderedColumns.map((column, index) => {
                     const key = String(column.key);
                     const dropTargetId = `${context.paginationId}:${key}`;
-                    const aliasDraftKey = `${context.paginationId}:${key}`;
-                    const aliasValue = aliasDrafts[aliasDraftKey] ?? aliases[key] ?? "";
                     const label = column.labelKey ? t(column.labelKey) : column.label;
                     return (
                       <Box
@@ -300,31 +357,16 @@ export default function Settings() {
                           <Checkbox.Control />
                           <Checkbox.Label>{label}</Checkbox.Label>
                         </Checkbox.Root>
-                        <HStack
-                          gap={2}
-                          gridColumn={{ base: "1 / -1", md: "auto" }}
-                        >
-                          <Input
-                            size="sm"
-                            value={aliasValue}
-                            placeholder={t("settings.projectTables.aliasPlaceholder")}
-                            aria-label={t("settings.projectTables.aliasLabel", {
-                              column: label,
-                            })}
-                            onChange={(event) =>
-                              setAliasDrafts((current) => ({
-                                ...current,
-                                [aliasDraftKey]: event.target.value,
-                              }))
-                            }
-                          />
-                          <Button
-                            colorPalette="blue"
-                            size="xs"
-                            disabled={aliasValue.trim() === (aliases[key] ?? "")}
-                            onClick={() => {
+                        <ColumnAliasEditor
+                          value={aliases[key] ?? ""}
+                          placeholder={t("settings.projectTables.aliasPlaceholder")}
+                          ariaLabel={t("settings.projectTables.aliasLabel", {
+                            column: label,
+                          })}
+                          saveLabel={t("settings.projectTables.saveAlias")}
+                          clearLabel={t("settings.projectTables.clearAlias")}
+                          onSave={(alias) => {
                               const nextAliases = { ...aliases };
-                              const alias = aliasValue.trim();
                               if (alias) nextAliases[key] = alias;
                               else delete nextAliases[key];
                               dispatch(
@@ -334,31 +376,14 @@ export default function Settings() {
                                   alias,
                                 })
                               );
-                              setAliasDrafts((current) => {
-                                const next = { ...current };
-                                delete next[aliasDraftKey];
-                                return next;
-                              });
                               persistContext(
                                 context.paginationId,
                                 enabledKeys,
                                 orderedKeys,
                                 nextAliases
                               );
-                            }}
-                          >
-                            {t("settings.projectTables.saveAlias")}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="xs"
-                            disabled={!aliasValue}
-                            onClick={() => {
-                              setAliasDrafts((current) => {
-                                const next = { ...current };
-                                delete next[aliasDraftKey];
-                                return next;
-                              });
+                          }}
+                          onClear={() => {
                               if (!aliases[key]) return;
                               const nextAliases = { ...aliases };
                               delete nextAliases[key];
@@ -374,11 +399,8 @@ export default function Settings() {
                                 orderedKeys,
                                 nextAliases
                               );
-                            }}
-                          >
-                            {t("settings.projectTables.clearAlias")}
-                          </Button>
-                        </HStack>
+                          }}
+                        />
                         <Box
                           draggable
                           role="button"

@@ -40,6 +40,10 @@ export const ROUTES = {
     READ: "/:id/read",
   },
 
+  SETTINGS: {
+    BASE: "/api/settings",
+  },
+
   UPLOAD: {
     BASE: "/api/upload",
     AVATAR: "/avatar",

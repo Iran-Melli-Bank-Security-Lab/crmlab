@@ -22,6 +22,7 @@ import pentestRoutes from "@/modules/pentest/routes/pentest.routes";
 import devopsRoutes from "@/modules/devops/routes/devops.routes";
 import ticketRoutes from "@/modules/tickets/routes/ticket.routes";
 import qaRoutes from "@/modules/qa/routes/qa.routes";
+import settingsRoutes from "@/modules/settings/routes/projectTableSetting.routes";
 
 export function createApp() {
   const app = express();
@@ -76,6 +77,7 @@ export function createApp() {
   app.use(ROUTES.DEVOPS.BASE, devopsRoutes);
   app.use(ROUTES.TICKETS.BASE, ticketRoutes);
   app.use(ROUTES.QA.BASE, qaRoutes);
+  app.use(ROUTES.SETTINGS.BASE, settingsRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

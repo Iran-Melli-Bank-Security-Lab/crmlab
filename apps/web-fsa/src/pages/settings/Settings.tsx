@@ -12,12 +12,23 @@ import {
 import type { RootState } from "@/app/store/store";
 import { useLanguage } from "@/features/language/model";
 import { projectTableColumnContexts } from "@/entities/project/ui/table/columns";
+import { usePermission } from "@/features/access-control/model/usePermission";
+import {
+  useResetProjectTableSettingsMutation,
+  useSaveProjectTableSettingsMutation,
+  useSyncProjectTableSettings,
+} from "@/features/ui-state/api/projectTableSettingsApi";
 import Card from "@/shared/ui/primitives/Card";
 import Button from "@/shared/ui/primitives/Button";
 
 export default function Settings() {
   const { t } = useLanguage();
+  const { hasPermission } = usePermission();
   const dispatch = useDispatch();
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
+  useSyncProjectTableSettings(userId);
+  const [saveProjectTableSettings] = useSaveProjectTableSettingsMutation();
+  const [resetProjectTableSettings] = useResetProjectTableSettingsMutation();
   const [draggedColumn, setDraggedColumn] = useState<{
     paginationId: string;
     key: string;
@@ -28,18 +39,41 @@ export default function Settings() {
     visibleProjectColumns,
     projectTableColumnOrder,
     projectTableColumnAliases,
+    projectTableSettingsUserId,
   } = useSelector((state: RootState) => state.ui);
+  const hasCurrentUserSettings = projectTableSettingsUserId === userId;
+  const scopedVisibleColumns = hasCurrentUserSettings ? visibleProjectColumns : {};
+  const scopedColumnOrder = hasCurrentUserSettings ? projectTableColumnOrder : {};
+  const scopedColumnAliases = hasCurrentUserSettings ? projectTableColumnAliases : {};
+  const allowedContexts = projectTableColumnContexts.filter((context) =>
+    hasPermission(context.permission)
+  );
+
+  const persistContext = (
+    context: string,
+    visibleColumns: string[],
+    columnOrder: string[],
+    aliases: Record<string, string>
+  ) => {
+    void saveProjectTableSettings({
+      context,
+      settings: { visibleColumns, columnOrder, aliases },
+    });
+  };
 
   const moveColumn = (
     paginationId: string,
     keys: string[],
     index: number,
-    targetIndex: number
+    targetIndex: number,
+    visibleColumns: string[],
+    aliases: Record<string, string>
   ) => {
     const nextKeys = [...keys];
     const [key] = nextKeys.splice(index, 1);
     nextKeys.splice(targetIndex, 0, key);
     dispatch(setProjectTableColumnOrder({ paginationId, columns: nextKeys }));
+    persistContext(paginationId, visibleColumns, nextKeys, aliases);
   };
 
   return (
@@ -81,9 +115,14 @@ export default function Settings() {
         <Text fontSize="sm" fontWeight="700" mb={2}>
           {t("settings.projectTables.selectContext")}
         </Text>
-        <Tabs.Root defaultValue={projectTableColumnContexts[0].paginationId} variant="enclosed">
+        {allowedContexts.length === 0 ? (
+          <Text color="var(--apple-muted)">
+            {t("settings.projectTables.noContexts")}
+          </Text>
+        ) : (
+        <Tabs.Root defaultValue={allowedContexts[0].paginationId} variant="enclosed">
           <Tabs.List overflowX="auto" overflowY="hidden" flexWrap="nowrap">
-            {projectTableColumnContexts.map((context) => (
+            {allowedContexts.map((context) => (
               <Tabs.Trigger
                 key={context.paginationId}
                 value={context.paginationId}
@@ -93,11 +132,11 @@ export default function Settings() {
               </Tabs.Trigger>
             ))}
           </Tabs.List>
-          {projectTableColumnContexts.map((context) => {
+          {allowedContexts.map((context) => {
             const defaultKeys = context.columns.map((column) => String(column.key));
-            const enabledKeys = visibleProjectColumns[context.paginationId] ?? defaultKeys;
-            const savedOrder = projectTableColumnOrder[context.paginationId] ?? defaultKeys;
-            const aliases = projectTableColumnAliases[context.paginationId] ?? {};
+            const enabledKeys = scopedVisibleColumns[context.paginationId] ?? defaultKeys;
+            const savedOrder = scopedColumnOrder[context.paginationId] ?? defaultKeys;
+            const aliases = scopedColumnAliases[context.paginationId] ?? {};
             const orderedKeys = [
               ...savedOrder.filter((key) => defaultKeys.includes(key)),
               ...defaultKeys.filter((key) => !savedOrder.includes(key)),
@@ -134,7 +173,10 @@ export default function Settings() {
                   </Box>
                   <Button
                     variant="secondary"
-                    onClick={() => dispatch(resetProjectTableVisibleColumns(context.paginationId))}
+                    onClick={() => {
+                      dispatch(resetProjectTableVisibleColumns(context.paginationId));
+                      void resetProjectTableSettings(context.paginationId);
+                    }}
                   >
                     {t("settings.projectTables.reset")}
                   </Button>
@@ -180,7 +222,9 @@ export default function Settings() {
                               context.paginationId,
                               orderedKeys,
                               orderedKeys.indexOf(draggedColumn.key),
-                              index
+                              index,
+                              enabledKeys,
+                              aliases
                             );
                           }
                           setDraggedColumn(null);
@@ -192,17 +236,24 @@ export default function Settings() {
                           alignItems="center"
                           gap={2}
                           checked={enabledKeys.includes(key)}
-                          onCheckedChange={(details) =>
+                          onCheckedChange={(details) => {
+                            const nextVisibleColumns =
+                              details.checked === true
+                                ? [...enabledKeys, key]
+                                : enabledKeys.filter((enabledKey) => enabledKey !== key);
                             dispatch(
                               setProjectTableVisibleColumns({
                                 paginationId: context.paginationId,
-                                columns:
-                                  details.checked === true
-                                    ? [...enabledKeys, key]
-                                    : enabledKeys.filter((enabledKey) => enabledKey !== key),
+                                columns: nextVisibleColumns,
                               })
-                            )
-                          }
+                            );
+                            persistContext(
+                              context.paginationId,
+                              nextVisibleColumns,
+                              orderedKeys,
+                              aliases
+                            );
+                          }}
                         >
                           <Checkbox.HiddenInput />
                           <Checkbox.Control />
@@ -228,18 +279,38 @@ export default function Settings() {
                                 })
                               )
                             }
+                            onBlur={(event) => {
+                              const nextAliases = { ...aliases };
+                              const alias = event.target.value.trim();
+                              if (alias) nextAliases[key] = alias;
+                              else delete nextAliases[key];
+                              persistContext(
+                                context.paginationId,
+                                enabledKeys,
+                                orderedKeys,
+                                nextAliases
+                              );
+                            }}
                           />
                           <Button
                             variant="secondary"
                             disabled={!aliases[key]}
-                            onClick={() =>
+                            onClick={() => {
+                              const nextAliases = { ...aliases };
+                              delete nextAliases[key];
                               dispatch(
                                 resetProjectTableColumnAlias({
                                   paginationId: context.paginationId,
                                   columnKey: key,
                                 })
                               )
-                            }
+                              persistContext(
+                                context.paginationId,
+                                enabledKeys,
+                                orderedKeys,
+                                nextAliases
+                              );
+                            }}
                           >
                             {t("settings.projectTables.resetAlias")}
                           </Button>
@@ -278,7 +349,9 @@ export default function Settings() {
                                 context.paginationId,
                                 orderedKeys,
                                 index,
-                                targetIndex
+                                targetIndex,
+                                enabledKeys,
+                                aliases
                               );
                             }
                           }}
@@ -294,6 +367,7 @@ export default function Settings() {
             );
           })}
         </Tabs.Root>
+        )}
       </Box>
     </VStack>
   );

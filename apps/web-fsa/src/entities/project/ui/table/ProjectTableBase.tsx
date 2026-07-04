@@ -19,6 +19,7 @@ import {
 import EmptyState from "@/shared/ui/feedback/EmptyState";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
+import { useSyncProjectTableSettings } from "@/features/ui-state/api/projectTableSettingsApi";
 import Button from "@/shared/ui/primitives/Button";
 import Input from "@/shared/ui/primitives/Input";
 import { useLanguage } from "@/features/language/model";
@@ -95,14 +96,25 @@ export default function ProjectTableBase({
   onAssignPentesters,
 }: ProjectTableBaseProps) {
   const { t } = useLanguage();
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  useSyncProjectTableSettings(currentUserId);
   const configuredColumnKeys = useSelector(
-    (state: RootState) => state.ui.visibleProjectColumns[paginationId]
+    (state: RootState) =>
+      state.ui.projectTableSettingsUserId === state.auth.user?.id
+        ? state.ui.visibleProjectColumns[paginationId]
+        : undefined
   );
   const configuredColumnOrder = useSelector(
-    (state: RootState) => state.ui.projectTableColumnOrder[paginationId]
+    (state: RootState) =>
+      state.ui.projectTableSettingsUserId === state.auth.user?.id
+        ? state.ui.projectTableColumnOrder[paginationId]
+        : undefined
   );
   const columnAliases = useSelector(
-    (state: RootState) => state.ui.projectTableColumnAliases[paginationId]
+    (state: RootState) =>
+      state.ui.projectTableSettingsUserId === state.auth.user?.id
+        ? state.ui.projectTableColumnAliases[paginationId]
+        : undefined
   );
   const visibleColumns = useMemo(() => {
     const enabledColumns = configuredColumnKeys

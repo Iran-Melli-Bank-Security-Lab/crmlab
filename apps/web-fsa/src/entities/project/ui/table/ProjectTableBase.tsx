@@ -528,21 +528,6 @@ export default function ProjectTableBase({
                   </Table.ColumnHeader>
                   );
                 })}
-                {onAssignPentesters && (
-                  <Table.ColumnHeader
-                    minW="150px"
-                    textAlign="end"
-                    color="var(--apple-muted)"
-                    fontWeight="800"
-                    fontSize="xs"
-                    textTransform="uppercase"
-                    borderColor="var(--apple-border-soft)"
-                    py={3}
-                    px={4}
-                  >
-                    {t("projectTable.pentesters")}
-                  </Table.ColumnHeader>
-                )}
                 {onAction && (
                   <Table.ColumnHeader
                     minW="100px"
@@ -593,9 +578,21 @@ export default function ProjectTableBase({
                         width="full"
                       >
                         <Box minW={0} maxW="full" flex="1">
-                          {column.render
-                            ? column.render(project, t)
-                            : <DefaultProjectCell project={project} column={column} />}
+                          {column.key === "assignedUserIds" && onAssignPentesters ? (
+                            <Button
+                              variant="secondary"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onAssignPentesters(project);
+                              }}
+                            >
+                              {t("projectTable.assign")}
+                            </Button>
+                          ) : column.render ? (
+                            column.render(project, t)
+                          ) : (
+                            <DefaultProjectCell project={project} column={column} />
+                          )}
                         </Box>
                         {column.key === "summary" && onCreateFromProject && (
                           <IconButton
@@ -618,24 +615,6 @@ export default function ProjectTableBase({
                       </HStack>
                     </Table.Cell>
                   ))}
-                  {onAssignPentesters && (
-                    <Table.Cell
-                      textAlign="end"
-                      borderColor="var(--apple-border-soft)"
-                      px={4}
-                      py={4}
-                    >
-                      <Button
-                        variant="secondary"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onAssignPentesters(project);
-                        }}
-                      >
-                        {t("projectTable.assign")}
-                      </Button>
-                    </Table.Cell>
-                  )}
                   {onAction && (
                     <Table.Cell
                       textAlign="end"

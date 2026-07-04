@@ -3,7 +3,9 @@ import { sendSuccess } from "@/utils/response";
 import { ProjectTableSettingModel } from "../models/projectTableSetting.model";
 import {
   getAllowedProjectTableContexts,
+  getAllowedProjectTableColumnRegistry,
   requireAllowedProjectTableContext,
+  type ProjectTableContext,
   validateProjectTableSettings,
 } from "../services/projectTableSetting.service";
 
@@ -12,11 +14,21 @@ const serialize = (setting: {
   visibleColumns: string[];
   columnOrder: string[];
   aliases: Map<string, string>;
-}) => ({
+}) => validateProjectTableSettings(setting.context as ProjectTableContext, {
   visibleColumns: setting.visibleColumns,
   columnOrder: setting.columnOrder,
   aliases: Object.fromEntries(setting.aliases),
 });
+
+export const getProjectTableColumns: RequestHandler = async (req, res, next) => {
+  try {
+    sendSuccess(res, {
+      contexts: getAllowedProjectTableColumnRegistry(req.user!.permissions),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getProjectTableSettings: RequestHandler = async (req, res, next) => {
   try {

@@ -1,77 +1,39 @@
-import { PERMISSIONS, type Permission } from "@/constants/permissions";
+import type { Permission } from "@/constants/permissions";
 import { HTTP_STATUS } from "@/constants/http";
 import { AppError } from "@/utils/AppError";
+import {
+  PROJECT_TABLE_CONTEXT_REGISTRY,
+  getProjectTableColumnDefinitions,
+  type ProjectTableContext,
+} from "../models/projectTableColumnRegistry.model";
 
-const CONTEXT_CONFIG = {
-  admin: {
-    permission: PERMISSIONS.ADMIN_SYSTEM_MANAGE,
-    columns: [
-      "summary", "projectGroupId", "version", "letterNumber", "platform",
-      "discipline", "status", "owner", "assignee", "testExpiresAt", "createdAt",
-    ],
-  },
-  "security-manager": {
-    permission: PERMISSIONS.SECURITY_PROJECTS_READ,
-    columns: [
-      "summary", "status", "priority", "assignee", "riskScore",
-      "vulnerabilities", "dueDate",
-    ],
-  },
-  pentest: {
-    permission: PERMISSIONS.PENTEST_PROJECTS_READ,
-    columns: [
-      "summary", "assignmentStatus", "priority", "scope", "phase", "riskScore",
-      "vulnerabilities", "assignmentDueDate", "progress",
-    ],
-  },
-  devops: {
-    permission: PERMISSIONS.DEVOPS_PROJECTS_READ,
-    columns: [
-      "summary", "status", "priority", "environment", "repository", "pipeline",
-      "lastActivity",
-    ],
-  },
-  "quality-manager": {
-    permission: PERMISSIONS.QUALITY_PROJECTS_READ,
-    columns: [
-      "summary", "status", "priority", "assignee", "testCoverage", "openBugs",
-      "dueDate",
-    ],
-  },
-  qa: {
-    permission: PERMISSIONS.QA_PROJECTS_READ,
-    columns: [
-      "summary", "assignmentStatus", "priority", "scope", "phase", "testCoverage",
-      "openBugs", "assignmentDueDate", "progress",
-    ],
-  },
-  representative: {
-    permission: PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
-    columns: [
-      "summary", "projectGroupId", "version", "letterNumber", "platform",
-      "discipline", "status", "owner", "assignee", "testExpiresAt", "createdAt",
-    ],
-  },
-} as const;
-
-export type ProjectTableContext = keyof typeof CONTEXT_CONFIG;
+export type { ProjectTableContext } from "../models/projectTableColumnRegistry.model";
 
 export function getAllowedProjectTableContexts(permissions: Permission[]) {
-  return (Object.keys(CONTEXT_CONFIG) as ProjectTableContext[]).filter((context) =>
-    permissions.includes(CONTEXT_CONFIG[context].permission)
+  return (Object.keys(PROJECT_TABLE_CONTEXT_REGISTRY) as ProjectTableContext[]).filter((context) =>
+    permissions.includes(PROJECT_TABLE_CONTEXT_REGISTRY[context].requiredPermission)
   );
+}
+
+export function getAllowedProjectTableColumnRegistry(permissions: Permission[]) {
+  return getAllowedProjectTableContexts(permissions).map((context) => ({
+    context,
+    defaultLabel: PROJECT_TABLE_CONTEXT_REGISTRY[context].defaultLabel,
+    faLabel: PROJECT_TABLE_CONTEXT_REGISTRY[context].faLabel,
+    columns: getProjectTableColumnDefinitions(context),
+  }));
 }
 
 export function requireAllowedProjectTableContext(
   context: string,
   permissions: Permission[]
 ): ProjectTableContext {
-  if (!(context in CONTEXT_CONFIG)) {
+  if (!(context in PROJECT_TABLE_CONTEXT_REGISTRY)) {
     throw new AppError("Unknown project table context", HTTP_STATUS.BAD_REQUEST);
   }
 
   const typedContext = context as ProjectTableContext;
-  if (!permissions.includes(CONTEXT_CONFIG[typedContext].permission)) {
+  if (!permissions.includes(PROJECT_TABLE_CONTEXT_REGISTRY[typedContext].requiredPermission)) {
     throw new AppError("Forbidden project table context", HTTP_STATUS.FORBIDDEN);
   }
   return typedContext;
@@ -91,16 +53,16 @@ export function validateProjectTableSettings(
     throw new AppError("Unexpected project table settings field", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const allowedColumns = new Set<string>(CONTEXT_CONFIG[context].columns);
+  const allowedColumns = new Set<string>(
+    getProjectTableColumnDefinitions(context)
+      .filter((column) => column.isConfigurable && !column.isSensitive)
+      .map((column) => column.columnKey)
+  );
   const readColumns = (value: unknown, field: string) => {
     if (!Array.isArray(value) || value.some((key) => typeof key !== "string")) {
       throw new AppError(`Invalid ${field}`, HTTP_STATUS.BAD_REQUEST);
     }
-    const unique = [...new Set(value as string[])];
-    if (unique.some((key) => !allowedColumns.has(key))) {
-      throw new AppError(`Invalid ${field} column`, HTTP_STATUS.BAD_REQUEST);
-    }
-    return unique;
+    return [...new Set(value as string[])].filter((key) => allowedColumns.has(key));
   };
 
   if (!input.aliases || typeof input.aliases !== "object" || Array.isArray(input.aliases)) {
@@ -108,11 +70,11 @@ export function validateProjectTableSettings(
   }
   const aliases = Object.fromEntries(
     Object.entries(input.aliases as Record<string, unknown>).map(([key, value]) => {
-      if (!allowedColumns.has(key) || typeof value !== "string" || value.trim().length > 80) {
+      if (typeof value !== "string" || value.trim().length > 80) {
         throw new AppError("Invalid column alias", HTTP_STATUS.BAD_REQUEST);
       }
       return [key, value.trim()];
-    }).filter(([, value]) => value)
+    }).filter(([key, value]) => allowedColumns.has(key) && value)
   );
 
   return {

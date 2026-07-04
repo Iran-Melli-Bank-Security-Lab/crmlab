@@ -8,8 +8,36 @@ import {
   type ProjectTableSettings,
 } from "../model/uiSlice";
 
+export type ProjectTableColumnDefinition = {
+  columnKey: string;
+  defaultLabel: string;
+  faLabel: string;
+  tableContexts: string[];
+  dataType: "text" | "date" | "status" | "user" | "link" | "count" | "action";
+  isConfigurable: boolean;
+  isDefaultVisible: boolean;
+  defaultOrder: number;
+  minWidth?: string;
+  maxWidth?: string;
+  requiredPermission?: string;
+  isSensitive: false;
+};
+
+export type ProjectTableColumnRegistry = {
+  contexts: Array<{
+    context: string;
+    defaultLabel: string;
+    faLabel: string;
+    columns: ProjectTableColumnDefinition[];
+  }>;
+};
+
 export const projectTableSettingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getProjectTableColumnRegistry: builder.query<ProjectTableColumnRegistry, string>({
+      query: () => "/settings/project-table-columns",
+      transformResponse: unwrapApiData<ProjectTableColumnRegistry>,
+    }),
     getProjectTableSettings: builder.query<ProjectTableSettings, string>({
       query: () => "/settings/project-tables",
       transformResponse: unwrapApiData<ProjectTableSettings>,
@@ -36,6 +64,7 @@ export const projectTableSettingsApi = api.injectEndpoints({
 });
 
 export const {
+  useGetProjectTableColumnRegistryQuery,
   useGetProjectTableSettingsQuery,
   useSaveProjectTableSettingsMutation,
   useResetProjectTableSettingsMutation,

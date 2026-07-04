@@ -6,8 +6,6 @@ import type {
   ProjectStatus,
 } from "@/shared/types";
 import type { TranslationKey } from "@/features/language/model";
-import { PERMISSIONS } from "@/entities/permission/model/permissions";
-import type { Permission } from "@/shared/types";
 import { formatCompactGroupId, formatDate } from "./formatters";
 import ProjectSummary from "./ProjectSummary";
 import type { ProjectTableColumn } from "./types";
@@ -392,6 +390,14 @@ export const projectTableColumns = {
     render: (project) => formatDate(project.lastActivity),
     sortValue: (project) => new Date(project.lastActivity).getTime(),
   },
+  assignedUsersAction: {
+    key: "assignedUserIds",
+    label: "Pentesters",
+    labelKey: "projectTable.pentesters",
+    minW: "150px",
+    maxW: "190px",
+    align: "end",
+  },
 } satisfies Record<string, ProjectTableColumn>;
 
 export const projectTablePresets = {
@@ -447,6 +453,7 @@ export const projectTablePresets = {
     projectTableColumns.riskScore,
     projectTableColumns.vulnerabilities,
     projectTableColumns.dueDate,
+    projectTableColumns.assignedUsersAction,
   ],
   qualityManager: [
     projectTableColumns.summary,
@@ -458,53 +465,3 @@ export const projectTablePresets = {
     projectTableColumns.dueDate,
   ],
 } satisfies Record<string, ProjectTableColumn[]>;
-
-export const projectTableColumnContexts = [
-  {
-    paginationId: "admin",
-    labelKey: "projectViews.admin.label",
-    permission: PERMISSIONS.ADMIN_SYSTEM_MANAGE,
-    columns: projectTablePresets.admin,
-  },
-  {
-    paginationId: "security-manager",
-    labelKey: "projectViews.security.label",
-    permission: PERMISSIONS.SECURITY_PROJECTS_READ,
-    columns: projectTablePresets.securityManager,
-  },
-  {
-    paginationId: "pentest",
-    labelKey: "projectViews.pentest.label",
-    permission: PERMISSIONS.PENTEST_PROJECTS_READ,
-    columns: projectTablePresets.pentester,
-  },
-  {
-    paginationId: "devops",
-    labelKey: "projectViews.devops.label",
-    permission: PERMISSIONS.DEVOPS_PROJECTS_READ,
-    columns: projectTablePresets.devops,
-  },
-  {
-    paginationId: "quality-manager",
-    labelKey: "projectViews.quality.label",
-    permission: PERMISSIONS.QUALITY_PROJECTS_READ,
-    columns: projectTablePresets.qualityManager,
-  },
-  {
-    paginationId: "qa",
-    labelKey: "projectViews.qa.label",
-    permission: PERMISSIONS.QA_PROJECTS_READ,
-    columns: projectTablePresets.qa,
-  },
-  {
-    paginationId: "representative",
-    labelKey: "projectViews.representative.label",
-    permission: PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
-    columns: projectTablePresets.admin,
-  },
-] satisfies Array<{
-  paginationId: string;
-  labelKey: TranslationKey;
-  permission: Permission;
-  columns: ProjectTableColumn[];
-}>;

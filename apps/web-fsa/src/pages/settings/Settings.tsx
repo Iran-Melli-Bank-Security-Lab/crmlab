@@ -23,9 +23,8 @@ import {
 } from "@/features/ui-state/model/uiSlice";
 import type { RootState } from "@/app/store/store";
 import { useLanguage } from "@/features/language/model";
-import { projectTableColumnContexts } from "@/entities/project/ui/table/columns";
-import { usePermission } from "@/features/access-control/model/usePermission";
 import {
+  useGetProjectTableColumnRegistryQuery,
   useResetProjectTableSettingsMutation,
   useSaveProjectTableSettingsMutation,
   useSyncProjectTableSettings,
@@ -108,11 +107,13 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
 });
 
 export default function Settings() {
-  const { dir, t } = useLanguage();
-  const { hasPermission } = usePermission();
+  const { dir, language, t } = useLanguage();
   const dispatch = useDispatch();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   useSyncProjectTableSettings(userId);
+  const { data: columnRegistry } = useGetProjectTableColumnRegistryQuery(userId || "", {
+    skip: !userId,
+  });
   const [saveProjectTableSettings] = useSaveProjectTableSettingsMutation();
   const [resetProjectTableSettings] = useResetProjectTableSettingsMutation();
   const [draggedColumn, setDraggedColumn] = useState<{
@@ -131,9 +132,14 @@ export default function Settings() {
   const scopedVisibleColumns = hasCurrentUserSettings ? visibleProjectColumns : {};
   const scopedColumnOrder = hasCurrentUserSettings ? projectTableColumnOrder : {};
   const scopedColumnAliases = hasCurrentUserSettings ? projectTableColumnAliases : {};
-  const allowedContexts = projectTableColumnContexts.filter((context) =>
-    hasPermission(context.permission)
-  );
+  const allowedContexts = (columnRegistry?.contexts || []).map((context) => ({
+    ...context,
+    paginationId: context.context,
+    label: language === "fa" ? context.faLabel : context.defaultLabel,
+    columns: context.columns
+      .filter((column) => column.isConfigurable && !column.isSensitive)
+      .sort((left, right) => left.defaultOrder - right.defaultOrder),
+  }));
 
   const persistContext = (
     context: string,
@@ -237,23 +243,26 @@ export default function Settings() {
                 whiteSpace="nowrap"
                 textAlign="center"
               >
-                {t(context.labelKey)}
+                {context.label}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
           {allowedContexts.map((context) => {
-            const defaultKeys = context.columns.map((column) => String(column.key));
+            const allKeys = context.columns.map((column) => column.columnKey);
+            const defaultKeys = context.columns
+              .filter((column) => column.isDefaultVisible)
+              .map((column) => column.columnKey);
             const enabledKeys = scopedVisibleColumns[context.paginationId] ?? defaultKeys;
-            const savedOrder = scopedColumnOrder[context.paginationId] ?? defaultKeys;
+            const savedOrder = scopedColumnOrder[context.paginationId] ?? allKeys;
             const aliases = scopedColumnAliases[context.paginationId] ?? {};
             const orderedKeys = [
-              ...savedOrder.filter((key) => defaultKeys.includes(key)),
-              ...defaultKeys.filter((key) => !savedOrder.includes(key)),
+              ...savedOrder.filter((key) => allKeys.includes(key)),
+              ...allKeys.filter((key) => !savedOrder.includes(key)),
             ];
             const orderedColumns = [...context.columns].sort(
               (left, right) =>
-                orderedKeys.indexOf(String(left.key)) -
-                orderedKeys.indexOf(String(right.key))
+                orderedKeys.indexOf(left.columnKey) -
+                orderedKeys.indexOf(right.columnKey)
             );
 
             return (
@@ -275,11 +284,11 @@ export default function Settings() {
               >
                 <HStack justify="space-between" mb={4} gap={3} flexWrap="wrap">
                   <Box>
-                    <Text fontWeight="800">{t(context.labelKey)}</Text>
+                    <Text fontWeight="800">{context.label}</Text>
                     <Badge variant="subtle" colorPalette="blue" mt={1}>
                       {t("settings.projectTables.visibleCount", {
                         selected: enabledKeys.length,
-                        total: defaultKeys.length,
+                        total: allKeys.length,
                       })}
                     </Badge>
                   </Box>
@@ -313,9 +322,9 @@ export default function Settings() {
                 </Box>
                 <VStack align="stretch" gap={2}>
                   {orderedColumns.map((column, index) => {
-                    const key = String(column.key);
+                    const key = column.columnKey;
                     const dropTargetId = `${context.paginationId}:${key}`;
-                    const label = column.labelKey ? t(column.labelKey) : column.label;
+                    const label = language === "fa" ? column.faLabel : column.defaultLabel;
                     return (
                       <Box
                         key={key}

@@ -44,6 +44,7 @@ export default function Settings() {
     key: string;
   } | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
+  const [aliasDrafts, setAliasDrafts] = useState<Record<string, string>>({});
   const {
     theme,
     visibleProjectColumns,
@@ -218,6 +219,8 @@ export default function Settings() {
                   {orderedColumns.map((column, index) => {
                     const key = String(column.key);
                     const dropTargetId = `${context.paginationId}:${key}`;
+                    const aliasDraftKey = `${context.paginationId}:${key}`;
+                    const aliasValue = aliasDrafts[aliasDraftKey] ?? aliases[key] ?? "";
                     const label = column.labelKey ? t(column.labelKey) : column.label;
                     return (
                       <Box
@@ -303,25 +306,39 @@ export default function Settings() {
                         >
                           <Input
                             size="sm"
-                            value={aliases[key] ?? ""}
+                            value={aliasValue}
                             placeholder={t("settings.projectTables.aliasPlaceholder")}
                             aria-label={t("settings.projectTables.aliasLabel", {
                               column: label,
                             })}
                             onChange={(event) =>
+                              setAliasDrafts((current) => ({
+                                ...current,
+                                [aliasDraftKey]: event.target.value,
+                              }))
+                            }
+                          />
+                          <Button
+                            colorPalette="blue"
+                            size="xs"
+                            disabled={aliasValue.trim() === (aliases[key] ?? "")}
+                            onClick={() => {
+                              const nextAliases = { ...aliases };
+                              const alias = aliasValue.trim();
+                              if (alias) nextAliases[key] = alias;
+                              else delete nextAliases[key];
                               dispatch(
                                 setProjectTableColumnAlias({
                                   paginationId: context.paginationId,
                                   columnKey: key,
-                                  alias: event.target.value,
+                                  alias,
                                 })
-                              )
-                            }
-                            onBlur={(event) => {
-                              const nextAliases = { ...aliases };
-                              const alias = event.target.value.trim();
-                              if (alias) nextAliases[key] = alias;
-                              else delete nextAliases[key];
+                              );
+                              setAliasDrafts((current) => {
+                                const next = { ...current };
+                                delete next[aliasDraftKey];
+                                return next;
+                              });
                               persistContext(
                                 context.paginationId,
                                 enabledKeys,
@@ -329,12 +346,20 @@ export default function Settings() {
                                 nextAliases
                               );
                             }}
-                          />
+                          >
+                            {t("settings.projectTables.saveAlias")}
+                          </Button>
                           <Button
                             variant="ghost"
                             size="xs"
-                            disabled={!aliases[key]}
+                            disabled={!aliasValue}
                             onClick={() => {
+                              setAliasDrafts((current) => {
+                                const next = { ...current };
+                                delete next[aliasDraftKey];
+                                return next;
+                              });
+                              if (!aliases[key]) return;
                               const nextAliases = { ...aliases };
                               delete nextAliases[key];
                               dispatch(

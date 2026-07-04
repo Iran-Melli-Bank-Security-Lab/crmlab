@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Box, Checkbox, Heading, HStack, Tabs, Text, VStack } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   resetProjectTableVisibleColumns,
@@ -70,7 +70,21 @@ export default function Settings() {
             {t("settings.projectTables.description")}
           </Text>
         </Box>
-        <VStack align="stretch" gap={5}>
+        <Text fontSize="sm" fontWeight="700" mb={2}>
+          {t("settings.projectTables.selectContext")}
+        </Text>
+        <Tabs.Root defaultValue={projectTableColumnContexts[0].paginationId} variant="enclosed">
+          <Tabs.List overflowX="auto" overflowY="hidden" flexWrap="nowrap">
+            {projectTableColumnContexts.map((context) => (
+              <Tabs.Trigger
+                key={context.paginationId}
+                value={context.paginationId}
+                flexShrink={0}
+              >
+                {t(context.labelKey)}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
           {projectTableColumnContexts.map((context) => {
             const defaultKeys = context.columns.map((column) => String(column.key));
             const enabledKeys = visibleProjectColumns[context.paginationId] ?? defaultKeys;
@@ -86,8 +100,12 @@ export default function Settings() {
             );
 
             return (
-              <Box
+              <Tabs.Content
                 key={context.paginationId}
+                value={context.paginationId}
+                pt={4}
+              >
+              <Box
                 border="1px solid"
                 borderColor="var(--apple-border-soft)"
                 borderRadius="md"
@@ -159,23 +177,27 @@ export default function Settings() {
                           setDropTargetKey(null);
                         }}
                       >
-                        <Box as="label" display="flex" alignItems="center" gap={2}>
-                          <input
-                            type="checkbox"
-                            checked={enabledKeys.includes(key)}
-                            onChange={(event) =>
-                              dispatch(
-                                setProjectTableVisibleColumns({
-                                  paginationId: context.paginationId,
-                                  columns: event.target.checked
+                        <Checkbox.Root
+                          display="flex"
+                          alignItems="center"
+                          gap={2}
+                          checked={enabledKeys.includes(key)}
+                          onCheckedChange={(details) =>
+                            dispatch(
+                              setProjectTableVisibleColumns({
+                                paginationId: context.paginationId,
+                                columns:
+                                  details.checked === true
                                     ? [...enabledKeys, key]
                                     : enabledKeys.filter((enabledKey) => enabledKey !== key),
-                                })
-                              )
-                            }
-                          />
-                          <Text as="span">{label}</Text>
-                        </Box>
+                              })
+                            )
+                          }
+                        >
+                          <Checkbox.HiddenInput />
+                          <Checkbox.Control />
+                          <Checkbox.Label>{label}</Checkbox.Label>
+                        </Checkbox.Root>
                         <Box
                           draggable
                           role="button"
@@ -222,9 +244,10 @@ export default function Settings() {
                   })}
                 </VStack>
               </Box>
+              </Tabs.Content>
             );
           })}
-        </VStack>
+        </Tabs.Root>
       </Box>
     </VStack>
   );

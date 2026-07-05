@@ -134,9 +134,20 @@ export default function Projects() {
             {t("projects.description")}
           </Text>
         </Box>
-        <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
+        <Badge
+          bg="var(--apple-surface-raised)"
+          border="1px solid"
+          borderColor="var(--apple-border)"
+          borderRadius="full"
+          color="var(--apple-secondary)"
+          fontSize="xs"
+          fontWeight="750"
+          px={3}
+          py={1.5}
+          textTransform="none"
+        >
           {t("projects.availableViews", { count: accessibleViews.length })}
-        </Text>
+        </Badge>
       </HStack>
 
       {accessibleViews.length > 1 && (
@@ -146,7 +157,7 @@ export default function Projects() {
           bg="var(--apple-surface-raised)"
           border="1px solid"
           borderColor="var(--apple-border)"
-          borderRadius="md"
+          borderRadius="xl"
           p={2}
           boxShadow="0 1px 2px rgba(0, 0, 0, 0.04)"
           css={{ scrollbarWidth: "thin" }}
@@ -162,15 +173,15 @@ export default function Projects() {
                 px={4}
                 flexShrink={0}
                 whiteSpace="nowrap"
-                borderRadius="md"
-                bg={selected ? "var(--apple-text)" : "transparent"}
-                color={selected ? "var(--apple-surface)" : "var(--apple-secondary)"}
+                borderRadius="lg"
+                bg={selected ? "var(--apple-blue)" : "transparent"}
+                color={selected ? "white" : "var(--apple-secondary)"}
                 fontSize="sm"
                 fontWeight="800"
-                boxShadow={selected ? "0 1px 2px rgba(0, 0, 0, 0.14)" : "none"}
+                boxShadow={selected ? "0 2px 6px rgba(0, 113, 227, 0.2)" : "none"}
                 transition="background 120ms ease, color 120ms ease, box-shadow 120ms ease"
                 _hover={{
-                  bg: selected ? "var(--apple-text)" : "var(--apple-surface-hover)",
+                  bg: selected ? "var(--apple-blue-hover)" : "var(--apple-surface-hover)",
                 }}
                 _focusVisible={{ boxShadow: "var(--focus-ring)" }}
                 aria-pressed={selected}
@@ -184,11 +195,41 @@ export default function Projects() {
 
       {activeView && ActiveProjectTable ? (
         <VStack align="stretch" gap={3}>
-          <Text color="var(--apple-muted)" fontSize="sm" lineHeight="1.7">
-            {t(projectViewKey(activeView.id, "description"))}
-          </Text>
-          {isLoading && <LoadingScreen text={t("projects.loading")} />}
-          {error && <ErrorState error={error} />}
+          <HStack
+            align="start"
+            gap={2.5}
+            borderInlineStart="2px solid"
+            borderColor="var(--apple-blue-border)"
+            px={3}
+            py={1}
+          >
+            <Box
+              boxSize="1.5"
+              borderRadius="full"
+              bg="var(--apple-blue)"
+              flexShrink={0}
+              mt="7px"
+            />
+            <Text color="var(--apple-muted)" fontSize="sm" lineHeight="1.7">
+              {t(projectViewKey(activeView.id, "description"))}
+            </Text>
+          </HStack>
+          {isLoading && (
+            <Box borderRadius="xl" overflow="hidden">
+              <LoadingScreen text={t("projects.loading")} />
+            </Box>
+          )}
+          {error && (
+            <Box
+              bg="var(--apple-surface-raised)"
+              border="1px solid"
+              borderColor="var(--apple-border)"
+              borderRadius="xl"
+              p={2}
+            >
+              <ErrorState error={error} />
+            </Box>
+          )}
           {!isLoading && !error && (
             <Suspense fallback={<LoadingScreen text={t("projects.loadingTable")} />}>
               <ActiveProjectTable

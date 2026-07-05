@@ -347,10 +347,20 @@ export default function ProjectTableBase({
       bg="var(--apple-surface-raised)"
       border="1px solid"
       borderColor="var(--apple-border)"
-      borderRadius="md"
-      boxShadow="0 1px 3px rgba(0, 0, 0, 0.06)"
+      borderRadius="xl"
+      boxShadow="0 8px 28px rgba(15, 23, 42, 0.06)"
       overflow="hidden"
       dir={dir}
+      position="relative"
+      _before={{
+        content: '""',
+        position: "absolute",
+        insetInline: 0,
+        top: 0,
+        h: "2px",
+        bg: "var(--apple-blue)",
+        zIndex: 2,
+      }}
     >
       <VStack
         align="stretch"
@@ -406,9 +416,18 @@ export default function ProjectTableBase({
         <Grid
           gap={3}
           alignItems="end"
-          templateColumns={{ base: "1fr", md: "minmax(260px, 1fr) 170px 170px" }}
+          bg="var(--apple-surface-subtle)"
+          border="1px solid"
+          borderColor="var(--apple-border-soft)"
+          borderRadius="lg"
+          p={3}
+          templateColumns={{
+            base: "1fr",
+            md: "repeat(2, minmax(0, 1fr))",
+            xl: "minmax(280px, 1fr) 180px 180px",
+          }}
         >
-          <Box minW={0}>
+          <Box minW={0} gridColumn={{ md: "1 / -1", xl: "auto" }}>
             <Input
               label={t("common.search")}
               value={query}
@@ -570,7 +589,17 @@ export default function ProjectTableBase({
                           {headerLabel}
                         </Text>
                         {column.sortable && sort.key === column.key && (
-                          <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
+                          <Center
+                            aria-hidden="true"
+                            boxSize="5"
+                            borderRadius="full"
+                            bg="var(--apple-blue-soft)"
+                            color="var(--apple-blue)"
+                            fontSize="xs"
+                            fontWeight="900"
+                          >
+                            {sort.direction === "asc" ? "↑" : "↓"}
+                          </Center>
                         )}
                       </HStack>
                     </Table.ColumnHeader>
@@ -598,6 +627,7 @@ export default function ProjectTableBase({
                 <Table.Row
                   key={project.id}
                   bg="var(--apple-surface-raised)"
+                  _even={{ bg: "var(--apple-surface-subtle)" }}
                   transition="background 120ms ease, box-shadow 120ms ease"
                   cursor={onRowClick || onRowDoubleClick ? "pointer" : "default"}
                   onClick={() => onRowClick?.(project)}
@@ -617,7 +647,7 @@ export default function ProjectTableBase({
                       color="var(--apple-text)"
                       fontWeight="600"
                       borderColor="var(--apple-border-soft)"
-                      px={4}
+                      px={{ base: 3, md: 4 }}
                       py={3}
                     >
                       <HStack
@@ -672,7 +702,7 @@ export default function ProjectTableBase({
                     <Table.Cell
                       textAlign="end"
                       borderColor="var(--apple-border-soft)"
-                      px={4}
+                      px={{ base: 3, md: 4 }}
                       py={3}
                     >
                       <Button
@@ -706,7 +736,12 @@ export default function ProjectTableBase({
         borderColor="var(--apple-border-soft)"
         bg="var(--apple-surface-subtle)"
       >
-        <HStack gap={3} flexWrap="wrap">
+        <HStack
+          gap={3}
+          flexWrap="wrap"
+          w={{ base: "full", sm: "auto" }}
+          justify={{ base: "space-between", sm: "start" }}
+        >
           <Center
             minW="38px"
             h="38px"
@@ -723,7 +758,12 @@ export default function ProjectTableBase({
             {t("projectTable.pageOf", { page: currentPage, total: totalPages })}
           </Text>
         </HStack>
-        <HStack gap={3} flexWrap="wrap">
+        <HStack
+          gap={2}
+          flexWrap="wrap"
+          w={{ base: "full", sm: "auto" }}
+          justify={{ base: "space-between", sm: "end" }}
+        >
           <NativeSelect.Root width="100px">
             <NativeSelect.Field
               value={pageSize}
@@ -750,6 +790,8 @@ export default function ProjectTableBase({
           </NativeSelect.Root>
           <Button
             variant="secondary"
+            minH="32px"
+            h="32px"
             onClick={() => setPage((value) => Math.max(1, value - 1))}
             disabled={currentPage === 1}
           >
@@ -757,6 +799,8 @@ export default function ProjectTableBase({
           </Button>
           <Button
             variant="secondary"
+            minH="32px"
+            h="32px"
             onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
             disabled={currentPage === totalPages}
           >

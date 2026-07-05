@@ -187,9 +187,15 @@ export const projectTableColumns = {
           py={0.5}
           fontSize="xs"
           fontWeight="750"
+          whiteSpace="nowrap"
           textTransform="none"
         >
-          {t(assignmentStatusLabelKeys[project.assignmentStatus])}
+          <HStack gap={1.5}>
+            <Box boxSize="1.5" borderRadius="full" bg="currentColor" />
+            <Text as="span">
+              {t(assignmentStatusLabelKeys[project.assignmentStatus])}
+            </Text>
+          </HStack>
         </Badge>
       ) : (
         "-"
@@ -282,9 +288,13 @@ export const projectTableColumns = {
         py={0.5}
         fontSize="xs"
         fontWeight="750"
+        whiteSpace="nowrap"
         textTransform="none"
       >
-        {t(statusLabelKeys[project.status])}
+        <HStack gap={1.5}>
+          <Box boxSize="1.5" borderRadius="full" bg="currentColor" />
+          <Text as="span">{t(statusLabelKeys[project.status])}</Text>
+        </HStack>
       </Badge>
     ),
   },
@@ -303,9 +313,13 @@ export const projectTableColumns = {
         py={0.5}
         fontSize="xs"
         fontWeight="750"
+        whiteSpace="nowrap"
         textTransform="none"
       >
-        {t(priorityLabelKeys[project.priority])}
+        <HStack gap={1.5}>
+          <Box boxSize="1.5" borderRadius="full" bg="currentColor" />
+          <Text as="span">{t(priorityLabelKeys[project.priority])}</Text>
+        </HStack>
       </Badge>
     ),
   },

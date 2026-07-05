@@ -15,15 +15,15 @@ import type { Project } from "@/shared/types";
 import PentesterAssignmentDock from "@/entities/project/ui/assignment/PentesterAssignmentDock";
 
 export default function Projects() {
-  const { t } = useLanguage();
+  const { dir, t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { permissions } = usePermission();
   const [assignmentProjectId, setAssignmentProjectId] = useState<string | null>(null);
   const [isAssignmentDockOpen, setIsAssignmentDockOpen] = useState(false);
-  const assignmentCloseTimer = useRef<ReturnType<typeof globalThis.setTimeout> | undefined>(
-    undefined
-  );
+  const assignmentCloseTimer = useRef<
+    ReturnType<typeof globalThis.setTimeout> | undefined
+  >(undefined);
   const accessibleViews = useMemo(
     () =>
       projectViewRegistry.filter((view) =>
@@ -52,15 +52,21 @@ export default function Projects() {
     [activeProjects, assignmentProjectId]
   );
 
-  const selectView = useCallback((viewId: string) => {
-    setSearchParams({ view: viewId });
-  }, [setSearchParams]);
+  const selectView = useCallback(
+    (viewId: string) => {
+      setSearchParams({ view: viewId });
+    },
+    [setSearchParams]
+  );
 
-  const createFromProject = useCallback((project: Project) => {
-    const params = new globalThis.URLSearchParams({ sourceProjectId: project.id });
-    if (project.projectGroupId) params.set("projectGroupId", project.projectGroupId);
-    navigate(`/projects/create?${params.toString()}`);
-  }, [navigate]);
+  const createFromProject = useCallback(
+    (project: Project) => {
+      const params = new globalThis.URLSearchParams({ sourceProjectId: project.id });
+      if (project.projectGroupId) params.set("projectGroupId", project.projectGroupId);
+      navigate(`/projects/create?${params.toString()}`);
+    },
+    [navigate]
+  );
 
   const openAssignmentDock = useCallback((project: Project) => {
     if (assignmentCloseTimer.current) {
@@ -98,9 +104,9 @@ export default function Projects() {
   );
 
   return (
-    <VStack align="stretch" gap={6}>
-      <HStack justify="space-between" align="end" flexWrap="wrap" gap={4}>
-        <Box>
+    <VStack align="stretch" gap={{ base: 4, md: 5 }} dir={dir}>
+      <HStack justify="space-between" align="end" flexWrap="wrap" gap={3}>
+        <Box minW={0}>
           <Badge
             bg="var(--apple-blue-soft)"
             color="var(--apple-blue)"
@@ -109,7 +115,7 @@ export default function Projects() {
             borderRadius="full"
             px={3}
             py={1}
-            mb={3}
+            mb={2}
             textTransform="none"
             fontWeight="850"
           >
@@ -117,14 +123,14 @@ export default function Projects() {
           </Badge>
           <Heading
             color="var(--apple-text)"
-            fontSize={{ base: "2xl", md: "3xl" }}
+            fontSize={{ base: "2xl", md: "2.5rem" }}
             fontWeight="850"
             letterSpacing="0"
             lineHeight="1.12"
           >
             {t("projects.title")}
           </Heading>
-          <Text color="var(--apple-muted)" mt={2} fontSize="md">
+          <Text color="var(--apple-muted)" mt={1.5} fontSize="sm" maxW="760px">
             {t("projects.description")}
           </Text>
         </Box>
@@ -136,14 +142,14 @@ export default function Projects() {
       {accessibleViews.length > 1 && (
         <HStack
           gap={2}
-          flexWrap="wrap"
+          overflowX="auto"
           bg="var(--apple-surface-raised)"
           border="1px solid"
           borderColor="var(--apple-border)"
           borderRadius="md"
           p={2}
-          boxShadow="var(--surface-shadow)"
-          backdropFilter="blur(18px)"
+          boxShadow="0 1px 2px rgba(0, 0, 0, 0.04)"
+          css={{ scrollbarWidth: "thin" }}
         >
           {accessibleViews.map((view) => {
             const selected = view.id === activeViewId;
@@ -154,6 +160,8 @@ export default function Projects() {
                 onClick={() => selectView(view.id)}
                 minH="38px"
                 px={4}
+                flexShrink={0}
+                whiteSpace="nowrap"
                 borderRadius="md"
                 bg={selected ? "var(--apple-text)" : "transparent"}
                 color={selected ? "var(--apple-surface)" : "var(--apple-secondary)"}
@@ -161,7 +169,9 @@ export default function Projects() {
                 fontWeight="800"
                 boxShadow={selected ? "0 1px 2px rgba(0, 0, 0, 0.14)" : "none"}
                 transition="background 120ms ease, color 120ms ease, box-shadow 120ms ease"
-                _hover={{ bg: selected ? "var(--apple-text)" : "var(--apple-surface-hover)" }}
+                _hover={{
+                  bg: selected ? "var(--apple-text)" : "var(--apple-surface-hover)",
+                }}
                 _focusVisible={{ boxShadow: "var(--focus-ring)" }}
                 aria-pressed={selected}
               >
@@ -173,15 +183,10 @@ export default function Projects() {
       )}
 
       {activeView && ActiveProjectTable ? (
-        <VStack align="stretch" gap={4}>
-          <Box>
-            <Heading as="h2" size="lg" color="var(--apple-text)" fontWeight="850">
-              {t(projectViewKey(activeView.id, "title"))}
-            </Heading>
-            <Text color="var(--apple-muted)" mt={2}>
-              {t(projectViewKey(activeView.id, "description"))}
-            </Text>
-          </Box>
+        <VStack align="stretch" gap={3}>
+          <Text color="var(--apple-muted)" fontSize="sm" lineHeight="1.7">
+            {t(projectViewKey(activeView.id, "description"))}
+          </Text>
           {isLoading && <LoadingScreen text={t("projects.loading")} />}
           {error && <ErrorState error={error} />}
           {!isLoading && !error && (

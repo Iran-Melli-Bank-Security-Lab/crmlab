@@ -3,9 +3,9 @@ import type { ProjectTableRow } from "./types";
 
 export default function ProjectSummary({ project }: { project: ProjectTableRow }) {
   return (
-    <VStack align="start" gap={1} minW={0} width="full">
+    <VStack align="start" gap={0.5} minW={0} width="full">
       <Text
-        fontWeight="850"
+        fontWeight="800"
         color="var(--apple-text)"
         maxW="full"
         truncate
@@ -15,8 +15,8 @@ export default function ProjectSummary({ project }: { project: ProjectTableRow }
       </Text>
       <Text
         color="var(--apple-muted)"
-        fontSize="sm"
-        fontWeight="600"
+        fontSize="xs"
+        fontWeight="650"
         maxW="full"
         truncate
         title={project.client}

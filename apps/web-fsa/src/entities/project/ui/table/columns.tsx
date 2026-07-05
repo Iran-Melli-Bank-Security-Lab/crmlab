@@ -6,7 +6,7 @@ import type {
   ProjectStatus,
 } from "@/shared/types";
 import type { TranslationKey } from "@/features/language/model";
-import { formatCompactGroupId, formatDate } from "./formatters";
+import { formatCompactGroupId } from "./formatters";
 import ProjectSummary from "./ProjectSummary";
 import type { ProjectTableColumn } from "./types";
 
@@ -137,11 +137,23 @@ function ProgressMeter({ value }: { value: number }) {
         : "var(--apple-muted)";
 
   return (
-    <HStack gap={3} minW="140px">
-      <Box flex="1" h="2" bg="var(--apple-surface-hover)" borderRadius="full" overflow="hidden">
+    <HStack gap={2.5} minW="125px">
+      <Box
+        flex="1"
+        h="1.5"
+        bg="var(--apple-surface-hover)"
+        borderRadius="full"
+        overflow="hidden"
+      >
         <Box h="full" width={`${value}%`} bg={palette} borderRadius="full" />
       </Box>
-      <Text fontSize="sm" color="var(--apple-secondary)" fontWeight="700" minW="9">
+      <Text
+        fontSize="xs"
+        color="var(--apple-secondary)"
+        fontWeight="750"
+        minW="9"
+        fontVariantNumeric="tabular-nums"
+      >
         {value}%
       </Text>
     </HStack>
@@ -171,8 +183,10 @@ export const projectTableColumns = {
           {...assignmentStatusStyles[project.assignmentStatus]}
           border="1px solid"
           borderRadius="full"
-          px={3}
-          py={1}
+          px={2.5}
+          py={0.5}
+          fontSize="xs"
+          fontWeight="750"
           textTransform="none"
         >
           {t(assignmentStatusLabelKeys[project.assignmentStatus])}
@@ -188,7 +202,6 @@ export const projectTableColumns = {
     minW: "130px",
     kind: "date",
     sortable: true,
-    render: (project) => formatDate(project.assignedAt),
     sortValue: (project) =>
       project.assignedAt ? new Date(project.assignedAt).getTime() : 0,
   },
@@ -199,13 +212,35 @@ export const projectTableColumns = {
     minW: "150px",
     kind: "date",
     sortable: true,
-    render: (project) => formatDate(project.assignmentDueDate),
     sortValue: (project) =>
       project.assignmentDueDate ? new Date(project.assignmentDueDate).getTime() : 0,
   },
-  reviewer: { key: "reviewer", label: "Reviewer", labelKey: "projectTable.columns.reviewer", minW: "190px", maxW: "260px", kind: "user", sortable: true },
-  scope: { key: "scope", label: "Scope", labelKey: "projectTable.columns.scope", minW: "240px", maxW: "380px", kind: "longText", wrap: true, sortable: true },
-  phase: { key: "phase", label: "Phase", labelKey: "projectTable.columns.phase", minW: "160px", sortable: true },
+  reviewer: {
+    key: "reviewer",
+    label: "Reviewer",
+    labelKey: "projectTable.columns.reviewer",
+    minW: "190px",
+    maxW: "260px",
+    kind: "user",
+    sortable: true,
+  },
+  scope: {
+    key: "scope",
+    label: "Scope",
+    labelKey: "projectTable.columns.scope",
+    minW: "240px",
+    maxW: "380px",
+    kind: "longText",
+    wrap: true,
+    sortable: true,
+  },
+  phase: {
+    key: "phase",
+    label: "Phase",
+    labelKey: "projectTable.columns.phase",
+    minW: "160px",
+    sortable: true,
+  },
   submittedItems: {
     key: "submittedItems",
     label: "Submitted",
@@ -215,7 +250,15 @@ export const projectTableColumns = {
     kind: "number",
     sortable: true,
   },
-  client: { key: "client", label: "Client", labelKey: "projectTable.columns.client", minW: "160px", maxW: "240px", kind: "text", sortable: true },
+  client: {
+    key: "client",
+    label: "Client",
+    labelKey: "projectTable.columns.client",
+    minW: "160px",
+    maxW: "240px",
+    kind: "text",
+    sortable: true,
+  },
   discipline: {
     key: "discipline",
     label: "Type",
@@ -235,8 +278,10 @@ export const projectTableColumns = {
         {...statusStyles[project.status]}
         border="1px solid"
         borderRadius="full"
-        px={3}
-        py={1}
+        px={2.5}
+        py={0.5}
+        fontSize="xs"
+        fontWeight="750"
         textTransform="none"
       >
         {t(statusLabelKeys[project.status])}
@@ -254,16 +299,34 @@ export const projectTableColumns = {
         {...priorityStyles[project.priority]}
         border="1px solid"
         borderRadius="full"
-        px={3}
-        py={1}
+        px={2.5}
+        py={0.5}
+        fontSize="xs"
+        fontWeight="750"
         textTransform="none"
       >
         {t(priorityLabelKeys[project.priority])}
       </Badge>
     ),
   },
-  owner: { key: "owner", label: "Owner", labelKey: "projectTable.columns.owner", minW: "190px", maxW: "260px", kind: "user", sortable: true },
-  assignee: { key: "assignee", label: "Assignee", labelKey: "projectTable.columns.assignee", minW: "180px", maxW: "260px", kind: "user", sortable: true },
+  owner: {
+    key: "owner",
+    label: "Owner",
+    labelKey: "projectTable.columns.owner",
+    minW: "190px",
+    maxW: "260px",
+    kind: "user",
+    sortable: true,
+  },
+  assignee: {
+    key: "assignee",
+    label: "Assignee",
+    labelKey: "projectTable.columns.assignee",
+    minW: "180px",
+    maxW: "260px",
+    kind: "user",
+    sortable: true,
+  },
   projectGroupId: {
     key: "projectGroupId",
     label: "Group",
@@ -276,7 +339,13 @@ export const projectTableColumns = {
       </Text>
     ),
   },
-  version: { key: "version", label: "Version", labelKey: "projectTable.columns.version", minW: "110px", sortable: true },
+  version: {
+    key: "version",
+    label: "Version",
+    labelKey: "projectTable.columns.version",
+    minW: "110px",
+    sortable: true,
+  },
   letterNumber: {
     key: "letterNumber",
     label: "Letter",
@@ -290,7 +359,6 @@ export const projectTableColumns = {
     labelKey: "projectTable.columns.platform",
     minW: "120px",
     sortable: true,
-    render: (project) => project.platform || "-",
   },
   dueDate: {
     key: "dueDate",
@@ -299,7 +367,6 @@ export const projectTableColumns = {
     minW: "130px",
     kind: "date",
     sortable: true,
-    render: (project) => formatDate(project.dueDate),
     sortValue: (project) => new Date(project.dueDate).getTime(),
   },
   testExpiresAt: {
@@ -309,7 +376,6 @@ export const projectTableColumns = {
     minW: "140px",
     kind: "date",
     sortable: true,
-    render: (project) => formatDate(project.testExpiresAt),
     sortValue: (project) =>
       project.testExpiresAt ? new Date(project.testExpiresAt).getTime() : 0,
   },
@@ -320,7 +386,6 @@ export const projectTableColumns = {
     minW: "130px",
     kind: "date",
     sortable: true,
-    render: (project) => formatDate(project.createdAt),
     sortValue: (project) =>
       project.createdAt ? new Date(project.createdAt).getTime() : 0,
   },
@@ -358,7 +423,6 @@ export const projectTableColumns = {
     align: "end",
     kind: "percent",
     sortable: true,
-    render: (project) => `${project.testCoverage}%`,
   },
   openBugs: {
     key: "openBugs",
@@ -378,8 +442,24 @@ export const projectTableColumns = {
     kind: "text",
     sortable: true,
   },
-  repository: { key: "repository", label: "Repository", labelKey: "projectTable.columns.repository", minW: "190px", maxW: "300px", kind: "link", sortable: true },
-  pipeline: { key: "pipeline", label: "Pipeline", labelKey: "projectTable.columns.pipeline", minW: "150px", maxW: "240px", kind: "link", sortable: true },
+  repository: {
+    key: "repository",
+    label: "Repository",
+    labelKey: "projectTable.columns.repository",
+    minW: "190px",
+    maxW: "300px",
+    kind: "link",
+    sortable: true,
+  },
+  pipeline: {
+    key: "pipeline",
+    label: "Pipeline",
+    labelKey: "projectTable.columns.pipeline",
+    minW: "150px",
+    maxW: "240px",
+    kind: "link",
+    sortable: true,
+  },
   lastActivity: {
     key: "lastActivity",
     label: "Updated",
@@ -387,7 +467,6 @@ export const projectTableColumns = {
     minW: "130px",
     kind: "date",
     sortable: true,
-    render: (project) => formatDate(project.lastActivity),
     sortValue: (project) => new Date(project.lastActivity).getTime(),
   },
   assignedUsersAction: {

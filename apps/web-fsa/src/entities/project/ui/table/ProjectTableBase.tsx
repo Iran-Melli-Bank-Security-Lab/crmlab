@@ -1,14 +1,9 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   Badge,
   Box,
   Center,
+  Grid,
   HStack,
   IconButton,
   Link,
@@ -57,7 +52,10 @@ const PROJECT_TABLE_PAGINATION_KEY_PREFIX = "crmlab:project-table-pagination:v1"
 function getDisplayText(value: unknown, column: ProjectTableColumn) {
   if (value === undefined || value === null || value === "") return "";
   if (Array.isArray(value)) {
-    return value.map((item) => getDisplayText(item, column)).filter(Boolean).join(", ");
+    return value
+      .map((item) => getDisplayText(item, column))
+      .filter(Boolean)
+      .join(", ");
   }
   if (column.kind === "date" && typeof value === "string") return formatDate(value);
   if (column.kind === "percent" && typeof value === "number") return `${value}%`;
@@ -105,6 +103,56 @@ function DefaultProjectCell({
     );
   }
 
+  if (column.kind === "user") {
+    const initials = text
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+
+    return (
+      <HStack gap={2.5} minW={0}>
+        <Center
+          aria-hidden="true"
+          boxSize="7"
+          flexShrink={0}
+          borderRadius="full"
+          bg="var(--apple-surface-hover)"
+          color="var(--apple-secondary)"
+          fontSize="10px"
+          fontWeight="850"
+        >
+          {initials}
+        </Center>
+        <Text truncate title={text} fontWeight="700">
+          {text}
+        </Text>
+      </HStack>
+    );
+  }
+
+  if (column.kind === "number" || column.kind === "percent") {
+    return (
+      <Text
+        color="var(--apple-secondary)"
+        fontWeight="750"
+        fontVariantNumeric="tabular-nums"
+      >
+        {text}
+      </Text>
+    );
+  }
+
+  if (column.kind === "date") {
+    return (
+      <Text color="var(--apple-secondary)" fontSize="sm" whiteSpace="nowrap">
+        {text}
+      </Text>
+    );
+  }
+
   return (
     <Text
       maxW="full"
@@ -114,7 +162,6 @@ function DefaultProjectCell({
       overflowWrap={column.wrap ? "anywhere" : undefined}
       lineClamp={column.wrap ? 2 : undefined}
       title={text}
-      fontWeight={column.kind === "user" ? "700" : undefined}
     >
       {text}
     </Text>
@@ -142,10 +189,7 @@ function getStoredPagination(storageKey: string): StoredPagination {
     const storedPage = Number(parsedValue.page);
 
     return {
-      page:
-        Number.isInteger(storedPage) && storedPage > 0
-          ? storedPage
-          : 1,
+      page: Number.isInteger(storedPage) && storedPage > 0 ? storedPage : 1,
       pageSize: PAGE_SIZE_OPTIONS.includes(storedPageSize)
         ? storedPageSize
         : DEFAULT_PAGE_SIZE,
@@ -168,37 +212,32 @@ export default function ProjectTableBase({
   onCreateFromProject,
   onAssignPentesters,
 }: ProjectTableBaseProps) {
-  const { t } = useLanguage();
+  const { dir, t } = useLanguage();
   const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
   useSyncProjectTableSettings(currentUserId);
-  const configuredColumnKeys = useSelector(
-    (state: RootState) =>
-      state.ui.projectTableSettingsUserId === state.auth.user?.id
-        ? state.ui.visibleProjectColumns[paginationId]
-        : undefined
+  const configuredColumnKeys = useSelector((state: RootState) =>
+    state.ui.projectTableSettingsUserId === state.auth.user?.id
+      ? state.ui.visibleProjectColumns[paginationId]
+      : undefined
   );
-  const configuredColumnOrder = useSelector(
-    (state: RootState) =>
-      state.ui.projectTableSettingsUserId === state.auth.user?.id
-        ? state.ui.projectTableColumnOrder[paginationId]
-        : undefined
+  const configuredColumnOrder = useSelector((state: RootState) =>
+    state.ui.projectTableSettingsUserId === state.auth.user?.id
+      ? state.ui.projectTableColumnOrder[paginationId]
+      : undefined
   );
-  const columnAliases = useSelector(
-    (state: RootState) =>
-      state.ui.projectTableSettingsUserId === state.auth.user?.id
-        ? state.ui.projectTableColumnAliases[paginationId]
-        : undefined
+  const columnAliases = useSelector((state: RootState) =>
+    state.ui.projectTableSettingsUserId === state.auth.user?.id
+      ? state.ui.projectTableColumnAliases[paginationId]
+      : undefined
   );
   const visibleColumns = useMemo(() => {
     const enabledColumns = configuredColumnKeys
-        ? columns.filter((column) => configuredColumnKeys.includes(String(column.key)))
-        : columns;
+      ? columns.filter((column) => configuredColumnKeys.includes(String(column.key)))
+      : columns;
 
     if (!configuredColumnOrder) return enabledColumns;
 
-    const positions = new Map(
-      configuredColumnOrder.map((key, index) => [key, index])
-    );
+    const positions = new Map(configuredColumnOrder.map((key, index) => [key, index]));
     return [...enabledColumns].sort(
       (left, right) =>
         (positions.get(String(left.key)) ?? columns.length) -
@@ -259,14 +298,17 @@ export default function ProjectTableBase({
 
   const totalPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const visibleProjects = filteredProjects.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+  const visibleProjects = useMemo(
+    () => filteredProjects.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [currentPage, filteredProjects, pageSize]
   );
-  const activeProjects = projects.filter((project) => project.status === "active").length;
-  const blockedProjects = projects.filter(
-    (project) => project.status === "blocked"
-  ).length;
+  const { activeProjects, blockedProjects } = useMemo(
+    () => ({
+      activeProjects: projects.filter((project) => project.status === "active").length,
+      blockedProjects: projects.filter((project) => project.status === "blocked").length,
+    }),
+    [projects]
+  );
 
   useEffect(() => {
     if (page > totalPages) {
@@ -306,19 +348,17 @@ export default function ProjectTableBase({
       border="1px solid"
       borderColor="var(--apple-border)"
       borderRadius="md"
-      boxShadow="var(--surface-shadow)"
+      boxShadow="0 1px 3px rgba(0, 0, 0, 0.06)"
       overflow="hidden"
-      backdropFilter="blur(18px)"
-      transition="box-shadow 160ms ease, border-color 160ms ease"
-      _hover={{ boxShadow: "var(--surface-shadow-hover)" }}
+      dir={dir}
     >
       <VStack
         align="stretch"
-        gap={5}
-        p={5}
+        gap={4}
+        p={{ base: 4, md: 5 }}
         borderBottom="1px solid"
         borderColor="var(--apple-border-soft)"
-        bg="var(--apple-surface-glass)"
+        bg="var(--apple-surface-raised)"
       >
         <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
           <Box>
@@ -333,7 +373,7 @@ export default function ProjectTableBase({
               })}
             </Text>
           </Box>
-          <HStack gap={2} flexWrap="wrap">
+          <HStack gap={2} flexWrap="wrap" justify="end">
             <Badge
               bg="var(--apple-blue-soft)"
               color="var(--apple-blue)"
@@ -363,8 +403,12 @@ export default function ProjectTableBase({
           </HStack>
         </HStack>
 
-        <HStack gap={3} align="end" flexWrap="wrap">
-          <Box flex="1" minW={{ base: "full", md: "280px" }}>
+        <Grid
+          gap={3}
+          alignItems="end"
+          templateColumns={{ base: "1fr", md: "minmax(260px, 1fr) 170px 170px" }}
+        >
+          <Box minW={0}>
             <Input
               label={t("common.search")}
               value={query}
@@ -372,7 +416,7 @@ export default function ProjectTableBase({
               placeholder={t("projectTable.searchPlaceholder")}
             />
           </Box>
-          <Box minW="160px">
+          <Box minW={0}>
             <Text
               as="label"
               display="block"
@@ -411,7 +455,7 @@ export default function ProjectTableBase({
               <NativeSelect.Indicator />
             </NativeSelect.Root>
           </Box>
-          <Box minW="160px">
+          <Box minW={0}>
             <Text
               as="label"
               display="block"
@@ -450,21 +494,18 @@ export default function ProjectTableBase({
               <NativeSelect.Indicator />
             </NativeSelect.Root>
           </Box>
-        </HStack>
+        </Grid>
       </VStack>
 
       {visibleProjects.length === 0 ? (
         <Box p={8}>
-          <EmptyState
-            title={emptyTitle}
-            description={t("projectTable.adjustFilters")}
-          />
+          <EmptyState title={emptyTitle} description={t("projectTable.adjustFilters")} />
         </Box>
       ) : (
         <Table.ScrollArea
           borderTop="1px solid"
           borderColor="var(--apple-border-soft)"
-          maxH="620px"
+          maxH={{ base: "70vh", xl: "640px" }}
           css={{
             "&::-webkit-scrollbar": { height: "10px", width: "10px" },
             "&::-webkit-scrollbar-thumb": {
@@ -490,42 +531,49 @@ export default function ProjectTableBase({
                     columnAliases?.[String(column.key)]?.trim() ||
                     (column.labelKey ? t(column.labelKey) : column.label);
                   return (
-                  <Table.ColumnHeader
-                    key={column.key}
-                    minW={column.minW}
-                    maxW={column.maxW ?? "280px"}
-                    textAlign={column.align}
-                    cursor={column.sortable ? "pointer" : "default"}
-                    onClick={() => handleSort(column)}
-                    userSelect="none"
-                    color="var(--apple-muted)"
-                    fontWeight="800"
-                    fontSize="xs"
-                    letterSpacing="0"
-                    textTransform="uppercase"
-                    borderColor="var(--apple-border-soft)"
-                    py={3}
-                    px={4}
-                    position="relative"
-                    _after={{
-                      content: '""',
-                      position: "absolute",
-                      insetInlineEnd: 0,
-                      top: "28%",
-                      bottom: "28%",
-                      width: "1px",
-                      bg: "var(--apple-border-soft)",
-                    }}
-                  >
-                    <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
-                      <Text as="span" truncate title={headerLabel}>
-                        {headerLabel}
-                      </Text>
-                      {column.sortable && sort.key === column.key && (
-                        <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
-                      )}
-                    </HStack>
-                  </Table.ColumnHeader>
+                    <Table.ColumnHeader
+                      key={column.key}
+                      minW={column.minW}
+                      maxW={column.maxW ?? "280px"}
+                      textAlign={column.align}
+                      cursor={column.sortable ? "pointer" : "default"}
+                      onClick={() => handleSort(column)}
+                      aria-sort={
+                        sort.key === column.key
+                          ? sort.direction === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : undefined
+                      }
+                      userSelect="none"
+                      color="var(--apple-muted)"
+                      fontWeight="800"
+                      fontSize="xs"
+                      letterSpacing="0"
+                      textTransform={dir === "ltr" ? "uppercase" : "none"}
+                      borderColor="var(--apple-border-soft)"
+                      py={2.5}
+                      px={4}
+                      position="relative"
+                      _after={{
+                        content: '""',
+                        position: "absolute",
+                        insetInlineEnd: 0,
+                        top: "28%",
+                        bottom: "28%",
+                        width: "1px",
+                        bg: "var(--apple-border-soft)",
+                      }}
+                    >
+                      <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
+                        <Text as="span" truncate title={headerLabel}>
+                          {headerLabel}
+                        </Text>
+                        {column.sortable && sort.key === column.key && (
+                          <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </HStack>
+                    </Table.ColumnHeader>
                   );
                 })}
                 {onAction && (
@@ -535,9 +583,9 @@ export default function ProjectTableBase({
                     color="var(--apple-muted)"
                     fontWeight="800"
                     fontSize="xs"
-                    textTransform="uppercase"
+                    textTransform={dir === "ltr" ? "uppercase" : "none"}
                     borderColor="var(--apple-border-soft)"
-                    py={3}
+                    py={2.5}
                     px={4}
                   >
                     {t("projectTable.action")}
@@ -556,7 +604,7 @@ export default function ProjectTableBase({
                   onDoubleClick={() => onRowDoubleClick?.(project)}
                   _hover={{
                     bg: "var(--apple-surface-hover)",
-                    boxShadow: "inset 3px 0 0 var(--apple-blue)",
+                    boxShadow: `inset ${dir === "rtl" ? "-3px" : "3px"} 0 0 var(--apple-blue)`,
                   }}
                 >
                   {visibleColumns.map((column) => (
@@ -570,7 +618,7 @@ export default function ProjectTableBase({
                       fontWeight="600"
                       borderColor="var(--apple-border-soft)"
                       px={4}
-                      py={4}
+                      py={3}
                     >
                       <HStack
                         justify={column.align === "end" ? "end" : "start"}
@@ -581,6 +629,9 @@ export default function ProjectTableBase({
                           {column.key === "assignedUserIds" && onAssignPentesters ? (
                             <Button
                               variant="secondary"
+                              minH="30px"
+                              h="30px"
+                              px={3}
                               onClick={(event) => {
                                 event.stopPropagation();
                                 onAssignPentesters(project);
@@ -596,7 +647,9 @@ export default function ProjectTableBase({
                         </Box>
                         {column.key === "summary" && onCreateFromProject && (
                           <IconButton
-                            aria-label={t("projectTable.createFrom", { name: project.name })}
+                            aria-label={t("projectTable.createFrom", {
+                              name: project.name,
+                            })}
                             size="xs"
                             minW="28px"
                             h="28px"
@@ -620,10 +673,13 @@ export default function ProjectTableBase({
                       textAlign="end"
                       borderColor="var(--apple-border-soft)"
                       px={4}
-                      py={4}
+                      py={3}
                     >
                       <Button
                         variant="secondary"
+                        minH="30px"
+                        h="30px"
+                        px={3}
                         onClick={(event) => {
                           event.stopPropagation();
                           onAction(project);
@@ -644,7 +700,8 @@ export default function ProjectTableBase({
         justify="space-between"
         gap={4}
         flexWrap="wrap"
-        p={4}
+        px={{ base: 4, md: 5 }}
+        py={3}
         borderTop="1px solid"
         borderColor="var(--apple-border-soft)"
         bg="var(--apple-surface-subtle)"

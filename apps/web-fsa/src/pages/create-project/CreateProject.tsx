@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import {
   Box,
   chakra,
+  Code,
   Flex,
   Heading,
   HStack,
@@ -40,6 +41,8 @@ type FormState = {
   testEndDate: string;
 };
 
+type CreateWorkType = "testing" | "devops" | "task";
+
 const initialForm: FormState = {
   name: "",
   version: "",
@@ -55,6 +58,42 @@ const initialForm: FormState = {
 
 const copy = {
   en: {
+    selectorEyebrow: "CREATE WORK",
+    selectorTitle: "What would you like to create?",
+    selectorDescription:
+      "Choose a work type to continue with the right setup and assignment flow.",
+    testingProject: "Testing Project",
+    testingProjectHint:
+      "Create a security or quality testing project with managers and certification settings.",
+    devopsProject: "DevOps Project",
+    devopsProjectHint:
+      "Create delivery work for environments, repositories, pipelines, and deployments.",
+    task: "Task",
+    taskHint: "Create a focused task and assign it to one user.",
+    available: "Available",
+    planned: "Planned",
+    choose: "Continue",
+    continueArrow: "→",
+    backToTypes: "Change work type",
+    unavailableTitle: "This creation flow is not implemented yet",
+    unavailableDescription:
+      "The required end-to-end API contract is not available, so submission is intentionally disabled.",
+    backendRequirements: "Backend/API support needed",
+    devopsRequirements: [
+      "POST /api/projects with a dedicated DevOps creation contract",
+      "apps/api/src/modules/projects/validators/project.validators.ts",
+      "apps/api/src/modules/projects/controllers/project.controller.ts",
+      "apps/web-fsa/src/shared/types/api/projects.ts",
+      "apps/web-fsa/src/entities/project/api/projectsApi.ts",
+    ],
+    taskRequirements: [
+      "POST /api/tasks with authenticated creator and validated assignee",
+      "apps/api/src/modules/tasks/models/task.model.ts",
+      "apps/api/src/modules/tasks/validators/task.validators.ts",
+      "apps/api/src/modules/tasks/controllers/task.controller.ts",
+      "apps/api/src/modules/tasks/routes/task.routes.ts",
+      "A shared task create request/response contract",
+    ],
     eyebrow: "ADMIN WORKSPACE",
     title: "Create a new project",
     description:
@@ -123,6 +162,41 @@ const copy = {
     none: "None",
   },
   fa: {
+    selectorEyebrow: "ایجاد کار",
+    selectorTitle: "چه چیزی می‌خواهید ایجاد کنید؟",
+    selectorDescription:
+      "نوع کار را انتخاب کنید تا با فرم و فرایند تخصیص مناسب ادامه دهید.",
+    testingProject: "پروژه تست",
+    testingProjectHint: "ایجاد پروژه تست امنیت یا کیفیت همراه با مدیران و تنظیمات گواهی.",
+    devopsProject: "پروژه دواپس",
+    devopsProjectHint:
+      "ایجاد کار تحویل برای محیط‌ها، مخازن کد، پایپ‌لاین‌ها و استقرارها.",
+    task: "وظیفه",
+    taskHint: "ایجاد یک وظیفه مشخص و تخصیص آن به یک کاربر.",
+    available: "آماده استفاده",
+    planned: "در برنامه",
+    choose: "ادامه",
+    continueArrow: "←",
+    backToTypes: "تغییر نوع کار",
+    unavailableTitle: "این فرایند ایجاد هنوز پیاده‌سازی نشده است",
+    unavailableDescription:
+      "قرارداد کامل API مورد نیاز موجود نیست؛ بنابراین ارسال اطلاعات عمداً غیرفعال است.",
+    backendRequirements: "پشتیبانی بک‌اند و API مورد نیاز",
+    devopsRequirements: [
+      "POST /api/projects با قرارداد اختصاصی ایجاد پروژه دواپس",
+      "apps/api/src/modules/projects/validators/project.validators.ts",
+      "apps/api/src/modules/projects/controllers/project.controller.ts",
+      "apps/web-fsa/src/shared/types/api/projects.ts",
+      "apps/web-fsa/src/entities/project/api/projectsApi.ts",
+    ],
+    taskRequirements: [
+      "POST /api/tasks با ایجادکننده احراز هویت‌شده و مسئول اعتبارسنجی‌شده",
+      "apps/api/src/modules/tasks/models/task.model.ts",
+      "apps/api/src/modules/tasks/validators/task.validators.ts",
+      "apps/api/src/modules/tasks/controllers/task.controller.ts",
+      "apps/api/src/modules/tasks/routes/task.routes.ts",
+      "قرارداد مشترک درخواست و پاسخ ایجاد وظیفه",
+    ],
     eyebrow: "فضای کاری مدیر",
     title: "ایجاد پروژه جدید",
     description:
@@ -191,6 +265,228 @@ const copy = {
     none: "بدون گواهی",
   },
 } as const;
+
+type CreateProjectLabels = (typeof copy)[keyof typeof copy];
+
+function WorkTypeCard({
+  number,
+  title,
+  description,
+  available,
+  labels,
+  onClick,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  available: boolean;
+  labels: CreateProjectLabels;
+  onClick: () => void;
+}) {
+  return (
+    <chakra.button
+      type="button"
+      onClick={onClick}
+      display="flex"
+      flexDirection="column"
+      alignItems="stretch"
+      minH="250px"
+      p={{ base: 5, md: 6 }}
+      textAlign="start"
+      bg="var(--apple-surface-raised)"
+      border="1px solid"
+      borderColor="var(--apple-border)"
+      borderRadius="xl"
+      boxShadow="0 8px 28px rgba(15, 23, 42, 0.06)"
+      transition="border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease"
+      _hover={{
+        borderColor: "var(--apple-blue-border-strong)",
+        boxShadow: "0 14px 36px rgba(15, 23, 42, 0.1)",
+        transform: "translateY(-2px)",
+      }}
+      _focusVisible={{ boxShadow: "var(--focus-ring)" }}
+    >
+      <HStack justify="space-between" gap={3}>
+        <Flex
+          align="center"
+          justify="center"
+          boxSize="10"
+          borderRadius="lg"
+          bg={available ? "var(--apple-blue)" : "var(--apple-surface-hover)"}
+          color={available ? "white" : "var(--apple-secondary)"}
+          fontSize="sm"
+          fontWeight="900"
+        >
+          {number}
+        </Flex>
+        <Box
+          px={2.5}
+          py={1}
+          borderRadius="full"
+          bg={available ? "var(--apple-success-bg)" : "var(--apple-surface-hover)"}
+          color={available ? "var(--apple-success-text)" : "var(--apple-muted)"}
+          fontSize="xs"
+          fontWeight="800"
+        >
+          {available ? labels.available : labels.planned}
+        </Box>
+      </HStack>
+      <Heading as="h2" size="lg" mt={7} color="var(--apple-text)">
+        {title}
+      </Heading>
+      <Text color="var(--apple-muted)" fontSize="sm" lineHeight="1.8" mt={2}>
+        {description}
+      </Text>
+      <HStack mt="auto" pt={7} color="var(--apple-blue)" fontWeight="800">
+        <Text>{labels.choose}</Text>
+        <Text aria-hidden="true">{labels.continueArrow}</Text>
+      </HStack>
+    </chakra.button>
+  );
+}
+
+function WorkTypeSelector({
+  labels,
+  dir,
+  onSelect,
+  onCancel,
+}: {
+  labels: CreateProjectLabels;
+  dir: "ltr" | "rtl";
+  onSelect: (type: CreateWorkType) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Box maxW="1180px" mx="auto" dir={dir}>
+      <Flex justify="space-between" align="start" gap={5} flexWrap="wrap">
+        <Box maxW="760px">
+          <Text color="var(--apple-blue)" fontSize="xs" fontWeight="900">
+            {labels.selectorEyebrow}
+          </Text>
+          <Heading size={{ base: "2xl", md: "3xl" }} mt={3} letterSpacing="0">
+            {labels.selectorTitle}
+          </Heading>
+          <Text color="var(--apple-muted)" mt={3} fontSize={{ base: "md", md: "lg" }}>
+            {labels.selectorDescription}
+          </Text>
+        </Box>
+        <Button variant="secondary" onClick={onCancel}>
+          {labels.cancel}
+        </Button>
+      </Flex>
+
+      <SimpleGrid columns={{ base: 1, md: 3 }} gap={5} mt={{ base: 7, md: 10 }}>
+        <WorkTypeCard
+          number="01"
+          title={labels.testingProject}
+          description={labels.testingProjectHint}
+          available
+          labels={labels}
+          onClick={() => onSelect("testing")}
+        />
+        <WorkTypeCard
+          number="02"
+          title={labels.devopsProject}
+          description={labels.devopsProjectHint}
+          available={false}
+          labels={labels}
+          onClick={() => onSelect("devops")}
+        />
+        <WorkTypeCard
+          number="03"
+          title={labels.task}
+          description={labels.taskHint}
+          available={false}
+          labels={labels}
+          onClick={() => onSelect("task")}
+        />
+      </SimpleGrid>
+    </Box>
+  );
+}
+
+function UnavailableWorkType({
+  title,
+  labels,
+  dir,
+  requirements,
+  onBack,
+}: {
+  title: string;
+  labels: CreateProjectLabels;
+  dir: "ltr" | "rtl";
+  requirements: readonly string[];
+  onBack: () => void;
+}) {
+  return (
+    <Box maxW="820px" mx="auto" dir={dir}>
+      <Button variant="secondary" onClick={onBack} mb={5}>
+        {labels.backToTypes}
+      </Button>
+      <Box
+        bg="var(--apple-surface-raised)"
+        border="1px solid"
+        borderColor="var(--apple-border)"
+        borderRadius="xl"
+        boxShadow="0 8px 28px rgba(15, 23, 42, 0.06)"
+        overflow="hidden"
+      >
+        <Box
+          p={{ base: 6, md: 8 }}
+          borderBottom="1px solid"
+          borderColor="var(--apple-border-soft)"
+        >
+          <Box
+            display="inline-flex"
+            px={2.5}
+            py={1}
+            borderRadius="full"
+            bg="var(--apple-warning-bg)"
+            color="var(--apple-warning-text)"
+            fontSize="xs"
+            fontWeight="800"
+          >
+            {labels.planned}
+          </Box>
+          <Heading mt={4} size="xl">
+            {title}
+          </Heading>
+          <Text mt={3} color="var(--apple-text)" fontWeight="800">
+            {labels.unavailableTitle}
+          </Text>
+          <Text mt={2} color="var(--apple-muted)" lineHeight="1.8">
+            {labels.unavailableDescription}
+          </Text>
+        </Box>
+        <Box p={{ base: 6, md: 8 }} bg="var(--apple-surface-subtle)">
+          <Text fontWeight="850" mb={4}>
+            {labels.backendRequirements}
+          </Text>
+          <VStack align="stretch" gap={2.5} dir="ltr" textAlign="left">
+            {requirements.map((requirement) => (
+              <HStack key={requirement} align="start" gap={3}>
+                <Box boxSize="1.5" borderRadius="full" bg="var(--apple-blue)" mt="8px" />
+                <Code
+                  bg="var(--apple-surface-raised)"
+                  border="1px solid"
+                  borderColor="var(--apple-border-soft)"
+                  borderRadius="md"
+                  color="var(--apple-secondary)"
+                  px={2.5}
+                  py={1.5}
+                  whiteSpace="normal"
+                  overflowWrap="anywhere"
+                >
+                  {requirement}
+                </Code>
+              </HStack>
+            ))}
+          </VStack>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
 
 function Section({
   number,
@@ -281,7 +577,10 @@ function ChoiceCard({
     >
       <Flex align="start" justify="space-between" gap={3}>
         <Box>
-          <Text fontWeight="800" color={selected ? "var(--apple-blue)" : "var(--apple-text)"}>
+          <Text
+            fontWeight="800"
+            color={selected ? "var(--apple-blue)" : "var(--apple-text)"}
+          >
             {title}
           </Text>
           {hint && (
@@ -300,7 +599,9 @@ function ChoiceCard({
           align="center"
           justify="center"
         >
-          {selected && <Box w="10px" h="10px" borderRadius="full" bg="var(--apple-blue)" />}
+          {selected && (
+            <Box w="10px" h="10px" borderRadius="full" bg="var(--apple-blue)" />
+          )}
         </Flex>
       </Flex>
     </chakra.button>
@@ -470,25 +771,24 @@ function isDevOpsManagerCandidate(user: User) {
 export default function CreateProject() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { language } = useLanguage();
+  const { dir, language } = useLanguage();
   const labels = copy[language];
+  const [workType, setWorkType] = useState<CreateWorkType | null>(null);
   const [form, setForm] = useState<FormState>(initialForm);
-  const { data: users = [], isLoading: usersLoading } = useGetUsersQuery();
+  const { data: users = [], isLoading: usersLoading } = useGetUsersQuery(undefined, {
+    skip: workType !== "testing",
+  });
   const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
 
-const disciplineUsers = useMemo(() => {
-  if (form.type === "security") {
-    return users.filter(isSecurityManagerCandidate);
-  }
+  const disciplineUsers = useMemo(() => {
+    if (form.type === "security") {
+      return users.filter(isSecurityManagerCandidate);
+    }
 
-  return users.filter(isQualityManagerCandidate);
-}, [form.type, users]);
+    return users.filter(isQualityManagerCandidate);
+  }, [form.type, users]);
 
-const devopsUsers = useMemo(
-  () => users.filter(isDevOpsManagerCandidate),
-  [users]
-);
-
+  const devopsUsers = useMemo(() => users.filter(isDevOpsManagerCandidate), [users]);
 
   const update = <Key extends keyof FormState>(key: Key, value: FormState[Key]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -545,12 +845,42 @@ const devopsUsers = useMemo(
   const managerCount =
     Number(Boolean(form.projectManagerId)) + Number(Boolean(form.devopsManagerId));
 
+  if (!workType) {
+    return (
+      <WorkTypeSelector
+        labels={labels}
+        dir={dir}
+        onSelect={setWorkType}
+        onCancel={() => navigate("/projects")}
+      />
+    );
+  }
+
+  if (workType !== "testing") {
+    return (
+      <UnavailableWorkType
+        title={workType === "devops" ? labels.devopsProject : labels.task}
+        labels={labels}
+        dir={dir}
+        requirements={
+          workType === "devops" ? labels.devopsRequirements : labels.taskRequirements
+        }
+        onBack={() => setWorkType(null)}
+      />
+    );
+  }
+
   return (
-    <Box maxW="1440px" mx="auto">
+    <Box maxW="1440px" mx="auto" dir={dir}>
       <Flex mb={7} justify="space-between" align="start" gap={5} flexWrap="wrap">
         <Box>
           <HStack gap={3} mb={3}>
-            <Text color="var(--apple-blue)" fontSize="xs" letterSpacing="0" fontWeight="900">
+            <Text
+              color="var(--apple-blue)"
+              fontSize="xs"
+              letterSpacing="0"
+              fontWeight="900"
+            >
               {labels.eyebrow}
             </Text>
             <Box
@@ -568,13 +898,23 @@ const devopsUsers = useMemo(
           <Heading size={{ base: "2xl", md: "3xl" }} letterSpacing="0">
             {labels.title}
           </Heading>
-          <Text color="var(--apple-muted)" mt={3} maxW="720px" fontSize={{ base: "md", md: "lg" }}>
+          <Text
+            color="var(--apple-muted)"
+            mt={3}
+            maxW="720px"
+            fontSize={{ base: "md", md: "lg" }}
+          >
             {labels.description}
           </Text>
         </Box>
-        <Button variant="secondary" onClick={() => navigate("/projects")}>
-          {labels.cancel}
-        </Button>
+        <HStack gap={2} flexWrap="wrap">
+          <Button variant="secondary" onClick={() => setWorkType(null)}>
+            {labels.backToTypes}
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/projects")}>
+            {labels.cancel}
+          </Button>
+        </HStack>
       </Flex>
 
       <form onSubmit={handleSubmit}>
@@ -743,12 +1083,7 @@ const devopsUsers = useMemo(
               overflow="hidden"
               position="relative"
             >
-              <Text
-                fontSize="xs"
-                color="#9fd0ff"
-                fontWeight="900"
-                letterSpacing="0"
-              >
+              <Text fontSize="xs" color="#9fd0ff" fontWeight="900" letterSpacing="0">
                 {labels.summary}
               </Text>
               <Heading size="lg" mt={3} lineClamp={2}>

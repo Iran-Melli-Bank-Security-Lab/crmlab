@@ -34,6 +34,10 @@ export const ROUTES = {
     ASSIGN_USERS: "/:id/assign-users",
   },
 
+  TASKS: {
+    BASE: "/api/tasks",
+  },
+
   NOTIFICATIONS: {
     BASE: "/api/notifications",
     READ_ALL: "/read-all",

@@ -6,18 +6,23 @@ import {
   Box,
   chakra,
   Code,
+  Field,
   Flex,
   Heading,
   HStack,
+  NativeSelect,
   SimpleGrid,
   Spinner,
   Text,
+  Textarea,
   VStack,
 } from "@chakra-ui/react";
+import type { TaskPriority } from "@role-dashboard/contracts";
 import Button from "@/shared/ui/primitives/Button";
 import Input from "@/shared/ui/primitives/Input";
 import { useLanguage } from "@/features/language/model";
 import { useCreateProjectMutation } from "@/entities/project/api/projectsApi";
+import { useCreateTaskMutation } from "@/entities/task/api/tasksApi";
 import { useGetUsersQuery } from "@/entities/user/api/usersApi";
 import { getApiErrorMessage } from "@/shared/lib/getApiErrorMessage";
 import type {
@@ -70,6 +75,27 @@ const copy = {
       "Create delivery work for environments, repositories, pipelines, and deployments.",
     task: "Task",
     taskHint: "Create a focused task and assign it to one user.",
+    taskFormEyebrow: "TASK ASSIGNMENT",
+    taskFormTitle: "Create a new task",
+    taskFormDescription:
+      "Define the work, choose its priority and deadline, then assign it to any active lab user.",
+    taskTitle: "Task title",
+    taskTitlePlaceholder: "e.g. Review the release security checklist",
+    taskDescription: "Description",
+    taskDescriptionPlaceholder: "Add clear context and expected outcome...",
+    taskAssignee: "Assignee",
+    taskAssigneeHint: "Select any active lab user, including your own account.",
+    taskPriority: "Priority",
+    taskDeadline: "Deadline",
+    taskRequired: "Enter a title, choose an assignee, and set a deadline.",
+    createTask: "Create task",
+    creatingTask: "Creating task...",
+    taskSuccess: "Task created and assigned successfully",
+    taskError: "Task could not be created",
+    priorityLow: "Low",
+    priorityMedium: "Medium",
+    priorityHigh: "High",
+    priorityCritical: "Critical",
     available: "Available",
     planned: "Planned",
     choose: "Continue",
@@ -173,6 +199,27 @@ const copy = {
       "ایجاد کار تحویل برای محیط‌ها، مخازن کد، پایپ‌لاین‌ها و استقرارها.",
     task: "وظیفه",
     taskHint: "ایجاد یک وظیفه مشخص و تخصیص آن به یک کاربر.",
+    taskFormEyebrow: "تخصیص وظیفه",
+    taskFormTitle: "ایجاد وظیفه جدید",
+    taskFormDescription:
+      "کار، اولویت و مهلت را مشخص کنید و آن را به هر کاربر فعال آزمایشگاه تخصیص دهید.",
+    taskTitle: "عنوان وظیفه",
+    taskTitlePlaceholder: "برای مثال بازبینی چک‌لیست امنیت انتشار",
+    taskDescription: "توضیحات",
+    taskDescriptionPlaceholder: "زمینه و نتیجه مورد انتظار را شفاف بنویسید...",
+    taskAssignee: "مسئول",
+    taskAssigneeHint: "هر کاربر فعال آزمایشگاه، از جمله حساب خودتان، قابل انتخاب است.",
+    taskPriority: "اولویت",
+    taskDeadline: "مهلت",
+    taskRequired: "عنوان، مسئول و مهلت وظیفه را تکمیل کنید.",
+    createTask: "ایجاد وظیفه",
+    creatingTask: "در حال ایجاد وظیفه...",
+    taskSuccess: "وظیفه با موفقیت ایجاد و تخصیص داده شد",
+    taskError: "ایجاد وظیفه انجام نشد",
+    priorityLow: "کم",
+    priorityMedium: "متوسط",
+    priorityHigh: "زیاد",
+    priorityCritical: "بحرانی",
     available: "آماده استفاده",
     planned: "در برنامه",
     choose: "ادامه",
@@ -396,7 +443,7 @@ function WorkTypeSelector({
           number="03"
           title={labels.task}
           description={labels.taskHint}
-          available={false}
+          available
           labels={labels}
           onClick={() => onSelect("task")}
         />
@@ -746,6 +793,170 @@ function UserPicker({
   );
 }
 
+function TaskCreationForm({
+  users,
+  usersLoading,
+  labels,
+  dir,
+  onBack,
+  onCancel,
+  onCreated,
+}: {
+  users: User[];
+  usersLoading: boolean;
+  labels: CreateProjectLabels;
+  dir: "ltr" | "rtl";
+  onBack: () => void;
+  onCancel: () => void;
+  onCreated: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [assigneeId, setAssigneeId] = useState("");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [deadline, setDeadline] = useState("");
+  const [createTask, { isLoading }] = useCreateTaskMutation();
+  const minDate = new Date().toISOString().slice(0, 10);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!title.trim() || !assigneeId || !deadline) {
+      toast.error(labels.taskRequired);
+      return;
+    }
+
+    try {
+      await createTask({
+        title: title.trim(),
+        description: description.trim(),
+        assigneeId,
+        priority,
+        deadline,
+      }).unwrap();
+      toast.success(labels.taskSuccess);
+      onCreated();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, labels.taskError));
+    }
+  };
+
+  return (
+    <Box maxW="1180px" mx="auto" dir={dir}>
+      <Flex justify="space-between" align="start" gap={5} flexWrap="wrap" mb={7}>
+        <Box maxW="760px">
+          <Text color="var(--apple-blue)" fontSize="xs" fontWeight="900">
+            {labels.taskFormEyebrow}
+          </Text>
+          <Heading size={{ base: "2xl", md: "3xl" }} mt={3}>
+            {labels.taskFormTitle}
+          </Heading>
+          <Text color="var(--apple-muted)" mt={3} lineHeight="1.8">
+            {labels.taskFormDescription}
+          </Text>
+        </Box>
+        <HStack gap={2} flexWrap="wrap">
+          <Button variant="secondary" onClick={onBack}>
+            {labels.backToTypes}
+          </Button>
+          <Button variant="secondary" onClick={onCancel}>
+            {labels.cancel}
+          </Button>
+        </HStack>
+      </Flex>
+
+      <form onSubmit={handleSubmit}>
+        <SimpleGrid columns={{ base: 1, lg: 2 }} gap={5} alignItems="start">
+          <Box
+            bg="var(--apple-surface-raised)"
+            border="1px solid"
+            borderColor="var(--apple-border)"
+            borderRadius="xl"
+            boxShadow="0 8px 28px rgba(15, 23, 42, 0.06)"
+            p={{ base: 5, md: 6 }}
+          >
+            <VStack align="stretch" gap={5}>
+              <Input
+                label={labels.taskTitle}
+                placeholder={labels.taskTitlePlaceholder}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                required
+              />
+              <Field.Root>
+                <Field.Label>{labels.taskDescription}</Field.Label>
+                <Textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder={labels.taskDescriptionPlaceholder}
+                  minH="150px"
+                  resize="vertical"
+                  bg="var(--apple-surface)"
+                  borderColor="var(--apple-border)"
+                  _focusVisible={{
+                    borderColor: "var(--apple-blue)",
+                    boxShadow: "var(--focus-ring)",
+                  }}
+                />
+              </Field.Root>
+              <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
+                <Box>
+                  <Text as="label" display="block" fontSize="sm" fontWeight="650" mb={2}>
+                    {labels.taskPriority}
+                  </Text>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      value={priority}
+                      onChange={(event) =>
+                        setPriority(event.target.value as TaskPriority)
+                      }
+                      bg="var(--apple-surface)"
+                      borderColor="var(--apple-border)"
+                      borderRadius="md"
+                    >
+                      <option value="low">{labels.priorityLow}</option>
+                      <option value="medium">{labels.priorityMedium}</option>
+                      <option value="high">{labels.priorityHigh}</option>
+                      <option value="critical">{labels.priorityCritical}</option>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                </Box>
+                <Input
+                  type="date"
+                  min={minDate}
+                  label={labels.taskDeadline}
+                  value={deadline}
+                  onChange={(event) => setDeadline(event.target.value)}
+                  required
+                />
+              </SimpleGrid>
+            </VStack>
+          </Box>
+
+          <UserPicker
+            title={labels.taskAssignee}
+            hint={labels.taskAssigneeHint}
+            users={users}
+            value={assigneeId}
+            onChange={setAssigneeId}
+            loading={usersLoading}
+            labels={labels}
+          />
+        </SimpleGrid>
+
+        <HStack justify="end" gap={3} mt={5} flexWrap="wrap">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            {labels.cancel}
+          </Button>
+          <Button type="submit" minW="150px" isLoading={isLoading} disabled={isLoading}>
+            {isLoading ? labels.creatingTask : labels.createTask}
+          </Button>
+        </HStack>
+      </form>
+    </Box>
+  );
+}
+
 type UserRole = User["roles"][number];
 
 function userHasRole(user: User, role: UserRole) {
@@ -776,7 +987,7 @@ export default function CreateProject() {
   const [workType, setWorkType] = useState<CreateWorkType | null>(null);
   const [form, setForm] = useState<FormState>(initialForm);
   const { data: users = [], isLoading: usersLoading } = useGetUsersQuery(undefined, {
-    skip: workType !== "testing",
+    skip: workType !== "testing" && workType !== "task",
   });
   const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
 
@@ -856,16 +1067,28 @@ export default function CreateProject() {
     );
   }
 
-  if (workType !== "testing") {
+  if (workType === "devops") {
     return (
       <UnavailableWorkType
-        title={workType === "devops" ? labels.devopsProject : labels.task}
+        title={labels.devopsProject}
         labels={labels}
         dir={dir}
-        requirements={
-          workType === "devops" ? labels.devopsRequirements : labels.taskRequirements
-        }
+        requirements={labels.devopsRequirements}
         onBack={() => setWorkType(null)}
+      />
+    );
+  }
+
+  if (workType === "task") {
+    return (
+      <TaskCreationForm
+        users={users}
+        usersLoading={usersLoading}
+        labels={labels}
+        dir={dir}
+        onBack={() => setWorkType(null)}
+        onCancel={() => navigate("/tasks")}
+        onCreated={() => navigate("/tasks")}
       />
     );
   }

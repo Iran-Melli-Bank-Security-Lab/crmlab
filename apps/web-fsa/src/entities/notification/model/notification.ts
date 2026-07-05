@@ -3,6 +3,7 @@ export type NotificationType =
   | "project.assigned"
   | "project.completed"
   | "project.report_submitted"
+  | "task.assigned"
   | "vulnerability.created"
   | "vulnerability.updated"
   | "vulnerability.approved"
@@ -32,6 +33,7 @@ export type NotificationEntity = {
   id: string;
   type:
     | "project"
+    | "task"
     | "vulnerability"
     | "deployment"
     | "ticket"

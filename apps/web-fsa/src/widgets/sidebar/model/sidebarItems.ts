@@ -32,6 +32,15 @@ export const sidebarItems: SidebarItem[] = [
     sectionKey: "sidebar.workspace",
   },
   {
+    icon: "clipboard",
+    title: "Tasks",
+    titleKey: "sidebar.tasks",
+    path: "/tasks",
+    permissions: [],
+    section: "Workspace",
+    sectionKey: "sidebar.workspace",
+  },
+  {
     icon: "plus",
     title: "Create Project",
     titleKey: "sidebar.createProject",

@@ -8,6 +8,7 @@ const AdminUsers = lazy(() => import("@/pages/admin-users/AdminUsers"));
 const Profile = lazy(() => import("@/pages/profile/Profile"));
 const Settings = lazy(() => import("@/pages/settings/Settings"));
 const Projects = lazy(() => import("@/pages/projects/Projects"));
+const Tasks = lazy(() => import("@/pages/tasks/Tasks"));
 const ProjectDetails = lazy(() => import("@/pages/project-details/ProjectDetails"));
 const CreateProject = lazy(() => import("@/pages/create-project/CreateProject"));
 const PentestWorkspacePage = lazy(
@@ -29,6 +30,11 @@ export const protectedRouteConfig = [
     path: ROUTE_ACCESS_POLICIES.projects.path,
     element: Projects,
     permissions: ROUTE_ACCESS_POLICIES.projects.permissions,
+  },
+  {
+    path: "/tasks",
+    element: Tasks,
+    permissions: [],
   },
   {
     path: ROUTE_ACCESS_POLICIES.projectDetails.path,

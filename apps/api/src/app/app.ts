@@ -6,7 +6,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import path from "path";
-import { env , isProduction} from "@/config/env";
+import { env, isProduction } from "@/config/env";
 import { ROUTES } from "@/constants/routes";
 import { csrfProtection } from "@/middlewares/csrf.middleware";
 import { errorHandler, notFoundHandler } from "@/middlewares/error.middleware";
@@ -23,6 +23,7 @@ import devopsRoutes from "@/modules/devops/routes/devops.routes";
 import ticketRoutes from "@/modules/tickets/routes/ticket.routes";
 import qaRoutes from "@/modules/qa/routes/qa.routes";
 import settingsRoutes from "@/modules/settings/routes/projectTableSetting.routes";
+import taskRoutes from "@/modules/tasks/routes/task.routes";
 
 export function createApp() {
   const app = express();
@@ -35,28 +36,28 @@ export function createApp() {
   //   })
   // );
   app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
+    cors({
+      origin(origin, callback) {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
 
-      if (env.clientUrls.includes(origin)) {
-        callback(null, true);
-        return;
-      }
+        if (env.clientUrls.includes(origin)) {
+          callback(null, true);
+          return;
+        }
 
-      if (!isProduction && isAllowedDevelopmentOrigin(origin)) {
-        callback(null, true);
-        return;
-      }
+        if (!isProduction && isAllowedDevelopmentOrigin(origin)) {
+          callback(null, true);
+          return;
+        }
 
-      callback(new Error(`CORS blocked origin: ${origin}`));
-    },
-    credentials: true,
-  })
-);
+        callback(new Error(`CORS blocked origin: ${origin}`));
+      },
+      credentials: true,
+    })
+  );
   app.use(cookieParser());
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ extended: true }));
@@ -65,12 +66,15 @@ export function createApp() {
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500 }));
   app.use(ROUTES.UPLOADS_STATIC, express.static(path.resolve(env.uploadDir)));
 
-  app.get(ROUTES.HEALTH, (_req, res) => sendSuccess(res, { ok: true, service: "enterprise-dashboard-backend" }));
+  app.get(ROUTES.HEALTH, (_req, res) =>
+    sendSuccess(res, { ok: true, service: "enterprise-dashboard-backend" })
+  );
 
   app.use(ROUTES.AUTH.BASE, authRoutes);
   app.use(ROUTES.AUDIT_LOGS.BASE, auditRoutes);
   app.use(ROUTES.USERS.BASE, userRoutes);
   app.use(ROUTES.PROJECTS.BASE, projectRoutes);
+  app.use(ROUTES.TASKS.BASE, taskRoutes);
   app.use(ROUTES.NOTIFICATIONS.BASE, notificationRoutes);
   app.use(ROUTES.UPLOAD.BASE, uploadRoutes);
   app.use(ROUTES.PENTEST.BASE, pentestRoutes);

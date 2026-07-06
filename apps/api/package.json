@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "format": "prettier --write \"src/**/*.{ts,json,md}\"",
-    "seed": "tsx src/db/seed.ts"
+    "seed": "tsx src/db/seed.ts",
+    "seed:security-standards": "tsx src/modules/security-standards/services/securityStandards.seed.ts",
+    "seed:security-standards:wstg": "npm run seed:security-standards -- owasp-wstg"
   },
   "dependencies": {
     "@role-dashboard/authz": "file:../../packages/authz",

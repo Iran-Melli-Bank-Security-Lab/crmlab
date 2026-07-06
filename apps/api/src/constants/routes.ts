@@ -38,6 +38,11 @@ export const ROUTES = {
     BASE: "/api/tasks",
   },
 
+  SECURITY_STANDARDS: {
+    BASE: "/api/security-standards",
+    BY_KEY_VERSION: "/:standardKey/:version",
+  },
+
   NOTIFICATIONS: {
     BASE: "/api/notifications",
     READ_ALL: "/read-all",

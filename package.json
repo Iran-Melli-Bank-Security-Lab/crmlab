@@ -24,6 +24,8 @@
     "typecheck:web": "tsc -p apps/web-fsa/tsconfig.json --noEmit",
     "typecheck:api": "npm --workspace enterprise-dashboard-backend run typecheck",
     "seed:api": "npm --workspace enterprise-dashboard-backend run seed",
+    "seed:security-standards": "npm --workspace enterprise-dashboard-backend run seed:security-standards",
+    "seed:security-standards:wstg": "npm --workspace enterprise-dashboard-backend run seed:security-standards:wstg",
     "msw:init": "msw init apps/web-fsa/public/ --save"
   },
   "dependencies": {},

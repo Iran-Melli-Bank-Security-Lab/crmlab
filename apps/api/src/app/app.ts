@@ -24,6 +24,7 @@ import ticketRoutes from "@/modules/tickets/routes/ticket.routes";
 import qaRoutes from "@/modules/qa/routes/qa.routes";
 import settingsRoutes from "@/modules/settings/routes/projectTableSetting.routes";
 import taskRoutes from "@/modules/tasks/routes/task.routes";
+import securityStandardRoutes from "@/modules/security-standards/routes/securityStandard.routes";
 
 export function createApp() {
   const app = express();
@@ -75,6 +76,7 @@ export function createApp() {
   app.use(ROUTES.USERS.BASE, userRoutes);
   app.use(ROUTES.PROJECTS.BASE, projectRoutes);
   app.use(ROUTES.TASKS.BASE, taskRoutes);
+  app.use(ROUTES.SECURITY_STANDARDS.BASE, securityStandardRoutes);
   app.use(ROUTES.NOTIFICATIONS.BASE, notificationRoutes);
   app.use(ROUTES.UPLOAD.BASE, uploadRoutes);
   app.use(ROUTES.PENTEST.BASE, pentestRoutes);

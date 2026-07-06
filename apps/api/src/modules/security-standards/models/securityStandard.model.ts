@@ -6,6 +6,9 @@ export const SECURITY_STANDARD_TYPES = [
   "mobile",
   "desktop",
   "sdlc",
+  "hardware",
+  "blockchain",
+  "ai",
   "other",
 ] as const;
 

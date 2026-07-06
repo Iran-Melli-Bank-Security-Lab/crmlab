@@ -4,6 +4,7 @@ import {
   SecurityStandardModel,
   type SecurityStandard,
   type SecurityStandardNode,
+  type SecurityStandardType,
 } from "../models/securityStandard.model";
 
 const STANDARD_KEY_PATTERN = /^[a-z0-9][a-z0-9-]{1,79}$/;
@@ -35,6 +36,39 @@ export function validateUniqueNodeIds(nodes: readonly SecurityStandardNode[]) {
   visit(nodes);
 }
 
+export function collectSecurityStandardNodeIds(nodes: readonly SecurityStandardNode[]) {
+  const nodeIds: string[] = [];
+  const visit = (items: readonly SecurityStandardNode[]) => {
+    for (const node of items) {
+      nodeIds.push(node.nodeId);
+      visit(node.children || []);
+    }
+  };
+  visit(nodes);
+  return nodeIds;
+}
+
+export function validateSelectedSecurityStandardNodeIds(
+  nodes: readonly SecurityStandardNode[],
+  selectedNodeIds: readonly string[]
+) {
+  if (new Set(selectedNodeIds).size !== selectedNodeIds.length) {
+    throw new AppError(
+      "Duplicate selected security standard nodeId",
+      HTTP_STATUS.BAD_REQUEST
+    );
+  }
+
+  const availableNodeIds = new Set(collectSecurityStandardNodeIds(nodes));
+  const unknownNodeId = selectedNodeIds.find((nodeId) => !availableNodeIds.has(nodeId));
+  if (unknownNodeId) {
+    throw new AppError(
+      `Unknown security standard nodeId: ${unknownNodeId}`,
+      HTTP_STATUS.BAD_REQUEST
+    );
+  }
+}
+
 function validateCatalogIdentity(standardKey: string, version: string) {
   if (!STANDARD_KEY_PATTERN.test(standardKey)) {
     throw new AppError("Invalid security standard key", HTTP_STATUS.BAD_REQUEST);
@@ -64,6 +98,13 @@ export async function listActiveSecurityStandards() {
     .lean();
 }
 
+export async function listActiveSecurityStandardsByType(type: SecurityStandardType) {
+  return SecurityStandardModel.find({ isActive: true, type })
+    .select("standardKey name shortName version type isActive createdAt updatedAt")
+    .sort({ shortName: 1, version: -1 })
+    .lean();
+}
+
 export async function getActiveSecurityStandardTree(
   standardKeyInput: string,
   versionInput: string
@@ -80,6 +121,34 @@ export async function getActiveSecurityStandardTree(
 
   if (!standard) {
     throw new AppError("Security standard not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  return standard;
+}
+
+export async function findActiveSecurityStandardForType({
+  type,
+  standardKey,
+  version,
+}: {
+  type: SecurityStandardType;
+  standardKey?: string;
+  version?: string;
+}) {
+  const standard = await SecurityStandardModel.findOne({
+    type,
+    isActive: true,
+    ...(standardKey ? { standardKey: standardKey.trim().toLowerCase() } : {}),
+    ...(version ? { version: version.trim() } : {}),
+  })
+    .sort({ version: -1 })
+    .lean();
+
+  if (!standard) {
+    throw new AppError(
+      "No active security standard is configured for this project type",
+      HTTP_STATUS.NOT_FOUND
+    );
   }
 
   return standard;

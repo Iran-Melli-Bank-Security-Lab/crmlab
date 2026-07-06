@@ -15,3 +15,13 @@ export type {
   TaskStatus,
   UpdateTaskRequestContract,
 } from "./task";
+export type {
+  PentesterScopeAssignmentContract,
+  ProjectSecurityScopeContract,
+  ProjectSecurityTargetType,
+  SecurityScopeMode,
+  SecurityScopeReferenceContract,
+  SecurityStandardNodeContract,
+  SecurityStandardSummaryContract,
+  SecurityStandardTreeContract,
+} from "./securityScope";

@@ -4,7 +4,11 @@ import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/constants/audit";
 import { HTTP_STATUS } from "@/constants/http";
 import { NOTIFICATION_PRIORITIES, NOTIFICATION_TYPES } from "@/constants/notifications";
 import { PERMISSIONS } from "@/constants/permissions";
-import { PROJECT_ASSIGNMENT_ROLES, PROJECT_TYPES, type ProjectAssignmentRole } from "@/constants/projects";
+import {
+  PROJECT_ASSIGNMENT_ROLES,
+  PROJECT_TYPES,
+  type ProjectAssignmentRole,
+} from "@/constants/projects";
 import { ROLES } from "@/constants/roles";
 import { ROUTES } from "@/constants/routes";
 import type { Role } from "@/constants/roles";
@@ -14,15 +18,23 @@ import { UserModel } from "@/modules/users/models/user.model";
 import { toAuthUserContext } from "@/modules/users/services/userAuth.service";
 import { writeAuditLog } from "@/modules/audit/services/audit.service";
 import { createNotifications } from "@/modules/notifications/services/notification.service";
-import {
-  addConnectedUsersToProject,
-  emitToProject,
-} from "@/realtime/socket.delivery";
+import { addConnectedUsersToProject, emitToProject } from "@/realtime/socket.delivery";
 import { SOCKET_EVENTS } from "@/constants/socket";
 import { AppError } from "@/utils/AppError";
 import { sendSuccess } from "@/utils/response";
 import { mapCreateProjectRequest } from "../services/project.mapper";
-import { createProjectRequestSchema } from "../validators/project.validators";
+import {
+  assignUsersRequestSchema,
+  createProjectRequestSchema,
+  securityScopeReferenceSchema,
+} from "../validators/project.validators";
+import {
+  getOrCreateDefaultProjectSecurityScope,
+  getResolvedProjectSecurityScope,
+  listProjectSecurityStandards,
+  resolvePentesterSecurityScope,
+  saveProjectSecurityScope,
+} from "../services/projectSecurityScope.service";
 
 type ProjectRecipientField =
   | "projectManager"
@@ -72,7 +84,12 @@ const assignableRoleRules: Record<
 };
 
 function userHasAnyRole(
-  user: { roles?: readonly Role[]; devOps?: boolean; security?: boolean; qualityAssurance?: boolean },
+  user: {
+    roles?: readonly Role[];
+    devOps?: boolean;
+    security?: boolean;
+    qualityAssurance?: boolean;
+  },
   roles: readonly Role[]
 ) {
   const effectiveRoles = new Set<Role>(user.roles || []);
@@ -112,9 +129,8 @@ async function validateProjectRecipients(
     if (user.qualityAssurance) effectiveRoles.add(ROLES.QA);
 
     const requiredRoles = recipientRules[field].roles;
-    const hasRequiredRole = !requiredRoles || requiredRoles.some((role) =>
-      effectiveRoles.has(role)
-    );
+    const hasRequiredRole =
+      !requiredRoles || requiredRoles.some((role) => effectiveRoles.has(role));
     if (!hasRequiredRole) {
       throw new AppError(
         `Assigned ${recipientRules[field].label} does not have the required role`,
@@ -168,7 +184,10 @@ function buildInitialProjectAssignments({
   projectType?: string | null;
   version?: string | null;
 }) {
-  const assignmentPairs: Array<{ userId: string; assignmentRole: ProjectAssignableRole }> = [];
+  const assignmentPairs: Array<{
+    userId: string;
+    assignmentRole: ProjectAssignableRole;
+  }> = [];
 
   if (projectType === PROJECT_TYPES.SECURITY && projectManagerId) {
     assignmentPairs.push({
@@ -240,7 +259,9 @@ function getProjectListFilter(
 
   switch (view) {
     case "admin":
-      return user.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE) ? {} : { ownerId: userId };
+      return user.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE)
+        ? {}
+        : { ownerId: userId };
     case "security":
       return { projectManager: userId, type: PROJECT_TYPES.SECURITY };
     case "quality":
@@ -277,7 +298,10 @@ export const getProjects: RequestHandler = async (req, res, next) => {
   try {
     const filter = getProjectListFilter(req.query.view, req.user!);
     const projects = await ProjectModel.find(filter).sort({ createdAt: -1 }).lean();
-    sendSuccess(res, projects.map((p) => ({ ...p, id: String(p._id) })));
+    sendSuccess(
+      res,
+      projects.map((p) => ({ ...p, id: String(p._id) }))
+    );
   } catch (error) {
     next(error);
   }
@@ -292,7 +316,59 @@ export const getProject: RequestHandler = async (req, res, next) => {
       throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
     }
 
-    sendSuccess(res, { ...project, id: String(project._id) });
+    const assignment = await ProjectAssignmentModel.findOne({
+      projectId,
+      userId: req.user!.id,
+      assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER,
+    })
+      .select("securityScope")
+      .lean();
+
+    sendSuccess(res, {
+      ...project,
+      id: String(project._id),
+      ...(assignment?.securityScope
+        ? { assignedSecurityScope: assignment.securityScope }
+        : {}),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProjectSecurityStandards: RequestHandler = async (req, res, next) => {
+  try {
+    sendSuccess(res, await listProjectSecurityStandards(String(req.params.id)));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProjectSecurityScope: RequestHandler = async (req, res, next) => {
+  try {
+    const result = await getResolvedProjectSecurityScope(
+      String(req.params.id),
+      req.user!.id
+    );
+    sendSuccess(res, {
+      ...result.scope.toObject(),
+      id: result.scope._id.toString(),
+      effectiveSelectedNodeIds: result.effectiveSelectedNodeIds,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const putProjectSecurityScope: RequestHandler = async (req, res, next) => {
+  try {
+    const input = securityScopeReferenceSchema.parse(req.body);
+    const scope = await saveProjectSecurityScope(
+      String(req.params.id),
+      input,
+      req.user!.id
+    );
+    sendSuccess(res, { ...scope.toObject(), id: scope._id.toString() });
   } catch (error) {
     next(error);
   }
@@ -311,7 +387,8 @@ export const createProject: RequestHandler = async (req, res, next) => {
         throw new AppError("Source project not found", HTTP_STATUS.BAD_REQUEST);
       }
 
-      projectData.projectGroupId = sourceProject.projectGroupId || String(sourceProject._id);
+      projectData.projectGroupId =
+        sourceProject.projectGroupId || String(sourceProject._id);
       projectData.canonicalName = sourceProject.canonicalName || undefined;
     }
 
@@ -323,13 +400,15 @@ export const createProject: RequestHandler = async (req, res, next) => {
     };
     await validateProjectRecipients(recipients);
     const projectMemberIds = Array.from(
-      new Set([
-        req.user!.id,
-        projectData.projectManager,
-        projectData.qualityManager,
-        projectData.devops,
-        projectData.representative,
-      ].filter(isString))
+      new Set(
+        [
+          req.user!.id,
+          projectData.projectManager,
+          projectData.qualityManager,
+          projectData.devops,
+          projectData.representative,
+        ].filter(isString)
+      )
     );
 
     const project = await ProjectModel.create({
@@ -382,7 +461,11 @@ export const createProject: RequestHandler = async (req, res, next) => {
       },
     });
 
-    sendSuccess(res, { ...project.toObject(), id: project._id.toString() }, HTTP_STATUS.CREATED);
+    sendSuccess(
+      res,
+      { ...project.toObject(), id: project._id.toString() },
+      HTTP_STATUS.CREATED
+    );
   } catch (error) {
     next(error);
   }
@@ -397,14 +480,15 @@ export const getEligibleProjectAssignees: RequestHandler = async (req, res, next
       throw new AppError("Unsupported assignee role", HTTP_STATUS.BAD_REQUEST);
     }
 
-    const users = (await UserModel.find({ isActive: true })
-      .sort({ firstName: 1, lastName: 1, username: 1 }))
-      .filter((user) => userHasAnyRole(user, roleRule.roles));
+    const users = (
+      await UserModel.find({ isActive: true }).sort({
+        firstName: 1,
+        lastName: 1,
+        username: 1,
+      })
+    ).filter((user) => userHasAnyRole(user, roleRule.roles));
 
-    sendSuccess(
-      res,
-      await Promise.all(users.map((user) => toAuthUserContext(user)))
-    );
+    sendSuccess(res, await Promise.all(users.map((user) => toAuthUserContext(user))));
   } catch (error) {
     next(error);
   }
@@ -413,22 +497,79 @@ export const getEligibleProjectAssignees: RequestHandler = async (req, res, next
 export const assignUsersToProject: RequestHandler = async (req, res, next) => {
   try {
     const projectId = String(req.params.id);
-    const role = String(
-      (req.body as { role?: ProjectAssignableRole }).role || "pentester"
-    ) as ProjectAssignableRole;
+    const request = assignUsersRequestSchema.parse(req.body);
+    const role = request.role as ProjectAssignableRole;
     const roleRule = assignableRoleRules[role];
 
     if (!roleRule) {
       throw new AppError("Unsupported assignee role", HTTP_STATUS.BAD_REQUEST);
     }
 
-    const requestedUserIds = Array.from(
-      new Set((req.body as { userIds: string[] }).userIds)
-    );
+    const requestedUserIds = Array.from(new Set(request.userIds));
     const requestedUserIdSet = new Set(requestedUserIds);
     const existingProject = await ProjectModel.findById(projectId);
     if (!existingProject) {
       throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    }
+
+    const requestedScopesByUserId = new Map(
+      (request.pentesterScopes || []).map((item) => [item.userId, item.securityScope])
+    );
+    if (
+      requestedScopesByUserId.size &&
+      !req.user!.permissions.includes(PERMISSIONS.SECURITY_PROJECTS_ASSIGN) &&
+      !req.user!.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE)
+    ) {
+      throw new AppError(
+        "Forbidden: missing security scope assignment permission",
+        HTTP_STATUS.FORBIDDEN
+      );
+    }
+    if (requestedScopesByUserId.size && existingProject.type !== PROJECT_TYPES.SECURITY) {
+      throw new AppError(
+        "Pentester security scopes require a security project",
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+
+    let resolvedScopesByUserId = new Map<
+      string,
+      Awaited<ReturnType<typeof resolvePentesterSecurityScope>>
+    >();
+    if (
+      role === PROJECT_ASSIGNMENT_ROLES.PENTESTER &&
+      existingProject.type === PROJECT_TYPES.SECURITY
+    ) {
+      try {
+        const projectScope = await getOrCreateDefaultProjectSecurityScope(
+          projectId,
+          req.user!.id
+        );
+        if (projectScope) {
+          resolvedScopesByUserId = new Map(
+            await Promise.all(
+              requestedUserIds.map(
+                async (userId) =>
+                  [
+                    userId,
+                    await resolvePentesterSecurityScope(
+                      projectScope,
+                      requestedScopesByUserId.get(userId)
+                    ),
+                  ] as const
+              )
+            )
+          );
+        }
+      } catch (error) {
+        if (
+          !(error instanceof AppError) ||
+          error.statusCode !== HTTP_STATUS.NOT_FOUND ||
+          requestedScopesByUserId.size
+        ) {
+          throw error;
+        }
+      }
     }
 
     const activeUsers = requestedUserIds.length
@@ -463,7 +604,7 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
     }).select("_id userId");
     const existingRoleUserIds = new Set(
       existingAssignments
-        .map((assignment) => assignment.userId ? String(assignment.userId) : undefined)
+        .map((assignment) => (assignment.userId ? String(assignment.userId) : undefined))
         .filter((userId): userId is string => Boolean(userId))
     );
     const addedUserIds = requestedUserIds.filter(
@@ -492,11 +633,15 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
                 project: projectId,
                 userId,
                 pentester: userId,
-                managerId: existingProject.projectManager || existingProject.qualityManager,
+                managerId:
+                  existingProject.projectManager || existingProject.qualityManager,
                 manager: existingProject.projectManager || existingProject.qualityManager,
                 assignedById: req.user!.id,
                 assignmentRole: role,
                 version: existingProject.version,
+                ...(resolvedScopesByUserId.has(userId)
+                  ? { securityScope: resolvedScopesByUserId.get(userId) }
+                  : {}),
               },
             },
             { new: true, upsert: true, runValidators: true }
@@ -505,11 +650,15 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       );
     }
 
-    const remainingAssignments = await ProjectAssignmentModel.find({ projectId }).select("_id userId");
+    const remainingAssignments = await ProjectAssignmentModel.find({ projectId }).select(
+      "_id userId"
+    );
     const nextAssignedUserIds = Array.from(
       new Set(
         remainingAssignments
-          .map((assignment) => assignment.userId ? String(assignment.userId) : undefined)
+          .map((assignment) =>
+            assignment.userId ? String(assignment.userId) : undefined
+          )
           .filter((userId): userId is string => Boolean(userId))
       )
     );
@@ -556,19 +705,33 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       await addConnectedUsersToProject(addedUserIds, projectId);
     }
 
-    emitToProject(projectId, SOCKET_EVENTS.PROJECT_ASSIGNED, toProjectEvent(project || existingProject));
+    emitToProject(
+      projectId,
+      SOCKET_EVENTS.PROJECT_ASSIGNED,
+      toProjectEvent(project || existingProject)
+    );
 
     await writeAuditLog({
       req,
       action: AUDIT_ACTIONS.PROJECT_ASSIGN_USERS,
       entityType: AUDIT_ENTITY_TYPES.PROJECT,
       entityId: projectId,
-      metadata: { role, assignedUserIds: requestedUserIds, addedUserIds, removedUserIds, fullyRemovedUserIds },
+      metadata: {
+        role,
+        assignedUserIds: requestedUserIds,
+        addedUserIds,
+        removedUserIds,
+        fullyRemovedUserIds,
+      },
     });
 
     sendSuccess(res, {
       project,
       assignedUserIds: requestedUserIds,
+      pentesterScopes: Array.from(resolvedScopesByUserId, ([userId, securityScope]) => ({
+        userId,
+        securityScope,
+      })),
       addedUserIds,
       removedUserIds,
     });

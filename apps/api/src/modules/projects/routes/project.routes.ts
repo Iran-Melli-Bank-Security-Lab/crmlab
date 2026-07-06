@@ -1,17 +1,27 @@
 import { Router } from "express";
 import { ROUTES } from "@/constants/routes";
 import { requireAuth } from "@/middlewares/auth.middleware";
-import { requireAnyPermission, requirePermission } from "@/middlewares/permission.middleware";
+import {
+  requireAnyPermission,
+  requirePermission,
+} from "@/middlewares/permission.middleware";
 import { requireProjectAccess } from "@/middlewares/projectAccess.middleware";
 import { PERMISSIONS } from "@/constants/permissions";
 import { validate } from "@/middlewares/validate.middleware";
-import { assignUsersSchema, createProjectSchema } from "../validators/project.validators";
+import {
+  assignUsersSchema,
+  createProjectSchema,
+  projectSecurityScopeSchema,
+} from "../validators/project.validators";
 import {
   assignUsersToProject,
   createProject,
   getEligibleProjectAssignees,
   getProject,
+  getProjectSecurityScope,
+  getProjectSecurityStandards,
   getProjects,
+  putProjectSecurityScope,
 } from "../controllers/project.controller";
 
 const router = Router();
@@ -29,7 +39,38 @@ router.get(
   ),
   getProjects
 );
-router.post(ROUTES.ROOT, requirePermission(PERMISSIONS.ADMIN_PROJECTS_CREATE), validate(createProjectSchema), createProject);
+router.post(
+  ROUTES.ROOT,
+  requirePermission(PERMISSIONS.ADMIN_PROJECTS_CREATE),
+  validate(createProjectSchema),
+  createProject
+);
+router.get(
+  "/:id/security-standards",
+  requireProjectAccess("params.id"),
+  requireAnyPermission(
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
+    PERMISSIONS.PENTEST_PROJECTS_READ
+  ),
+  getProjectSecurityStandards
+);
+router.get(
+  "/:id/security-scope",
+  requireProjectAccess("params.id"),
+  requireAnyPermission(
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.SECURITY_PROJECTS_ASSIGN
+  ),
+  getProjectSecurityScope
+);
+router.put(
+  "/:id/security-scope",
+  requireProjectAccess("params.id"),
+  requirePermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN),
+  validate(projectSecurityScopeSchema),
+  putProjectSecurityScope
+);
 router.get(
   ROUTES.PARAM_ID,
   requireAnyPermission(
@@ -46,13 +87,19 @@ router.get(
 router.get(
   ROUTES.PROJECTS.ELIGIBLE_ASSIGNEES,
   requireProjectAccess("params.id"),
-  requireAnyPermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN, PERMISSIONS.QUALITY_PROJECTS_ASSIGN),
+  requireAnyPermission(
+    PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
+    PERMISSIONS.QUALITY_PROJECTS_ASSIGN
+  ),
   getEligibleProjectAssignees
 );
 router.post(
   ROUTES.PROJECTS.ASSIGN_USERS,
   requireProjectAccess("params.id"),
-  requireAnyPermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN, PERMISSIONS.QUALITY_PROJECTS_ASSIGN),
+  requireAnyPermission(
+    PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
+    PERMISSIONS.QUALITY_PROJECTS_ASSIGN
+  ),
   validate(assignUsersSchema),
   assignUsersToProject
 );

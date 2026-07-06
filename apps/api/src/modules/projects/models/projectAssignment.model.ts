@@ -5,6 +5,17 @@ import {
   PROJECT_ASSIGNMENT_STATUS,
   PROJECT_ASSIGNMENT_STATUS_VALUES,
 } from "@/constants/projects";
+import { SECURITY_SCOPE_MODES } from "../constants/securityScope";
+
+const securityScopeSchema = new Schema(
+  {
+    standardKey: { type: String, required: true, trim: true, lowercase: true },
+    standardVersion: { type: String, required: true, trim: true },
+    scopeMode: { type: String, enum: SECURITY_SCOPE_MODES, required: true },
+    selectedNodeIds: { type: [String], default: [] },
+  },
+  { _id: false }
+);
 
 const bugScopeSchema = new Schema(
   {
@@ -58,6 +69,7 @@ const projectAssignmentSchema = new Schema(
       default: PROJECT_ASSIGNMENT_STATUS.OPEN,
     },
     progress: { type: Number, default: 0, min: 0, max: 100 },
+    securityScope: { type: securityScopeSchema, default: undefined },
 
     bugScopes: { type: [bugScopeSchema], default: [] },
     assignBugScopeForFirst: { type: Boolean, default: true },
@@ -116,12 +128,18 @@ projectAssignmentSchema.index({ projectId: 1, status: 1, updatedAt: -1 });
 projectAssignmentSchema.index({ managerId: 1, status: 1, updatedAt: -1 });
 projectAssignmentSchema.index({ assignedById: 1, createdAt: -1 });
 projectAssignmentSchema.index({ assignmentRole: 1, status: 1 });
+projectAssignmentSchema.index({
+  "securityScope.standardKey": 1,
+  "securityScope.standardVersion": 1,
+});
 projectAssignmentSchema.index({ "bugScopes.wstg": 1 });
 projectAssignmentSchema.index({ "bugScopes.status": 1 });
 projectAssignmentSchema.index({ finishDate: 1 });
 projectAssignmentSchema.index({ pendingDate: 1 });
 
-export type ProjectAssignmentDocument = InferSchemaType<typeof projectAssignmentSchema> & {
+export type ProjectAssignmentDocument = InferSchemaType<
+  typeof projectAssignmentSchema
+> & {
   _id: mongoose.Types.ObjectId;
 };
 

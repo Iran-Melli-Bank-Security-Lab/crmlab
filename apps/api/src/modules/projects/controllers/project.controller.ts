@@ -360,6 +360,28 @@ export const getProjectSecurityScope: RequestHandler = async (req, res, next) =>
   }
 };
 
+export const getProjectPentesterScopes: RequestHandler = async (req, res, next) => {
+  try {
+    const assignments = await ProjectAssignmentModel.find({
+      projectId: String(req.params.id),
+      assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER,
+      securityScope: { $exists: true },
+    })
+      .select("userId securityScope")
+      .lean();
+
+    sendSuccess(res, {
+      pentesterScopes: assignments.flatMap((assignment) =>
+        assignment.userId && assignment.securityScope
+          ? [{ userId: String(assignment.userId), securityScope: assignment.securityScope }]
+          : []
+      ),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const putProjectSecurityScope: RequestHandler = async (req, res, next) => {
   try {
     const input = securityScopeReferenceSchema.parse(req.body);
@@ -512,6 +534,18 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
     }
 
+    const existingAssignments = await ProjectAssignmentModel.find({
+      projectId,
+      assignmentRole: role,
+    }).select("_id userId securityScope");
+    const existingScopesByUserId = new Map(
+      existingAssignments.flatMap((assignment) =>
+        assignment.userId && assignment.securityScope
+          ? [[String(assignment.userId), assignment.securityScope] as const]
+          : []
+      )
+    );
+
     const requestedScopesByUserId = new Map(
       (request.pentesterScopes || []).map((item) => [item.userId, item.securityScope])
     );
@@ -554,7 +588,8 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
                     userId,
                     await resolvePentesterSecurityScope(
                       projectScope,
-                      requestedScopesByUserId.get(userId)
+                      requestedScopesByUserId.get(userId) ||
+                        existingScopesByUserId.get(userId)
                     ),
                   ] as const
               )
@@ -598,10 +633,6 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       );
     }
 
-    const existingAssignments = await ProjectAssignmentModel.find({
-      projectId,
-      assignmentRole: role,
-    }).select("_id userId");
     const existingRoleUserIds = new Set(
       existingAssignments
         .map((assignment) => (assignment.userId ? String(assignment.userId) : undefined))

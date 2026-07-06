@@ -6,6 +6,14 @@ import type {
   CreateProjectResponse,
   ProjectListView,
 } from "@/shared/types/api/projects";
+import type {
+  PentesterScopeAssignmentContract,
+  ProjectPentesterScopesContract,
+  ProjectSecurityScopeContract,
+  ProjectSecurityStandardsContract,
+  SecurityStandardTreeContract,
+} from "@role-dashboard/contracts";
+import { unwrapApiData } from "@/shared/api/unwrapApiData";
 
 type ProjectResponse =
   | CreateProjectResponse
@@ -145,6 +153,29 @@ export const projectsApi = api.injectEndpoints({
       transformResponse: normalizeUsersResponse,
       providesTags: ["Users"],
     }),
+    getProjectSecurityStandards: builder.query<ProjectSecurityStandardsContract, string>({
+      query: (projectId) => `/projects/${projectId}/security-standards`,
+      transformResponse: (response) =>
+        unwrapApiData<ProjectSecurityStandardsContract>(response),
+    }),
+    getSecurityStandardTree: builder.query<
+      SecurityStandardTreeContract,
+      { standardKey: string; version: string }
+    >({
+      query: ({ standardKey, version }) =>
+        `/security-standards/${encodeURIComponent(standardKey)}/${encodeURIComponent(version)}`,
+      transformResponse: (response) => unwrapApiData<SecurityStandardTreeContract>(response),
+    }),
+    getProjectSecurityScope: builder.query<ProjectSecurityScopeContract, string>({
+      query: (projectId) => `/projects/${projectId}/security-scope`,
+      transformResponse: (response) => unwrapApiData<ProjectSecurityScopeContract>(response),
+    }),
+    getProjectPentesterScopes: builder.query<PentesterScopeAssignmentContract[], string>({
+      query: (projectId) => `/projects/${projectId}/pentester-scopes`,
+      transformResponse: (response) =>
+        unwrapApiData<ProjectPentesterScopesContract>(response).pentesterScopes || [],
+      providesTags: ["Projects"],
+    }),
     assignProjectUsers: builder.mutation<
       {
         project?: unknown;
@@ -152,12 +183,17 @@ export const projectsApi = api.injectEndpoints({
         addedUserIds?: string[];
         removedUserIds?: string[];
       },
-      { projectId: string; userIds: string[]; role?: "pentester" }
+      {
+        projectId: string;
+        userIds: string[];
+        role?: "pentester";
+        pentesterScopes?: PentesterScopeAssignmentContract[];
+      }
     >({
-      query: ({ projectId, userIds, role = "pentester" }) => ({
+      query: ({ projectId, userIds, role = "pentester", pentesterScopes }) => ({
         url: `/projects/${projectId}/assign-users`,
         method: "POST",
-        body: { userIds, role },
+        body: { userIds, role, ...(pentesterScopes ? { pentesterScopes } : {}) },
       }),
       invalidatesTags: ["Projects", "Users", "Notifications"],
     }),
@@ -174,5 +210,9 @@ export const {
   useCreateProjectMutation,
   useGetProjectQuery,
   useGetProjectAssigneesQuery,
+  useGetProjectPentesterScopesQuery,
+  useGetProjectSecurityScopeQuery,
+  useGetProjectSecurityStandardsQuery,
   useGetProjectsQuery,
+  useGetSecurityStandardTreeQuery,
 } = projectsApi;

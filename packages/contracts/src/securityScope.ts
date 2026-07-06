@@ -61,3 +61,12 @@ export type PentesterScopeAssignmentContract = {
   userId: string;
   securityScope: SecurityScopeReferenceContract;
 };
+
+export type ProjectSecurityStandardsContract = {
+  targetType: ProjectSecurityTargetType;
+  standards: SecurityStandardSummaryContract[];
+};
+
+export type ProjectPentesterScopesContract = {
+  pentesterScopes: PentesterScopeAssignmentContract[];
+};

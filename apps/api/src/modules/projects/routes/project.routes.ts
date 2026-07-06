@@ -20,6 +20,7 @@ import {
   getProject,
   getProjectSecurityScope,
   getProjectSecurityStandards,
+  getProjectPentesterScopes,
   getProjects,
   putProjectSecurityScope,
 } from "../controllers/project.controller";
@@ -70,6 +71,12 @@ router.put(
   requirePermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN),
   validate(projectSecurityScopeSchema),
   putProjectSecurityScope
+);
+router.get(
+  "/:id/pentester-scopes",
+  requireProjectAccess("params.id"),
+  requirePermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN),
+  getProjectPentesterScopes
 );
 router.get(
   ROUTES.PARAM_ID,

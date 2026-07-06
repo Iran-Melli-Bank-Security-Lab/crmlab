@@ -17,7 +17,9 @@ export type {
 } from "./task";
 export type {
   PentesterScopeAssignmentContract,
+  ProjectPentesterScopesContract,
   ProjectSecurityScopeContract,
+  ProjectSecurityStandardsContract,
   ProjectSecurityTargetType,
   SecurityScopeMode,
   SecurityScopeReferenceContract,

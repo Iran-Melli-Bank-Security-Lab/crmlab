@@ -74,7 +74,7 @@ function normalizeProject(project: ApiProjectResponse): Project {
     notes: project.devopsInfo?.notes,
   };
 
-  return {
+  const normalized: Project = {
     id: project.id || project._id || "",
     name: project.projectName,
     client: "-",
@@ -114,6 +114,17 @@ function normalizeProject(project: ApiProjectResponse): Project {
     devopsInfo,
     lastActivity: project.updatedAt || project.createdAt || new Date().toISOString(),
   };
+  const summary = (
+    project as ApiProjectResponse & {
+      devOpsInfoSummary?: {
+        exists: boolean;
+        completionStatus: "empty" | "partial" | "complete";
+        provisioningStatus?: string;
+        updatedAt?: string;
+      };
+    }
+  ).devOpsInfoSummary;
+  return summary ? Object.assign(normalized, { devOpsInfoSummary: summary }) : normalized;
 }
 
 function normalizeProjectsResponse(response: ProjectListResponse): Project[] {

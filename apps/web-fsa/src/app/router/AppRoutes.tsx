@@ -32,15 +32,19 @@ export default function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/unauthorized" element={<Unauthorized />} />
-            {protectedRouteConfig.map((route) => {
+            {protectedRouteConfig.flatMap((route) => {
               const Page = route.element;
-              return (
+              const paths =
+                route.path === "/projects/:projectId"
+                  ? [route.path, `${route.path}/devops`]
+                  : [route.path];
+              return paths.map((path) => (
                 <Route
-                  key={route.path}
+                  key={path}
                   element={<PermissionRoute permissions={route.permissions} />}
                 >
                   <Route
-                    path={route.path}
+                    path={path}
                     element={
                       <ErrorBoundary>
                         <Page />
@@ -48,7 +52,7 @@ export default function AppRoutes() {
                     }
                   />
                 </Route>
-              );
+              ));
             })}
           </Route>
         </Route>

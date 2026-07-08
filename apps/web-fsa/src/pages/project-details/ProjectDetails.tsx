@@ -1,13 +1,15 @@
 import { Badge, Box, Heading, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
 import { useGetProjectQuery } from "@/entities/project/api/projectsApi";
 import { formatCompactGroupId, formatDate } from "@/entities/project/ui/table/formatters";
 import { usePermission } from "@/features/access-control/model/usePermission";
+import { useLanguage } from "@/features/language/model";
 import Button from "@/shared/ui/primitives/Button";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project, ProjectDiscipline, ProjectStatus } from "@/shared/types";
+import DevOpsInfoSection from "./DevOpsInfoSection";
 
 const statusStyles: Record<ProjectStatus, { bg: string; color: string; border: string }> = {
   planning: {
@@ -114,8 +116,11 @@ function metricItems(project: Project) {
 
 export default function ProjectDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { projectId = "" } = useParams<{ projectId: string }>();
   const { hasPermission } = usePermission();
+  const { language } = useLanguage();
+  const isDevOpsSection = location.pathname.endsWith("/devops");
   const {
     data: project,
     error,
@@ -175,8 +180,20 @@ export default function ProjectDetails() {
         </Box>
 
         <HStack gap={2} flexWrap="wrap">
+          <Button
+            variant={isDevOpsSection ? "secondary" : undefined}
+            onClick={() => navigate(`/projects/${project.id}`)}
+          >
+            {language === "fa" ? "نمای کلی پروژه" : "Project overview"}
+          </Button>
+          <Button
+            variant={isDevOpsSection ? undefined : "secondary"}
+            onClick={() => navigate(`/projects/${project.id}/devops`)}
+          >
+            {language === "fa" ? "اطلاعات DevOps" : "DevOps Info"}
+          </Button>
           <Button variant="secondary" onClick={() => navigate("/projects")}>
-            Back to projects
+            {language === "fa" ? "بازگشت به پروژه‌ها" : "Back to projects"}
           </Button>
           {canOpenPentestWorkspace && (
             <Button onClick={() => navigate(`/projects/pentest/${project.id}`)}>
@@ -185,6 +202,17 @@ export default function ProjectDetails() {
           )}
         </HStack>
       </HStack>
+
+      {isDevOpsSection ? (
+        <DevOpsInfoSection
+          projectId={project.id}
+          projectName={project.name}
+          projectPlatform={project.platform || "-"}
+          projectStatus={project.status}
+          assignedUserIds={project.assignedUserIds || []}
+        />
+      ) : (
+        <>
 
       <SimpleGrid columns={{ base: 1, xl: 3 }} gap={4}>
         {metricItems(project).map((item) => (
@@ -255,6 +283,8 @@ export default function ProjectDetails() {
           </Box>
         )}
       </DetailPanel>
+        </>
+      )}
     </VStack>
   );
 }

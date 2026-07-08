@@ -15,8 +15,6 @@ export default function DevOpsProjectsTable({ projects, title }: ProjectTableVie
       title={title}
       projects={projects}
       columns={projectTablePresets.devops}
-      actionLabel="Details"
-      onAction={openDetails}
       onRowClick={openDetails}
     />
   );

@@ -1,4 +1,5 @@
 import { Badge, Box, HStack, Text } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 import type {
   ProjectAssignmentStatus,
   ProjectDiscipline,
@@ -474,6 +475,49 @@ export const projectTableColumns = {
     kind: "link",
     sortable: true,
   },
+  devOpsInfo: {
+    key: "devopsInfo",
+    label: "DevOps Info",
+    labelKey: "projectTable.columns.devOpsInfo",
+    minW: "150px",
+    align: "end",
+    render: (project, t) => {
+      const summary = (
+        project as typeof project & {
+          devOpsInfoSummary?: { completionStatus?: "empty" | "partial" | "complete" };
+        }
+      ).devOpsInfoSummary;
+      const labelKey = !summary
+        ? "projectTable.devOpsInfo.neutral"
+        : summary.completionStatus === "complete"
+          ? "projectTable.devOpsInfo.complete"
+          : summary.completionStatus === "partial"
+            ? "projectTable.devOpsInfo.partial"
+            : "projectTable.devOpsInfo.empty";
+      return (
+        <Link
+          to={`/projects/${project.id}/devops`}
+          onClick={(event) => event.stopPropagation()}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "6px 12px",
+            borderRadius: "8px",
+            background: "var(--apple-blue-soft)",
+            color: "var(--apple-blue)",
+            border: "1px solid var(--apple-blue-border)",
+            fontSize: "12px",
+            fontWeight: 800,
+            whiteSpace: "nowrap",
+            textDecoration: "none",
+          }}
+        >
+          {t(labelKey)}
+        </Link>
+      );
+    },
+  },
   lastActivity: {
     key: "lastActivity",
     label: "Updated",
@@ -536,6 +580,7 @@ export const projectTablePresets = {
     projectTableColumns.environment,
     projectTableColumns.repository,
     projectTableColumns.pipeline,
+    projectTableColumns.devOpsInfo,
     projectTableColumns.lastActivity,
   ],
   securityManager: [

@@ -14,6 +14,10 @@ import { ROUTES } from "@/constants/routes";
 import type { Role } from "@/constants/roles";
 import { ProjectModel, type ProjectDocument } from "../models/project.model";
 import { ProjectAssignmentModel } from "../models/projectAssignment.model";
+import {
+  DELIVERY_MODE_TO_SETUP_TYPE,
+  ProjectDevOpsInfoModel,
+} from "@/modules/devops/models/projectDevOpsInfo.model";
 import { UserModel } from "@/modules/users/models/user.model";
 import { toAuthUserContext } from "@/modules/users/services/userAuth.service";
 import { writeAuditLog } from "@/modules/audit/services/audit.service";
@@ -298,9 +302,39 @@ export const getProjects: RequestHandler = async (req, res, next) => {
   try {
     const filter = getProjectListFilter(req.query.view, req.user!);
     const projects = await ProjectModel.find(filter).sort({ createdAt: -1 }).lean();
+    const devOpsSummaries = await ProjectDevOpsInfoModel.find({
+      projectId: { $in: projects.map((project) => project._id) },
+    })
+      .select("projectId setupType deliveryMode completionStatus provisioningStatus updatedAt")
+      .lean();
+    const summaryByProjectId = new Map(
+      devOpsSummaries.map((summary) => [String(summary.projectId), summary])
+    );
     sendSuccess(
       res,
-      projects.map((p) => ({ ...p, id: String(p._id) }))
+      projects.map((project) => {
+        const summary = summaryByProjectId.get(String(project._id));
+        return {
+          ...project,
+          id: String(project._id),
+          devOpsInfoSummary: summary
+            ? {
+                exists: true,
+                setupType:
+                  summary.setupType || DELIVERY_MODE_TO_SETUP_TYPE[summary.deliveryMode],
+                completionStatus: summary.completionStatus,
+                provisioningStatus: summary.provisioningStatus,
+                updatedAt: summary.updatedAt,
+              }
+            : {
+                exists: false,
+                setupType: "none",
+                completionStatus: "empty",
+                provisioningStatus: "not_started",
+                updatedAt: null,
+              },
+        };
+      })
     );
   } catch (error) {
     next(error);

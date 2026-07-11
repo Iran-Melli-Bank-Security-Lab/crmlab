@@ -68,6 +68,7 @@ export const ROUTES = {
     BASE: "/api/devops",
     DEPLOYMENTS: "/deployments",
     SERVERS: "/servers",
+    PROJECT_INFO: "/projects/:projectId",
   },
 
   TICKETS: {

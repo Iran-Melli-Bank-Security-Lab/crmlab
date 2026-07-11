@@ -76,6 +76,7 @@ export const PERMISSIONS = {
   DEVOPS_PROJECTS_READ: "devops.projects.read.assigned",
   DEVOPS_DEPLOYMENTS_READ: "devops.deployments.read.assigned",
   DEVOPS_DEPLOYMENTS_CREATE: "devops.deployments.create.assigned",
+  DEVOPS_DEPLOYMENTS_UPDATE: "devops.deployments.update.assigned",
   DEVOPS_SERVERS_READ: "devops.servers.read.assigned",
 
   REPRESENTATIVE_DASHBOARD_READ: "representative.dashboard.read.own",
@@ -151,6 +152,7 @@ export const PERMISSION_REGISTRY: PermissionDefinition[] = [
   ["DEVOPS_PROJECTS_READ", "devops", "projects", "read", "assigned", "Read assigned delivery projects."],
   ["DEVOPS_DEPLOYMENTS_READ", "devops", "deployments", "read", "assigned", "Read deployments."],
   ["DEVOPS_DEPLOYMENTS_CREATE", "devops", "deployments", "create", "assigned", "Create deployments."],
+  ["DEVOPS_DEPLOYMENTS_UPDATE", "devops", "deployments", "update", "assigned", "Update deployments."],
   ["DEVOPS_SERVERS_READ", "devops", "servers", "read", "assigned", "Read servers."],
 
   ["REPRESENTATIVE_DASHBOARD_READ", "representative", "dashboard", "read", "own", "Read the representative dashboard."],

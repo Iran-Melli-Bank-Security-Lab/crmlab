@@ -15,6 +15,8 @@ export const AUDIT_ACTIONS = {
   USER_DELETE: "user.delete",
   UPLOAD_AVATAR: "upload.avatar",
   UPLOAD_DELETE: "upload.delete",
+  DEVOPS_INFO_VIEW: "devops.info_view",
+  DEVOPS_INFO_UPDATE: "devops.info_update",
 } as const;
 
 export const AUDIT_ENTITY_TYPES = {
@@ -24,6 +26,7 @@ export const AUDIT_ENTITY_TYPES = {
   NOTIFICATION: "notification",
   UPLOAD: "upload",
   SESSION: "session",
+  DEVOPS_INFO: "devops_info",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

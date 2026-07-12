@@ -4,10 +4,11 @@ import { ROLES } from "@/constants/roles";
 import { ProjectModel } from "@/modules/projects/models/project.model";
 import { AppError } from "@/utils/AppError";
 
-type ProjectIdSource = "params.id" | "body.projectId";
+type ProjectIdSource = "params.id" | "params.projectId" | "body.projectId";
 
 function getProjectId(req: Parameters<RequestHandler>[0], source: ProjectIdSource) {
   if (source === "params.id") return req.params.id;
+  if (source === "params.projectId") return req.params.projectId;
   return req.body?.projectId;
 }
 

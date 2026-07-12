@@ -1,0 +1,464 @@
+Implement the DevOps Information module for web-based projects according to the following requirements.
+
+## General Project Flow
+
+When a client submits a project to the laboratory, the platform type must first be identified. The project can be:
+
+* A web application
+* A mobile application
+
+For the current implementation, focus only on web applications.
+
+For web projects, the client provides an OVF file to the laboratory’s DevOps team. The DevOps engineer must deploy the OVF and register all related DevOps information inside the project management platform.
+
+The DevOps engineer should follow this flow:
+
+1. Open the DevOps Projects table.
+2. Click on a project.
+3. Enter the project details page.
+4. Open the project’s DevOps Information section.
+5. Register and manage the project’s deployment, server, VM, endpoint, and authentication information.
+
+When the project is delivered as an OVF file, there are two possible deployment modes.
+
+# Deployment Mode 1: One Shared VM for the Entire Project
+
+In this mode, the DevOps engineer deploys the OVF file and creates one virtual machine.
+
+The client’s application is deployed and executed on this VM.
+
+The application may expose multiple services, modules, dashboards, APIs, panels, or other components. Each component may have its own:
+
+* URL
+* IP address
+* Port
+
+The DevOps Information form must allow the DevOps engineer to register an unlimited number of application endpoints.
+
+## Endpoint Management
+
+The form must contain an action such as:
+
+`Add Endpoint`
+
+Each endpoint must support the following fields:
+
+* URL
+* IP address
+* Port
+* Description
+
+The system must allow the DevOps engineer to add, edit, and remove endpoints dynamically.
+
+The application may be accessible by URL, IP address, or both. Therefore, the data model and validation rules should support the required combinations appropriately.
+
+## Authentication Accounts for Each Endpoint
+
+Each endpoint may have an unlimited number of authentication accounts.
+
+The form must contain an action such as:
+
+`Add Authentication Account`
+
+For every authentication account, the DevOps engineer must select an authentication method using radio buttons or another appropriate single-selection input.
+
+Initially, support the following authentication methods:
+
+### Authentication Method 1
+
+Username and password only:
+
+* Username
+* Password
+
+### Authentication Method 2
+
+Username, password, and OTP:
+
+* Username
+* Password
+* OTP-related information
+
+A project endpoint may use only username and password, while another endpoint may require username, password, and OTP.
+
+The selected authentication method must control which fields are displayed and required.
+
+When the DevOps engineer selects `Username and Password`, OTP fields must not be required.
+
+When the DevOps engineer selects `Username, Password, and OTP`, the OTP-related fields must be displayed and validated.
+
+Each endpoint must be able to contain multiple authentication accounts, and different accounts may use different authentication methods.
+
+# Deployment Mode 2: A Separate VM for Each Assigned User
+
+In this mode, the DevOps engineer creates a separate VM for every user assigned to the project, especially every pentester who is expected to test the application.
+
+Each VM contains an instance of the client’s application.
+
+The client has already provided the application authentication accounts to the DevOps engineer.
+
+The DevOps engineer must register separate DevOps access information for every assigned user.
+
+For each assigned pentester or project user, the DevOps Information form must contain the following three sections.
+
+# 1. Laboratory Server Connection Information
+
+This section contains the information required for the assigned user to connect to the laboratory server.
+
+The following values are shared and remain the same for all users:
+
+* Server IP address
+* Server port
+
+The following values are different for each user:
+
+* Server username
+* Server password
+
+The UI should avoid forcing the DevOps engineer to repeatedly enter shared server values for every user.
+
+The shared server IP address and port should be defined once and applied to all assigned users.
+
+Each assigned user must still have their own server username and password.
+
+Example structure:
+
+Shared laboratory server information:
+
+* Server IP
+* Server port
+
+Per-user server credentials:
+
+* Assigned user
+* Username
+* Password
+
+# 2. Per-User VM Connection Information
+
+Each assigned user has a separate VM.
+
+The following VM values are different for every user:
+
+* VM IP address
+* VM port
+
+The following VM values are the same for all users because they were configured by the client inside the VM:
+
+* VM username
+* VM password
+
+The UI should allow the DevOps engineer to define the shared VM username and password once.
+
+For every assigned user, the DevOps engineer must then register the user-specific:
+
+* VM IP address
+* VM port
+
+Example structure:
+
+Shared VM credentials:
+
+* VM username
+* VM password
+
+Per-user VM connection information:
+
+* Assigned user
+* VM IP address
+* VM port
+
+# 3. Per-User Application Access Information
+
+For each assigned user, the DevOps engineer must be able to register an unlimited number of application endpoints.
+
+Each application endpoint must contain:
+
+* URL — optional
+* IP address — required
+* Port — required
+* Description — optional
+
+The form must contain an action such as:
+
+`Add Application Endpoint`
+
+The DevOps engineer must be able to dynamically add, edit, and remove endpoints for each assigned user.
+
+The URL field is optional because some application services may only be available through an IP address and port.
+
+The IP address and port are required for this deployment mode.
+
+## Authentication Accounts for Each Per-User Endpoint
+
+Each application endpoint must support an unlimited number of authentication accounts.
+
+The form must contain an action such as:
+
+`Add Authentication Account`
+
+For every authentication account, the DevOps engineer must select one of the following authentication methods:
+
+### Authentication Method 1
+
+Username and password:
+
+* Username
+* Password
+
+### Authentication Method 2
+
+Username, password, and OTP:
+
+* Username
+* Password
+* OTP-related information
+
+The selected authentication method must control the visible and required fields.
+
+An endpoint may require only username and password, while another endpoint may require username, password, and OTP.
+
+Different endpoints and accounts must be able to use different authentication methods.
+
+# Required UI Behavior
+
+Implement the form as a clear and manageable DevOps workspace.
+
+The UI must support:
+
+* Selecting the OVF deployment mode
+* Shared VM deployment
+* Separate VM per assigned user
+* Dynamically adding and removing endpoints
+* Dynamically adding and removing authentication accounts
+* Authentication method selection
+* Conditional OTP fields
+* Shared values that are entered only once
+* Per-user values for assigned users
+* Clear grouping of server, VM, endpoint, and authentication information
+* Editing previously saved information
+* Validation before saving
+* A final review before submission
+* Explicit Save functionality
+* Preservation of unsaved form state while navigating between form sections
+
+Avoid displaying all fields in one large and crowded form.
+
+Use sections, steps, tabs, accordions, cards, or another suitable UX pattern so that the form remains understandable even when:
+
+* Many users are assigned to a project
+* Every user has multiple endpoints
+* Every endpoint has multiple authentication accounts
+
+# Assigned User Handling
+
+The list of users must come from the users already assigned to the project.
+
+The DevOps engineer must not manually create or type arbitrary project users inside this form.
+
+The system must display the assigned user’s identity clearly, such as:
+
+* User ID
+* Full name
+* Username
+* Role
+
+DevOps information in the separate-VM mode must be associated with the correct project assignment and user.
+
+If a user is removed from the project, their DevOps information must not be silently assigned to another user.
+
+# Security Requirements
+
+DevOps information contains highly sensitive credentials.
+
+Apply the following security rules:
+
+* Only authenticated and authorized users may access the DevOps Information module.
+* Only users with the appropriate DevOps permissions may create or modify DevOps information.
+* Project users may only view credentials that are explicitly assigned to them.
+* A pentester must not be able to view another pentester’s server, VM, or application credentials.
+* Project managers and administrators should only receive access according to the existing permission model.
+* Do not return all project credentials to the frontend and hide unauthorized ones only in the UI.
+* Enforce authorization and filtering on the backend.
+* Passwords, OTP secrets, recovery codes, tokens, and other secrets must not appear in logs.
+* Sensitive values must not be included in audit log payloads in plaintext.
+* Sensitive credentials must be encrypted at rest or integrated with an appropriate secret-management abstraction.
+* Never store plaintext credentials unless the existing project architecture explicitly requires it and no secure alternative exists.
+* Credential access and credential modification operations should be auditable.
+* API responses must not expose secrets to unauthorized users.
+* Consider masking secret values in the UI after they have been saved.
+* Do not send an existing saved secret back to the frontend merely to populate an edit input.
+* Use explicit replace or update-secret actions where appropriate.
+
+# Validation Requirements
+
+Implement both frontend and backend validation.
+
+Validate at least the following:
+
+* Project exists.
+* Project type supports web DevOps information.
+* User is assigned to the project.
+* Selected deployment mode is valid.
+* Required IP addresses are present.
+* Required ports are present.
+* Ports are valid integers in the range 1–65535.
+* URLs are valid when provided.
+* Authentication method is valid.
+* Username is required for supported username-based authentication methods.
+* Password is required when creating an authentication account.
+* OTP-related fields are required only when the OTP authentication method is selected.
+* Duplicate or conflicting records are handled appropriately.
+* Unknown fields are rejected or safely removed.
+* Users cannot submit DevOps information for another project by manipulating IDs.
+* Users cannot submit per-user information for users who are not assigned to the project.
+
+# Suggested Domain Structure
+
+Use domain concepts similar to the following, while adapting them to the existing project architecture and naming conventions:
+
+* ProjectDevOpsInfo
+* DeploymentMode
+* SharedVmDeployment
+* PerUserVmDeployment
+* LaboratoryServerAccess
+* UserServerCredential
+* SharedVmCredential
+* UserVmConnection
+* ApplicationEndpoint
+* AuthenticationAccount
+* AuthenticationMethod
+
+Possible deployment mode values:
+
+```ts
+type OvfDeploymentMode =
+  | "shared_vm"
+  | "separate_vm_per_user";
+```
+
+Possible authentication method values:
+
+```ts
+type AuthenticationMethod =
+  | "username_password"
+  | "username_password_otp";
+```
+
+An endpoint may conceptually contain:
+
+```ts
+interface ApplicationEndpoint {
+  id: string;
+  url?: string;
+  ipAddress: string;
+  port: number;
+  description?: string;
+  authenticationAccounts: AuthenticationAccount[];
+}
+```
+
+An authentication account may conceptually contain:
+
+```ts
+interface AuthenticationAccount {
+  id: string;
+  authenticationMethod:
+    | "username_password"
+    | "username_password_otp";
+  username: string;
+  password: string;
+  otp?: {
+    type?: string;
+    secret?: string;
+    deliveryMethod?: string;
+    instructions?: string;
+  };
+}
+```
+
+Do not treat the example interfaces as a requirement to store plaintext secrets. Adapt secret storage to a secure implementation.
+
+# Backend Requirements
+
+Implement the required:
+
+* Database models
+* Validation schemas
+* Services
+* Controllers
+* Routes
+* Authorization checks
+* Permission checks
+* Data mapping
+* Audit events
+* Safe error handling
+* Tests
+
+Keep business logic out of route files and avoid putting all logic directly inside controllers.
+
+Separate:
+
+* Validation
+* Authorization
+* Business logic
+* Persistence
+* Secret handling
+* Response mapping
+
+Use database transactions where multiple related records must be updated atomically.
+
+Ensure that repeated requests do not accidentally create duplicate DevOps records.
+
+# Frontend Requirements
+
+Implement the DevOps Information workspace using the project’s existing frontend architecture and component library.
+
+The frontend must:
+
+* Load the project and assigned users
+* Load existing DevOps information
+* Support create and edit modes
+* Allow deployment mode selection
+* Render only fields relevant to the selected deployment mode
+* Support nested dynamic forms
+* Support multiple users
+* Support multiple endpoints per user
+* Support multiple authentication accounts per endpoint
+* Provide clear validation messages
+* Prevent accidental loss of unsaved changes
+* Avoid unnecessary rerenders
+* Avoid sending API requests on every keystroke
+* Use explicit Save actions
+* Display loading, empty, success, and error states
+* Respect RTL and internationalization requirements
+* Follow the existing permission system
+* Never rely only on frontend permission checks
+
+Use stable keys for dynamically created users, endpoints, and authentication accounts.
+
+Do not use array indexes as persistent entity identifiers.
+
+# Expected Outcome
+
+After implementation, the DevOps engineer must be able to:
+
+1. Open a web project.
+2. Enter the project’s DevOps Information workspace.
+3. Select whether the OVF was deployed as one shared VM or as a separate VM for every assigned user.
+4. Register all shared and per-user server information.
+5. Register all shared and per-user VM information.
+6. Add any number of application endpoints.
+7. Add any number of authentication accounts for every endpoint.
+8. Select whether every authentication account uses:
+
+   * Username and password
+   * Username, password, and OTP
+9. Securely save and edit the information.
+10. Ensure every assigned user can only access the credentials intended for that user.
+
+Before making changes, inspect the current repository structure, existing project models, project assignment logic, RBAC package, permission middleware, API conventions, DevOps routes, frontend project detail pages, form components, validation patterns, and existing coding conventions.
+
+Do not create a parallel architecture.
+
+Integrate this feature into the existing project architecture and reuse existing patterns wherever appropriate.

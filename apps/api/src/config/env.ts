@@ -31,6 +31,10 @@ export const env = {
   jwtAccessSecret: requiredSecret("JWT_ACCESS_SECRET", "dev_access_secret"),
   jwtRefreshSecret: requiredSecret("JWT_REFRESH_SECRET", "dev_refresh_secret"),
   csrfSecret: requiredSecret("CSRF_SECRET", process.env.JWT_REFRESH_SECRET || "dev_csrf_secret"),
+  credentialEncryptionKey: requiredSecret(
+    "CREDENTIAL_ENCRYPTION_KEY",
+    process.env.JWT_REFRESH_SECRET || "dev_credential_encryption_key"
+  ),
   accessTokenTtl: process.env.ACCESS_TOKEN_TTL || "15m",
   refreshTokenTtl: process.env.REFRESH_TOKEN_TTL || "7d",
   cookieDomain: process.env.COOKIE_DOMAIN || undefined,

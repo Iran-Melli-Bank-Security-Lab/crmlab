@@ -68,5 +68,6 @@ export type ProjectSecurityStandardsContract = {
 };
 
 export type ProjectPentesterScopesContract = {
+  assignedUserIds: string[];
   pentesterScopes: PentesterScopeAssignmentContract[];
 };

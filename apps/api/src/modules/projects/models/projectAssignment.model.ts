@@ -91,10 +91,15 @@ const projectAssignmentSchema = new Schema(
 
 projectAssignmentSchema.pre("validate", function () {
   this.projectId ||= this.project;
-  this.project ||= this.projectId;
-
   this.userId ||= this.pentester;
-  this.pentester ||= this.userId;
+
+  // Legacy identity fields are reserved for pentester rows. Keeping them on
+  // manager/DevOps/QA rows makes the legacy unique index conflict with the
+  // role-aware assignment index when one user has multiple project roles.
+  if (this.assignmentRole === PROJECT_ASSIGNMENT_ROLES.PENTESTER) {
+    this.project ||= this.projectId;
+    this.pentester ||= this.userId;
+  }
 
   this.managerId ||= this.manager;
   this.manager ||= this.managerId;

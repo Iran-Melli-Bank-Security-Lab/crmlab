@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import type { QueryFilter } from "mongoose";
+import mongoose, { type QueryFilter } from "mongoose";
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/constants/audit";
 import { HTTP_STATUS } from "@/constants/http";
 import { NOTIFICATION_PRIORITIES, NOTIFICATION_TYPES } from "@/constants/notifications";
@@ -222,15 +222,63 @@ function buildInitialProjectAssignments({
     })
     .map(({ userId, assignmentRole }) => ({
       projectId,
-      project: projectId,
       userId,
-      pentester: userId,
       managerId,
       manager: managerId,
       assignedById,
       assignmentRole,
       version: version || "initial",
     }));
+}
+
+function isDuplicateKeyError(error: unknown): error is { code: number } {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: number }).code === 11000
+  );
+}
+
+async function upsertProjectAssignment({
+  projectId,
+  userId,
+  assignmentRole,
+  version,
+  values,
+}: {
+  projectId: string;
+  userId: string;
+  assignmentRole: ProjectAssignableRole;
+  version: string;
+  values: Record<string, unknown>;
+}) {
+  const identity = { projectId, userId, assignmentRole, version };
+  const update = { $set: values };
+
+  try {
+    return await ProjectAssignmentModel.findOneAndUpdate(identity, update, {
+      new: true,
+      upsert: true,
+      runValidators: true,
+    });
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error;
+
+    // A concurrent identical request may win the upsert. Retrying as an update
+    // makes the operation idempotent without hiding a genuine identity conflict.
+    const assignment = await ProjectAssignmentModel.findOneAndUpdate(identity, update, {
+      new: true,
+      runValidators: true,
+    });
+    if (!assignment) {
+      throw new AppError(
+        "Assignment conflicts with an existing project role",
+        HTTP_STATUS.CONFLICT
+      );
+    }
+    return assignment;
+  }
 }
 
 function toProjectEvent(project: {
@@ -362,18 +410,34 @@ export const getProjectSecurityScope: RequestHandler = async (req, res, next) =>
 
 export const getProjectPentesterScopes: RequestHandler = async (req, res, next) => {
   try {
+    const projectId = String(req.params.id);
     const assignments = await ProjectAssignmentModel.find({
-      projectId: String(req.params.id),
-      assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER,
-      securityScope: { $exists: true },
+      $and: [
+        { $or: [{ projectId }, { project: projectId }] },
+        {
+          $or: [
+            { assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
+            { assignmentRole: { $exists: false } },
+          ],
+        },
+      ],
     })
-      .select("userId securityScope")
+      .select("userId pentester securityScope")
       .lean();
 
     sendSuccess(res, {
+      assignedUserIds: assignments.flatMap((assignment) => {
+        const userId = assignment.userId || assignment.pentester;
+        return userId ? [String(userId)] : [];
+      }),
       pentesterScopes: assignments.flatMap((assignment) =>
-        assignment.userId && assignment.securityScope
-          ? [{ userId: String(assignment.userId), securityScope: assignment.securityScope }]
+        assignment.securityScope && (assignment.userId || assignment.pentester)
+          ? [
+              {
+                userId: String(assignment.userId || assignment.pentester),
+                securityScope: assignment.securityScope,
+              },
+            ]
           : []
       ),
     });
@@ -519,6 +583,9 @@ export const getEligibleProjectAssignees: RequestHandler = async (req, res, next
 export const assignUsersToProject: RequestHandler = async (req, res, next) => {
   try {
     const projectId = String(req.params.id);
+    if (!mongoose.isValidObjectId(projectId)) {
+      throw new AppError("Invalid project id", HTTP_STATUS.BAD_REQUEST);
+    }
     const request = assignUsersRequestSchema.parse(req.body);
     const role = request.role as ProjectAssignableRole;
     const roleRule = assignableRoleRules[role];
@@ -532,6 +599,54 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
     const existingProject = await ProjectModel.findById(projectId);
     if (!existingProject) {
       throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    }
+    const assignmentVersion = existingProject.version || "initial";
+
+    if (role === PROJECT_ASSIGNMENT_ROLES.PENTESTER) {
+      // Older manager assignments used the pentester legacy aliases. Release
+      // those aliases so the same eligible user can also receive a pentester row.
+      await ProjectAssignmentModel.updateMany(
+        {
+          version: assignmentVersion,
+          assignmentRole: { $ne: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
+          $or: [
+            { projectId, userId: { $in: requestedUserIds } },
+            { project: projectId, pentester: { $in: requestedUserIds } },
+          ],
+        },
+        { $unset: { project: 1, pentester: 1 } }
+      );
+
+      const legacyAssignments = await ProjectAssignmentModel.find({
+        project: projectId,
+        version: assignmentVersion,
+        $and: [
+          { $or: [{ projectId: { $exists: false } }, { userId: { $exists: false } }] },
+          {
+            $or: [
+              { assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
+              { assignmentRole: { $exists: false } },
+            ],
+          },
+        ],
+      }).select("_id project pentester");
+
+      await Promise.all(
+        legacyAssignments.map((assignment) =>
+          assignment.pentester
+            ? ProjectAssignmentModel.updateOne(
+                { _id: assignment._id },
+                {
+                  $set: {
+                    projectId: assignment.project,
+                    userId: assignment.pentester,
+                    assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER,
+                  },
+                }
+              )
+            : Promise.resolve()
+        )
+      );
     }
 
     const existingAssignments = await ProjectAssignmentModel.find({
@@ -656,27 +771,28 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
     if (requestedUserIds.length) {
       await Promise.all(
         requestedUserIds.map((userId) =>
-          ProjectAssignmentModel.findOneAndUpdate(
-            { projectId, userId, assignmentRole: role, version: existingProject.version },
-            {
-              $set: {
-                projectId,
-                project: projectId,
-                userId,
-                pentester: userId,
-                managerId:
-                  existingProject.projectManager || existingProject.qualityManager,
-                manager: existingProject.projectManager || existingProject.qualityManager,
-                assignedById: req.user!.id,
-                assignmentRole: role,
-                version: existingProject.version,
-                ...(resolvedScopesByUserId.has(userId)
-                  ? { securityScope: resolvedScopesByUserId.get(userId) }
-                  : {}),
-              },
+          upsertProjectAssignment({
+            projectId,
+            userId,
+            assignmentRole: role,
+            version: assignmentVersion,
+            values: {
+              projectId,
+              ...(role === PROJECT_ASSIGNMENT_ROLES.PENTESTER
+                ? { project: projectId, pentester: userId }
+                : {}),
+              userId,
+              managerId:
+                existingProject.projectManager || existingProject.qualityManager,
+              manager: existingProject.projectManager || existingProject.qualityManager,
+              assignedById: req.user!.id,
+              assignmentRole: role,
+              version: assignmentVersion,
+              ...(resolvedScopesByUserId.has(userId)
+                ? { securityScope: resolvedScopesByUserId.get(userId) }
+                : {}),
             },
-            { new: true, upsert: true, runValidators: true }
-          )
+          })
         )
       );
     }

@@ -170,10 +170,10 @@ export const projectsApi = api.injectEndpoints({
       query: (projectId) => `/projects/${projectId}/security-scope`,
       transformResponse: (response) => unwrapApiData<ProjectSecurityScopeContract>(response),
     }),
-    getProjectPentesterScopes: builder.query<PentesterScopeAssignmentContract[], string>({
+    getProjectPentesterScopes: builder.query<ProjectPentesterScopesContract, string>({
       query: (projectId) => `/projects/${projectId}/pentester-scopes`,
       transformResponse: (response) =>
-        unwrapApiData<ProjectPentesterScopesContract>(response).pentesterScopes || [],
+        unwrapApiData<ProjectPentesterScopesContract>(response),
       providesTags: ["Projects"],
     }),
     assignProjectUsers: builder.mutation<

@@ -16,6 +16,9 @@ export type {
   UpdateTaskRequestContract,
 } from "./task";
 export type {
+  AssignedSecurityStandardContract,
+  AssignedSecurityStandardNodeContract,
+  AssignedSecurityStandardsContract,
   PentesterScopeAssignmentContract,
   ProjectPentesterScopesContract,
   ProjectSecurityScopeContract,

@@ -71,3 +71,32 @@ export type ProjectPentesterScopesContract = {
   assignedUserIds: string[];
   pentesterScopes: PentesterScopeAssignmentContract[];
 };
+
+export type AssignedSecurityStandardNodeContract = {
+  nodeId: string;
+  code?: string;
+  label: string;
+  labelFa?: string;
+  description?: string;
+  order: number;
+  isSelectable: boolean;
+  pathNodeIds: string[];
+  pathLabels: string[];
+  pathLabelsFa: string[];
+  children: AssignedSecurityStandardNodeContract[];
+};
+
+export type AssignedSecurityStandardContract = {
+  id: string;
+  standardKey: string;
+  name: string;
+  shortName: string;
+  version: string;
+  type: ProjectSecurityTargetType | "sdlc";
+  nodes: AssignedSecurityStandardNodeContract[];
+};
+
+export type AssignedSecurityStandardsContract = {
+  projectId: string;
+  standards: AssignedSecurityStandardContract[];
+};

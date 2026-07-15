@@ -18,7 +18,8 @@ When it runs:
 
 Validation rules:
 
-- Login requires username and password with minimum length.
+- Login requires a valid username and a non-empty password. Password-strength
+  rules apply only when creating accounts, so existing short passwords can authenticate.
 - Register accepts first name, last name, username, password, optional avatar URL, and optional roles.
 
 Why it exists:

@@ -33,7 +33,7 @@ export default function Login() {
     () =>
       z.object({
         username: z.string().min(3, t("auth.validation.usernameMin")),
-        password: z.string().min(6, t("auth.validation.passwordMin", { count: 6 })),
+        password: z.string().min(1, t("auth.validation.passwordRequired")),
       }),
     [t]
   );

@@ -12,7 +12,7 @@ const avatarUrlSchema = z.union([
 export const loginSchema = z.object({
   body: z.object({
     username: z.string().min(2),
-    password: z.string().min(6),
+    password: z.string().min(1),
   }),
 });
 

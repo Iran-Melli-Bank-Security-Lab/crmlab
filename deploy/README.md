@@ -13,11 +13,12 @@ process. React Router refreshes fall back to `index.html`.
 
 ## Server setup
 
-After installing Node.js, MongoDB, Nginx, and PM2, clone the project at
-`/var/www/crmlab` and run the automated setup as the deployment user:
+After installing Node.js, MongoDB, Nginx, and PM2, place the project directly in
+the `slb` user's home directory at `/home/slb` and run the automated setup as
+that user:
 
 ```bash
-cd /var/www/crmlab
+cd /home/slb
 ./deploy/setup-server.sh
 ```
 
@@ -25,7 +26,9 @@ The script runs `npm ci`, creates `apps/api/.env` when absent, generates four
 independent 64-character secrets, prepares persistent uploads, builds both apps,
 starts or reloads PM2, installs the Nginx symlink, validates Nginx, reloads it,
 and checks the API health endpoint. Existing non-placeholder secrets are never
-overwritten.
+overwritten. It grants the Nginx worker traversal permission on `/home/slb` and
+read-only access to `/home/slb/dist/web-fsa`; it does not make other home files
+world-readable.
 
 The production template uses the existing local MongoDB database named `test`:
 

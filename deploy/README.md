@@ -32,6 +32,9 @@ worker traversal permission on `/home/slb` and
 `/home/slb/crmlab/dist/web-fsa`; it does not make other home files
 world-readable.
 
+The API build also compiles the shared `@role-dashboard/authz` workspace package
+to production JavaScript before PM2 starts; PM2 never executes TypeScript source.
+
 The production template uses the existing local MongoDB database named `test`:
 
 ```text

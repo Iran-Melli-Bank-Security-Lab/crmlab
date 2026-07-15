@@ -109,6 +109,18 @@ install_nginx_config() {
   sudo systemctl reload nginx
 }
 
+verify_backend() {
+  if curl --fail --silent --show-error --retry 10 --retry-delay 2 \
+    http://127.0.0.1:4000/api/health >/dev/null; then
+    printf 'Backend health check passed on 127.0.0.1:4000\n'
+    return 0
+  fi
+
+  printf '\nBackend did not start successfully. Recent PM2 logs:\n' >&2
+  pm2 logs "$PM2_APP_NAME" --lines 100 --nostream >&2 || true
+  fail "Backend health check failed; fix the PM2 error before configuring Nginx"
+}
+
 main() {
   if [[ "$EUID" -eq 0 ]]; then
     fail "Run this script as the deployment user, not root; it invokes sudo only where required"
@@ -162,6 +174,9 @@ main() {
     pm2 start ecosystem.config.cjs --env production
   fi
   pm2 save
+
+  log "Checking the backend before enabling Nginx"
+  verify_backend
 
   log "Installing and validating Nginx configuration"
   install_nginx_config

@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "crmlab-api",
-      cwd: "./apps/api",
+      cwd: "/home/slb/crmlab/apps/api",
       script: "dist/server.js",
       instances: 1,
       exec_mode: "fork",

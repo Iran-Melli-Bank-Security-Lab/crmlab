@@ -24,8 +24,10 @@ cd /home/slb/crmlab
 The script runs `npm ci`, creates `apps/api/.env` when absent, generates four
 independent 64-character secrets, prepares persistent uploads, builds both apps,
 starts or reloads PM2, installs the Nginx symlink, validates Nginx, reloads it,
-and checks the API health endpoint. Existing non-placeholder secrets are never
-overwritten. It grants the Nginx worker traversal permission on `/home/slb` and
+and checks the backend directly before checking the public API endpoint. If the
+backend fails, it prints the latest PM2 logs and stops before changing Nginx.
+Existing non-placeholder secrets are never overwritten. It grants the Nginx
+worker traversal permission on `/home/slb` and
 `/home/slb/crmlab`, plus read-only access to
 `/home/slb/crmlab/dist/web-fsa`; it does not make other home files
 world-readable.

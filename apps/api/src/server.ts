@@ -11,8 +11,8 @@ async function bootstrap() {
   const server = http.createServer(app);
   await setupSocket(server);
 
-  server.listen(env.port,env.host,  () => {
-    console.log(`Backend running on http://localhost:${env.port}`);
+  server.listen(env.port, env.host, () => {
+    console.log(`Backend listening on http://${env.host}:${env.port}`);
   });
 
   const shutdown = async () => {

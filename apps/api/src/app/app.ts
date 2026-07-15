@@ -29,6 +29,10 @@ import securityStandardRoutes from "@/modules/security-standards/routes/security
 export function createApp() {
   const app = express();
 
+  if (env.trustProxy > 0) {
+    app.set("trust proxy", env.trustProxy);
+  }
+
   app.use(helmet());
   // app.use(
   //   cors({

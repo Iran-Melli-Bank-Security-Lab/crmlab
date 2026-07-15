@@ -1,11 +1,11 @@
 import type { Response } from "express";
-import { env, isProduction } from "@/config/env";
+import { env } from "@/config/env";
 import { COOKIE_NAMES } from "@/constants/security";
 
 const baseCookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  secure: env.cookieSecure,
+  sameSite: env.cookieSameSite,
   domain: env.cookieDomain,
   path: "/",
 };

@@ -1,21 +1,15 @@
 // src/realtime/socket.config.ts
 import { isAllowedDevelopmentOrigin } from "@/constants/cors";
-import { isProduction } from "@/config/env";
-
-const defaultAllowedOrigins = [
-  "http://localhost:5173",
-  "http://172.20.10.12:5173",
-  "http://localhost:3000",
-  "https://your-frontend-domain.com",
-];
+import { env, isProduction } from "@/config/env";
 
 function parseOrigins(value?: string): string[] {
-  if (!value) return defaultAllowedOrigins;
+  if (!value) return env.clientUrls;
 
   return value
     .split(",")
     .map((origin) => origin.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((origin) => new URL(origin).origin);
 }
 
 export const socketConfig = {

@@ -61,6 +61,7 @@ export const ROUTES = {
   PENTEST: {
     BASE: "/api/pentest",
     ASSIGNED_STANDARDS: "/projects/:projectId/assigned-standards",
+    ITEM_ASSESSMENTS: "/projects/:projectId/item-assessments",
     VULNERABILITIES: "/vulnerabilities",
     WORK_SESSIONS: "/work-sessions",
   },

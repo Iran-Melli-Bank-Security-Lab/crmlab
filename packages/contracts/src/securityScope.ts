@@ -83,7 +83,40 @@ export type AssignedSecurityStandardNodeContract = {
   pathNodeIds: string[];
   pathLabels: string[];
   pathLabelsFa: string[];
+  assessment?: {
+    status: ItemAssessmentStatusContract;
+    linkedVulnerabilityCount: number;
+    hasSubmittedVulnerability: boolean;
+  };
   children: AssignedSecurityStandardNodeContract[];
+};
+
+export type ItemAssessmentStatusContract =
+  | "PASS"
+  | "FAILED"
+  | "NOT_ACCESSIBLE"
+  | "NOT_APPLICABLE";
+
+export type ItemAssessmentProgressContract = {
+  completedItems: number;
+  totalItems: number;
+  percentage: number;
+};
+
+export type ItemAssessmentContract = {
+  id: string;
+  projectId: string;
+  standardId: string;
+  itemId: string;
+  status: ItemAssessmentStatusContract;
+  linkedVulnerabilityIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SaveItemAssessmentResponseContract = {
+  assessment: ItemAssessmentContract;
+  progress: ItemAssessmentProgressContract;
 };
 
 export type AssignedSecurityStandardContract = {
@@ -99,4 +132,5 @@ export type AssignedSecurityStandardContract = {
 export type AssignedSecurityStandardsContract = {
   projectId: string;
   standards: AssignedSecurityStandardContract[];
+  progress: ItemAssessmentProgressContract;
 };

@@ -13,26 +13,30 @@ process. React Router refreshes fall back to `index.html`.
 
 ## Server setup
 
-Run from `/var/www/crmlab` after installing Node.js, MongoDB, Nginx, and PM2:
+After installing Node.js, MongoDB, Nginx, and PM2, clone the project at
+`/var/www/crmlab` and run the automated setup as the deployment user:
 
 ```bash
-npm ci
-cp apps/api/.env.production.example apps/api/.env
+cd /var/www/crmlab
+./deploy/setup-server.sh
 ```
 
-Replace every secret placeholder in `apps/api/.env` with an independent random
-value of at least 32 characters. Keep that file on the server; it is gitignored.
-Confirm the MongoDB URI and create the persistent upload directory with ownership
-for the account running PM2.
+The script runs `npm ci`, creates `apps/api/.env` when absent, generates four
+independent 64-character secrets, prepares persistent uploads, builds both apps,
+starts or reloads PM2, installs the Nginx symlink, validates Nginx, reloads it,
+and checks the API health endpoint. Existing non-placeholder secrets are never
+overwritten.
 
-```bash
-npm run build
-pm2 start ecosystem.config.cjs --env production
-pm2 save
-sudo ln -s /var/www/crmlab/deploy/nginx/crmlab.conf /etc/nginx/sites-enabled/crmlab.conf
-sudo nginx -t
-sudo systemctl reload nginx
+The production template uses the existing local MongoDB database named `test`:
+
+```text
+MONGO_URI=mongodb://127.0.0.1:27017/test
 ```
+
+If the server uses a different MongoDB URI, copy
+`apps/api/.env.production.example` to `apps/api/.env` and update `MONGO_URI`
+before running the script. The script will preserve that file and fill only its
+secret placeholders. `apps/api/.env` remains on the server and is gitignored.
 
 Verify after deployment:
 

@@ -1,7 +1,13 @@
 import dotenv from "dotenv";
 import { DEFAULT_CORS_ORIGINS } from "@/constants/cors";
 
-dotenv.config({ quiet: true });
+// PM2 retains environment variables across reloads. In production this project
+// intentionally uses apps/api/.env as its deployment configuration, so let that
+// file replace stale values inherited by the PM2 daemon.
+dotenv.config({
+  quiet: true,
+  override: process.env.NODE_ENV === "production",
+});
 
 const nodeEnv = process.env.NODE_ENV || "development";
 const isProductionEnvironment = nodeEnv === "production";
@@ -102,6 +108,7 @@ export const env = {
     "MONGO_URI",
     "mongodb://127.0.0.1:27017/test"
   ),
+  legacyDatabaseName: process.env.LEGACY_DATABASE_NAME || "test",
   jwtAccessSecret: requiredSecret("JWT_ACCESS_SECRET", "dev_access_secret"),
   jwtRefreshSecret: requiredSecret("JWT_REFRESH_SECRET", "dev_refresh_secret"),
   csrfSecret: requiredSecret("CSRF_SECRET", "dev_csrf_secret"),

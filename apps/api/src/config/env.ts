@@ -1,15 +1,19 @@
 import dotenv from "dotenv";
 import { DEFAULT_CORS_ORIGINS } from "@/constants/cors";
 
+const runtimeNodeEnv = process.env.NODE_ENV;
+
 // PM2 retains environment variables across reloads. In production this project
 // intentionally uses apps/api/.env as its deployment configuration, so let that
-// file replace stale values inherited by the PM2 daemon.
+// file replace stale values inherited by the PM2 daemon. Keep NODE_ENV owned by
+// the process manager so an old .env file cannot disable production safeguards.
 dotenv.config({
   quiet: true,
-  override: process.env.NODE_ENV === "production",
+  override: runtimeNodeEnv === "production",
 });
+if (runtimeNodeEnv) process.env.NODE_ENV = runtimeNodeEnv;
 
-const nodeEnv = process.env.NODE_ENV || "development";
+const nodeEnv = runtimeNodeEnv || process.env.NODE_ENV || "development";
 const isProductionEnvironment = nodeEnv === "production";
 
 function productionValue(name: string, fallback: string) {

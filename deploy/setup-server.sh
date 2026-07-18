@@ -10,6 +10,8 @@ readonly ENV_FILE="${PROJECT_ROOT}/apps/api/.env"
 readonly NGINX_SOURCE="${PROJECT_ROOT}/deploy/nginx/crmlab.conf"
 readonly NGINX_TARGET="/etc/nginx/sites-enabled/crmlab.conf"
 readonly PM2_APP_NAME="crmlab-api"
+readonly LEGACY_MONGO_URI="mongodb://127.0.0.1:27017/test"
+readonly LEGACY_DATABASE_NAME="test"
 readonly SECRET_KEYS=(
   JWT_ACCESS_SECRET
   JWT_REFRESH_SECRET
@@ -94,6 +96,23 @@ configure_secrets() {
   done
 }
 
+configure_legacy_database() {
+  local current_uri
+  local current_database
+
+  current_uri="$(read_env_value MONGO_URI || true)"
+  current_database="$(read_env_value LEGACY_DATABASE_NAME || true)"
+
+  write_env_value MONGO_URI "$LEGACY_MONGO_URI"
+  write_env_value LEGACY_DATABASE_NAME "$LEGACY_DATABASE_NAME"
+
+  if [[ "$current_uri" != "$LEGACY_MONGO_URI" || "$current_database" != "$LEGACY_DATABASE_NAME" ]]; then
+    printf 'Configured the legacy MongoDB database: %s\n' "$LEGACY_DATABASE_NAME"
+  else
+    printf 'Preserved legacy MongoDB database configuration: %s\n' "$LEGACY_DATABASE_NAME"
+  fi
+}
+
 install_nginx_config() {
   if [[ -e "$NGINX_TARGET" && ! -L "$NGINX_TARGET" ]]; then
     fail "${NGINX_TARGET} exists and is not a symlink; move it manually before continuing"
@@ -154,6 +173,7 @@ main() {
     printf 'Using existing %s\n' "$ENV_FILE"
   fi
   chmod 600 "$ENV_FILE"
+  configure_legacy_database
   configure_secrets
 
   log "Preparing persistent uploads"

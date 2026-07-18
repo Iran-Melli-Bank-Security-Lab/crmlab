@@ -35,20 +35,20 @@ world-readable.
 The API build also compiles the shared `@role-dashboard/authz` workspace package
 to production JavaScript before PM2 starts; PM2 never executes TypeScript source.
 
-The production template uses the existing local MongoDB database named `test`:
+The production deployment uses the existing local MongoDB database named `test`:
 
 ```text
 MONGO_URI=mongodb://127.0.0.1:27017/test
 LEGACY_DATABASE_NAME=test
 ```
 
-If the server uses a different MongoDB URI, copy
-`apps/api/.env.production.example` to `apps/api/.env` and update `MONGO_URI`
-before running the script. The script will preserve that file and fill only its
-secret placeholders. In production, this file is authoritative over environment
-values retained by earlier PM2 processes. The API also verifies
-`LEGACY_DATABASE_NAME` at startup and refuses to run against the wrong database.
-`apps/api/.env` remains on the server and is gitignored.
+The setup script repairs these two values in an existing `apps/api/.env`, which
+prevents an older `enterprise_dashboard` configuration from surviving a PM2
+reload. It preserves other settings and all existing non-placeholder secrets.
+In production, this file is authoritative over environment values retained by
+earlier PM2 processes. The API verifies `LEGACY_DATABASE_NAME` at startup and
+refuses to run against the wrong database. `apps/api/.env` remains on the server
+and is gitignored.
 
 Verify after deployment:
 

@@ -8,6 +8,7 @@ import {
   PROJECT_ASSIGNMENT_ROLES,
   PROJECT_TYPES,
   type ProjectAssignmentRole,
+  type ProjectType,
 } from "@/constants/projects";
 import { ROLES } from "@/constants/roles";
 import { ROUTES } from "@/constants/routes";
@@ -284,13 +285,16 @@ async function upsertProjectAssignment({
 function toProjectEvent(project: {
   _id: { toString(): string };
   projectName: string;
-  type?: "security" | "quality" | "devops" | null;
+  type?: string | null;
   createdAt: Date;
 }) {
+  const type = project.type && (Object.values(PROJECT_TYPES) as string[]).includes(project.type)
+    ? project.type as ProjectType
+    : undefined;
   return {
     id: project._id.toString(),
     projectName: project.projectName,
-    type: project.type || undefined,
+    type,
     createdAt: project.createdAt,
   };
 }
@@ -299,11 +303,42 @@ function isString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-function getProjectListFilter(
+function normalizeLegacyProject<T extends Record<string, unknown>>(project: T) {
+  const legacyTypes = Array.isArray(project.projectType) ? project.projectType : [];
+  const rawType = String(project.type || legacyTypes[0] || "").toLowerCase();
+  const type = (Object.values(PROJECT_TYPES) as string[]).includes(rawType)
+    ? rawType as ProjectType
+    : undefined;
+  const rawStatus = String(project.status || "open").toLowerCase();
+  const status = rawStatus === "closed" ? "finished" : rawStatus;
+
+  return {
+    ...project,
+    type,
+    status,
+    createdAt: project.createdAt || project.created_date,
+    id: String(project._id),
+  };
+}
+
+async function getProjectListFilter(
   view: unknown,
   user: Express.UserContext
-): QueryFilter<ProjectDocument> {
+): Promise<QueryFilter<ProjectDocument>> {
   const userId = user.id;
+  const assignments = await ProjectAssignmentModel.find({
+    $or: [
+      { userId },
+      { pentester: userId },
+      { managerId: userId },
+      { manager: userId },
+    ],
+    status: { $ne: "removed" },
+  }).select("projectId project");
+  const assignedProjectIds = assignments.flatMap((assignment) => {
+    const projectId = assignment.projectId || assignment.project;
+    return projectId ? [projectId] : [];
+  });
 
   switch (view) {
     case "admin":
@@ -311,19 +346,30 @@ function getProjectListFilter(
         ? {}
         : { ownerId: userId };
     case "security":
-      return { projectManager: userId, type: PROJECT_TYPES.SECURITY };
+      return {
+        $and: [
+          { $or: [{ type: PROJECT_TYPES.SECURITY }, { projectType: { $in: ["security", "Security"] } }] },
+          { $or: [{ projectManager: userId }, { _id: { $in: assignedProjectIds } }] },
+        ],
+      };
     case "quality":
       return {
-        type: PROJECT_TYPES.QUALITY,
-        $or: [{ qualityManager: userId }, { projectManager: userId }],
+        $and: [
+          { $or: [{ type: PROJECT_TYPES.QUALITY }, { projectType: { $in: ["quality", "Quality"] } }] },
+          { $or: [
+            { qualityManager: userId },
+            { projectManager: userId },
+            { _id: { $in: assignedProjectIds } },
+          ] },
+        ],
       };
     case "devops":
-      return { devops: userId };
+      return { $or: [{ devops: userId }, { _id: { $in: assignedProjectIds } }] };
     case "representative":
-      return { representative: userId };
+      return { $or: [{ representative: userId }, { _id: { $in: assignedProjectIds } }] };
     case "pentest":
     case "qa":
-      return { assignedUserIds: userId };
+      return { $or: [{ assignedUserIds: userId }, { _id: { $in: assignedProjectIds } }] };
     default:
       if (user.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE)) {
         return {};
@@ -337,6 +383,7 @@ function getProjectListFilter(
           { devops: userId },
           { representative: userId },
           { assignedUserIds: userId },
+          { _id: { $in: assignedProjectIds } },
         ],
       };
   }
@@ -344,11 +391,11 @@ function getProjectListFilter(
 
 export const getProjects: RequestHandler = async (req, res, next) => {
   try {
-    const filter = getProjectListFilter(req.query.view, req.user!);
-    const projects = await ProjectModel.find(filter).sort({ createdAt: -1 }).lean();
+    const filter = await getProjectListFilter(req.query.view, req.user!);
+    const projects = await ProjectModel.find(filter).sort({ created_date: -1, createdAt: -1 }).lean();
     sendSuccess(
       res,
-      projects.map((p) => ({ ...p, id: String(p._id) }))
+      projects.map((project) => normalizeLegacyProject(project))
     );
   } catch (error) {
     next(error);
@@ -365,16 +412,16 @@ export const getProject: RequestHandler = async (req, res, next) => {
     }
 
     const assignment = await ProjectAssignmentModel.findOne({
-      projectId,
-      userId: req.user!.id,
-      assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER,
+      $or: [
+        { projectId, userId: req.user!.id, assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
+        { project: projectId, pentester: req.user!.id },
+      ],
     })
       .select("securityScope")
       .lean();
 
     sendSuccess(res, {
-      ...project,
-      id: String(project._id),
+      ...normalizeLegacyProject(project),
       ...(assignment?.securityScope
         ? { assignedSecurityScope: assignment.securityScope }
         : {}),

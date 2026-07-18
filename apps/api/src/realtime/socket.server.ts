@@ -5,12 +5,11 @@ import { Server as SocketIOServer } from "socket.io";
 import type { Server as HttpServer } from "http";
 
 import { SOCKET_EVENTS } from "@/constants/socket";
-import {
-  NOTIFICATION_PRIORITIES,
-  type NotificationPriority,
-  type NotificationType,
-} from "@/constants/notifications";
 import { NotificationModel } from "@/modules/notifications/models/notification.model";
+import {
+  serializeCompatibleNotification,
+  unreadNotificationFilter,
+} from "@/modules/notifications/services/notificationCompatibility.service";
 import { socketAuthMiddleware } from "./socket.auth";
 import { socketConfig, isAllowedSocketOrigin } from "./socket.config";
 import { createSocketRedisClients, type SocketRedisClients } from "./socket.redis";
@@ -27,46 +26,18 @@ import type {
 let ioInstance: RealtimeServer | null = null;
 let redisClients: SocketRedisClients | null = null;
 
-function toNotificationSocketPayload(notification: {
-  _id: { toString(): string };
-  type: string;
-  title: string;
-  message: string;
-  priority?: string;
-  isRead?: boolean;
-  userId: unknown;
-  projectId?: unknown;
-  entityId?: string | null;
-  actionUrl?: string | null;
-  createdAt?: Date;
-}) {
-  return {
-    id: notification._id.toString(),
-    type: notification.type as NotificationType,
-    title: notification.title,
-    message: notification.message,
-    priority: (notification.priority || NOTIFICATION_PRIORITIES.MEDIUM) as NotificationPriority,
-    isRead: Boolean(notification.isRead),
-    userId: String(notification.userId),
-    projectId: notification.projectId ? String(notification.projectId) : undefined,
-    entityId: notification.entityId || undefined,
-    actionUrl: notification.actionUrl || undefined,
-    createdAt: notification.createdAt || new Date(),
-  };
-}
-
 async function syncSocketNotifications(socket: RealtimeSocket) {
   const userId = socket.data.user?.id;
   if (!userId) return;
 
   const [notifications, unreadCount] = await Promise.all([
     NotificationModel.find({ userId }).sort({ createdAt: -1 }).limit(50),
-    NotificationModel.countDocuments({ userId, isRead: false }),
+    NotificationModel.countDocuments(unreadNotificationFilter(userId)),
   ]);
 
   socket.emit(
     SOCKET_EVENTS.NOTIFICATIONS_SYNC,
-    notifications.map(toNotificationSocketPayload)
+    notifications.map(serializeCompatibleNotification)
   );
   socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: unreadCount });
 }
@@ -142,16 +113,15 @@ export async function setupSocket(server: HttpServer): Promise<RealtimeServer> {
       try {
         const notification = await NotificationModel.findOneAndUpdate(
           { _id: id, userId: user.id },
-          { isRead: true },
+          { $set: { isRead: true, seen: true, seenAt: new Date() } },
           { new: true }
         );
         if (!notification) return;
 
         socket.emit(SOCKET_EVENTS.NOTIFICATION_READ, { id, isRead: true });
-        const unreadCount = await NotificationModel.countDocuments({
-          userId: user.id,
-          isRead: false,
-        });
+        const unreadCount = await NotificationModel.countDocuments(
+          unreadNotificationFilter(user.id)
+        );
         socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: unreadCount });
       } catch (error) {
         console.warn("[socket:notification:mark_read] failed", error);
@@ -161,8 +131,8 @@ export async function setupSocket(server: HttpServer): Promise<RealtimeServer> {
     socket.on("notifications:mark_all_read", async () => {
       try {
         await NotificationModel.updateMany(
-          { userId: user.id, isRead: false },
-          { isRead: true }
+          unreadNotificationFilter(user.id),
+          { $set: { isRead: true, seen: true, seenAt: new Date() } }
         );
         socket.emit(SOCKET_EVENTS.NOTIFICATIONS_READ_ALL, { isRead: true });
         socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: 0 });

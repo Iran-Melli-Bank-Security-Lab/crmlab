@@ -20,6 +20,15 @@ export type NotificationType =
   | "system.announcement";
 
 export type NotificationPriority = "low" | "medium" | "high" | "critical";
+
+export function normalizeNotificationPriority(value: unknown): NotificationPriority {
+  const normalized = String(value || "").toLowerCase();
+  if (["low", "medium", "high", "critical"].includes(normalized)) {
+    return normalized as NotificationPriority;
+  }
+  if (normalized === "urgent" || normalized === "emergency") return "critical";
+  return "medium";
+}
 export type NotificationChannel = "in_app" | "email" | "sms" | "push";
 export type NotificationDeliveryStatus = "queued" | "delivered" | "read" | "failed";
 

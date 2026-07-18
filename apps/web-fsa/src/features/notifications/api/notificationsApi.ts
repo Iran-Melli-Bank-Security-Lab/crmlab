@@ -1,6 +1,9 @@
 import { api } from "@/shared/api/baseApi";
 import { unwrapApiData } from "@/shared/api/unwrapApiData";
-import type { AppNotification } from "@/entities/notification/model/notification";
+import {
+  normalizeNotificationPriority,
+  type AppNotification,
+} from "@/entities/notification/model/notification";
 
 type NotificationListPayload = AppNotification[] | { items?: AppNotification[] };
 type NotificationListResponse = NotificationListPayload | { success?: boolean; data?: NotificationListPayload };
@@ -9,7 +12,11 @@ type SuccessResponse = { success?: boolean; data?: { id?: string; isRead?: boole
 
 const normalizeNotifications = (response: NotificationListResponse) => {
   const payload = unwrapApiData<NotificationListPayload>(response);
-  return Array.isArray(payload) ? payload : payload.items || [];
+  const notifications = Array.isArray(payload) ? payload : payload.items || [];
+  return notifications.map((notification) => ({
+    ...notification,
+    priority: normalizeNotificationPriority(notification.priority),
+  }));
 };
 
 export const notificationsApi = api.injectEndpoints({

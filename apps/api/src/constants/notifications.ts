@@ -2,6 +2,7 @@ export const NOTIFICATION_TYPES = {
   PROJECT_ASSIGNED: "project.assigned",
   TASK_ASSIGNED: "task.assigned",
   VULNERABILITY_CREATED: "vulnerability.created",
+  SYSTEM_ANNOUNCEMENT: "system.announcement",
 } as const;
 
 export const NOTIFICATION_PRIORITIES = {

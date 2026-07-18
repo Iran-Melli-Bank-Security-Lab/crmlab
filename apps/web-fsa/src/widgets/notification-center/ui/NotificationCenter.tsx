@@ -20,6 +20,7 @@ import type {
   NotificationConnectionStatus,
   NotificationPriority,
 } from "@/entities/notification/model/notification";
+import { normalizeNotificationPriority } from "@/entities/notification/model/notification";
 import {
   getBrowserNotificationPermission,
   requestBrowserNotificationPermission,
@@ -196,7 +197,8 @@ function NotificationItem({
 }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const style = priorityStyles[notification.priority];
+  const priority = normalizeNotificationPriority(notification.priority);
+  const style = priorityStyles[priority] || priorityStyles.medium;
   const isClickable = Boolean(notification.actionUrl);
 
   const markReadIfNeeded = async () => {
@@ -305,7 +307,7 @@ function NotificationItem({
               textTransform="capitalize"
               variant="subtle"
             >
-              {notification.priority}
+              {priority}
             </Badge>
           </Flex>
 

@@ -1,5 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
-import { NOTIFICATION_PRIORITIES, NOTIFICATION_PRIORITY_VALUES } from "@/constants/notifications";
+import { NOTIFICATION_PRIORITIES } from "@/constants/notifications";
 
 const notificationSchema = new Schema(
   {
@@ -8,12 +8,19 @@ const notificationSchema = new Schema(
     type: { type: String, required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },
-    priority: { type: String, enum: NOTIFICATION_PRIORITY_VALUES, default: NOTIFICATION_PRIORITIES.MEDIUM },
-    isRead: { type: Boolean, default: false },
+    priority: { type: String, default: NOTIFICATION_PRIORITIES.MEDIUM },
+    isRead: { type: Boolean },
+    seen: { type: Boolean },
+    seenAt: { type: Date },
     actionUrl: { type: String },
+    link: { type: String },
+    fromUserId: { type: Schema.Types.ObjectId, ref: "User" },
+    category: { type: String },
+    data: { type: Schema.Types.Mixed },
+    icon: { type: String },
     entityId: { type: String },
   },
-  { timestamps: true }
+  { collection: "notifications", timestamps: true, strict: false }
 );
 
 notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });

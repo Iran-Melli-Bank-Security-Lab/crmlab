@@ -9,6 +9,7 @@ import { AppError } from "@/utils/AppError";
 import { sendSuccess } from "@/utils/response";
 import { NotificationModel } from "../models/notification.model";
 import { serializeNotification } from "../services/notification.service";
+import { unreadNotificationFilter } from "../services/notificationCompatibility.service";
 
 export const getNotifications: RequestHandler = async (req, res, next) => {
   try {
@@ -34,7 +35,7 @@ export const markAsRead: RequestHandler = async (req, res, next) => {
 
     const notification = await NotificationModel.findOneAndUpdate(
       { _id: notificationId, userId: req.user!.id },
-      { isRead: true },
+      { $set: { isRead: true, seen: true, seenAt: new Date() } },
       { new: true }
     );
     if (!notification) {
@@ -88,7 +89,10 @@ export const deleteNotification: RequestHandler = async (req, res, next) => {
 
 export const markAllAsRead: RequestHandler = async (req, res, next) => {
   try {
-    await NotificationModel.updateMany({ userId: req.user!.id, isRead: false }, { isRead: true });
+    await NotificationModel.updateMany(
+      unreadNotificationFilter(req.user!.id),
+      { $set: { isRead: true, seen: true, seenAt: new Date() } }
+    );
     await writeAuditLog({
       req,
       action: AUDIT_ACTIONS.NOTIFICATION_MARK_ALL_READ,

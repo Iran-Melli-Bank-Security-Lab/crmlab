@@ -100,7 +100,7 @@ export const env = {
   clientUrls: Array.from(new Set(clientUrls)),
   mongoUri: productionValue(
     "MONGO_URI",
-    "mongodb://127.0.0.1:27017/enterprise_dashboard"
+    "mongodb://127.0.0.1:27017/test"
   ),
   jwtAccessSecret: requiredSecret("JWT_ACCESS_SECRET", "dev_access_secret"),
   jwtRefreshSecret: requiredSecret("JWT_REFRESH_SECRET", "dev_refresh_secret"),

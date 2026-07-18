@@ -1,5 +1,6 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
-import { PROJECT_STATUS, PROJECT_STATUS_VALUES, PROJECT_TYPE_VALUES, type ProjectType } from "@/constants/projects";
+import { PROJECT_STATUS, PROJECT_TYPE_VALUES, type ProjectType } from "@/constants/projects";
+import { LEGACY_COLLECTIONS } from "@/constants/legacyCollections";
 
 const projectIdentifierSchema = new Schema(
   {
@@ -39,9 +40,9 @@ const projectDevopsInfoSchema = new Schema(
 const projectSchema = new Schema(
   {
     projectName: { type: String, required: true, trim: true },
-    type: { type: String, enum: PROJECT_TYPE_VALUES },
+    type: { type: String },
     description: { type: Schema.Types.Mixed },
-    status: { type: String, enum: PROJECT_STATUS_VALUES, default: PROJECT_STATUS.OPEN },
+    status: { type: String, default: PROJECT_STATUS.OPEN },
     ownerId: { type: Schema.Types.ObjectId, ref: "User" },
 
     // Legacy production field. New code must write `type` only.
@@ -80,8 +81,14 @@ const projectSchema = new Schema(
     verifiedReportByAdmin: { type: Date },
     numberOfTest: { type: Number },
     reportPassword: { type: String, default: "" },
+    created_date: { type: Date },
   },
-  { timestamps: true }
+  {
+    collection: LEGACY_COLLECTIONS.projects,
+    timestamps: true,
+    autoCreate: false,
+    autoIndex: false,
+  }
 );
 
 projectSchema.pre("validate", function () {
@@ -98,8 +105,9 @@ projectSchema.pre("validate", function () {
   // but new canonical writes never recreate the legacy field.
   if (!this.type && this.projectType?.length) {
     const [firstType] = this.projectType;
-    if ((PROJECT_TYPE_VALUES as readonly string[]).includes(firstType)) {
-      this.type = firstType as ProjectType;
+    const normalizedType = firstType.toLowerCase();
+    if ((PROJECT_TYPE_VALUES as readonly string[]).includes(normalizedType)) {
+      this.type = normalizedType as ProjectType;
     }
   }
 });
@@ -131,4 +139,8 @@ projectSchema.index({ letterNumber: 1 });
 projectSchema.index({ "identifier.docId": 1 });
 
 export type ProjectDocument = InferSchemaType<typeof projectSchema> & { _id: mongoose.Types.ObjectId };
-export const ProjectModel = mongoose.model<ProjectDocument>("Project", projectSchema);
+export const ProjectModel = mongoose.model<ProjectDocument>(
+  "Project",
+  projectSchema,
+  LEGACY_COLLECTIONS.projects
+);

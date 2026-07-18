@@ -1,5 +1,6 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 import { ALL_ROLES, ROLES, type Role } from "@/constants/roles";
+import { LEGACY_COLLECTIONS } from "@/constants/legacyCollections";
 
 type LegacyRoles = {
   User?: number;
@@ -9,6 +10,7 @@ type LegacyRoles = {
 export type UserLike = {
   roles?: Role[] | LegacyRoles;
   devOps?: boolean;
+  devops?: boolean;
   security?: boolean;
   qualityAssurance?: boolean;
 };
@@ -26,13 +28,20 @@ export function normalizeRoles(user: UserLike): Role[] {
   const roles = new Set<Role>();
 
   if (Array.isArray(legacyRoles)) {
-    legacyRoles.forEach((role) => roles.add(role));
+    legacyRoles.forEach((role) => {
+      const normalized = String(role).toLowerCase();
+      if ((ALL_ROLES as readonly string[]).includes(normalized)) {
+        roles.add(normalized as Role);
+      } else if (normalized === "user") {
+        roles.add(ROLES.REPRESENTATIVE);
+      }
+    });
   } else {
     if (legacyRoles?.Admin) roles.add(ROLES.ADMIN);
     if (legacyRoles?.User) roles.add(ROLES.REPRESENTATIVE);
   }
 
-  if (user.devOps) roles.add(ROLES.DEVOPS);
+  if (user.devOps || user.devops) roles.add(ROLES.DEVOPS);
   if (user.security) roles.add(ROLES.PENTESTER);
   if (user.qualityAssurance) roles.add(ROLES.QA);
 
@@ -54,18 +63,12 @@ const userSchema = new Schema(
     },
     password: { type: String, required: true, select: false },
     avatarUrl: { type: String },
-    roles: {
-      type: [String],
-      enum: ALL_ROLES,
-      default: [ROLES.PENTESTER],
-      validate: {
-        validator: (roles: string[]) => roles.length > 0,
-        message: "A user must have at least one role",
-      },
-    },
+    profileImageUrl: { type: String },
+    roles: { type: Schema.Types.Mixed, default: [ROLES.PENTESTER] },
     status: { type: String, default: "Active" },
     score: { type: Number, default: 0 },
     devOps: { type: Boolean, default: false },
+    devops: { type: Boolean, default: false },
     security: { type: Boolean, default: false },
     qualityAssurance: { type: Boolean, default: false },
     userProject: [{ type: Schema.Types.ObjectId, ref: "ProjectAssignment" }],
@@ -73,7 +76,12 @@ const userSchema = new Schema(
     sessionVersion: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  {
+    collection: LEGACY_COLLECTIONS.users,
+    timestamps: true,
+    autoCreate: false,
+    autoIndex: false,
+  }
 );
 
 userSchema.pre("validate", function () {
@@ -93,4 +101,8 @@ export type UserDocument = InferSchemaType<typeof userSchema> & {
   _id: mongoose.Types.ObjectId;
 };
 
-export const UserModel = mongoose.model<UserDocument>("User", userSchema);
+export const UserModel = mongoose.model<UserDocument>(
+  "User",
+  userSchema,
+  LEGACY_COLLECTIONS.users
+);

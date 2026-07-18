@@ -1,11 +1,11 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 import {
-  PROJECT_ASSIGNMENT_ROLE_VALUES,
   PROJECT_ASSIGNMENT_ROLES,
   PROJECT_ASSIGNMENT_STATUS,
   PROJECT_ASSIGNMENT_STATUS_VALUES,
 } from "@/constants/projects";
 import { SECURITY_SCOPE_MODES } from "../constants/securityScope";
+import { LEGACY_COLLECTIONS } from "@/constants/legacyCollections";
 
 const securityScopeSchema = new Schema(
   {
@@ -53,7 +53,6 @@ const projectAssignmentSchema = new Schema(
     assignedById: { type: Schema.Types.ObjectId, ref: "User" },
     assignmentRole: {
       type: String,
-      enum: PROJECT_ASSIGNMENT_ROLE_VALUES,
       default: PROJECT_ASSIGNMENT_ROLES.PENTESTER,
     },
 
@@ -65,7 +64,6 @@ const projectAssignmentSchema = new Schema(
     version: { type: String, trim: true },
     status: {
       type: String,
-      enum: PROJECT_ASSIGNMENT_STATUS_VALUES,
       default: PROJECT_ASSIGNMENT_STATUS.OPEN,
     },
     progress: { type: Number, default: 0, min: 0, max: 100 },
@@ -82,10 +80,14 @@ const projectAssignmentSchema = new Schema(
     managerVerifyDate: { type: Date },
     stateChanges: { type: [stateChangeSchema], default: [] },
     totalWorkTime: { type: Number, default: 0, min: 0 },
+    created_at: { type: Date },
+    updated_at: { type: Date },
   },
   {
-    collection: "projectusers",
+    collection: LEGACY_COLLECTIONS.projectUsers,
     timestamps: true,
+    autoCreate: false,
+    autoIndex: false,
   }
 );
 
@@ -150,5 +152,6 @@ export type ProjectAssignmentDocument = InferSchemaType<
 
 export const ProjectAssignmentModel = mongoose.model<ProjectAssignmentDocument>(
   "ProjectAssignment",
-  projectAssignmentSchema
+  projectAssignmentSchema,
+  LEGACY_COLLECTIONS.projectUsers
 );

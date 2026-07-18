@@ -63,6 +63,7 @@ export const ROUTES = {
     ASSIGNED_STANDARDS: "/projects/:projectId/assigned-standards",
     ITEM_ASSESSMENTS: "/projects/:projectId/item-assessments",
     VULNERABILITIES: "/vulnerabilities",
+    VULNERABILITY: "/vulnerabilities/:id",
     WORK_SESSIONS: "/work-sessions",
   },
 

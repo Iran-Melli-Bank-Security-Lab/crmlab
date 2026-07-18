@@ -9,6 +9,7 @@ export const AUDIT_ACTIONS = {
   PROJECT_ASSIGN_USERS: "project.assign_users",
   PENTEST_WORK_SESSION_CREATE: "pentest.work_session_create",
   VULNERABILITY_CREATE: "vulnerability.create",
+  VULNERABILITY_UPDATE: "vulnerability.update",
   NOTIFICATION_MARK_READ: "notification.mark_read",
   NOTIFICATION_MARK_ALL_READ: "notification.mark_all_read",
   NOTIFICATION_DELETE: "notification.delete",

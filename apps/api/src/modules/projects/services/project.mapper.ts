@@ -1,4 +1,33 @@
 import type { CreateProjectRequest } from "../validators/project.validators";
+import {
+  PROJECT_TYPE_VALUES,
+  type ProjectType,
+} from "@/constants/projects";
+
+type ProjectTypeSource = {
+  type?: unknown;
+  projectType?: unknown;
+};
+
+export function getEffectiveProjectType(
+  project: ProjectTypeSource
+): ProjectType | undefined {
+  const legacyTypes = Array.isArray(project.projectType)
+    ? project.projectType
+    : [project.projectType];
+  const candidates = [project.type, ...legacyTypes];
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string") continue;
+
+    const normalized = candidate.trim().toLowerCase();
+    if ((PROJECT_TYPE_VALUES as readonly string[]).includes(normalized)) {
+      return normalized as ProjectType;
+    }
+  }
+
+  return undefined;
+}
 
 export function mapCreateProjectRequest(input: CreateProjectRequest) {
   return {

@@ -23,7 +23,10 @@ import { addConnectedUsersToProject, emitToProject } from "@/realtime/socket.del
 import { SOCKET_EVENTS } from "@/constants/socket";
 import { AppError } from "@/utils/AppError";
 import { sendSuccess } from "@/utils/response";
-import { mapCreateProjectRequest } from "../services/project.mapper";
+import {
+  getEffectiveProjectType,
+  mapCreateProjectRequest,
+} from "../services/project.mapper";
 import {
   assignUsersRequestSchema,
   createProjectRequestSchema,
@@ -304,11 +307,7 @@ function isString(value: unknown): value is string {
 }
 
 function normalizeLegacyProject<T extends Record<string, unknown>>(project: T) {
-  const legacyTypes = Array.isArray(project.projectType) ? project.projectType : [];
-  const rawType = String(project.type || legacyTypes[0] || "").toLowerCase();
-  const type = (Object.values(PROJECT_TYPES) as string[]).includes(rawType)
-    ? rawType as ProjectType
-    : undefined;
+  const type = getEffectiveProjectType(project);
   const rawStatus = String(project.status || "open").toLowerCase();
   const status = rawStatus === "closed" ? "finished" : rawStatus;
 

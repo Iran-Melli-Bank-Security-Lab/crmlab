@@ -19,12 +19,16 @@ import {
 } from "../constants/securityScope";
 import { ProjectModel, type ProjectDocument } from "../models/project.model";
 import { ProjectAssignmentModel } from "../models/projectAssignment.model";
+import { getEffectiveProjectType } from "./project.mapper";
 import {
   ProjectSecurityScopeModel,
   type ProjectSecurityScopeDocument,
 } from "../models/projectSecurityScope.model";
 
-type ProjectPlatformSource = Pick<ProjectDocument, "type" | "platform">;
+type ProjectPlatformSource = Pick<
+  ProjectDocument,
+  "type" | "projectType" | "platform"
+>;
 
 export function getProjectSecurityTargetType(
   project: ProjectPlatformSource
@@ -37,7 +41,9 @@ export function getProjectSecurityTargetType(
     return platform as ProjectSecurityTargetType;
   }
 
-  return project.type === PROJECT_TYPES.SECURITY ? "web" : "other";
+  return getEffectiveProjectType(project) === PROJECT_TYPES.SECURITY
+    ? "web"
+    : "other";
 }
 
 async function requireSecurityProject(projectId: string) {
@@ -45,7 +51,7 @@ async function requireSecurityProject(projectId: string) {
   if (!project) {
     throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
   }
-  if (project.type !== PROJECT_TYPES.SECURITY) {
+  if (getEffectiveProjectType(project) !== PROJECT_TYPES.SECURITY) {
     throw new AppError(
       "Security scope is only available for security projects",
       HTTP_STATUS.BAD_REQUEST

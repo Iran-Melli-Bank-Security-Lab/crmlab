@@ -1,7 +1,7 @@
 import { normalizePermissionKey, type Permission } from "@/constants/permissions";
 import type { Role } from "@/constants/roles";
 import { getPermissionsForRoles } from "./role.service";
-import { normalizeRoles, type UserDocument } from "../models/user.model";
+import { normalizeRoles, UserModel, type UserDocument } from "../models/user.model";
 import { UserPermissionModel } from "../models/userPermission.model";
 import { ProjectAssignmentModel } from "@/modules/projects/models/projectAssignment.model";
 
@@ -11,6 +11,24 @@ function uniquePermissions(permissions: Permission[] = []) {
 
 export async function getDefaultPermissionsForRoles(roles: Role[]) {
   return uniquePermissions(await getPermissionsForRoles(roles));
+}
+
+export async function replaceUserRoles(
+  userId: string,
+  roles: Role[],
+  status?: "Active" | "Inactive"
+) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        roles,
+        ...(status ? { status, isActive: status !== "Inactive" } : {}),
+      },
+      $inc: { sessionVersion: 1 },
+    },
+    { new: true, runValidators: true }
+  );
 }
 
 export async function upsertUserPermissions(userId: string, permissions: Permission[]) {

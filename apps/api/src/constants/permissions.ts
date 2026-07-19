@@ -7,6 +7,7 @@ export {
   PERMISSION_KEY_PATTERN,
   PERMISSION_REGISTRY,
   PERMISSION_SCOPES,
+  isAdminPermission,
   isPermissionKey,
   normalizePermissionKey,
   type PermissionAction,

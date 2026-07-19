@@ -216,3 +216,7 @@ export function isPermissionKey(value: string): value is Permission {
     normalizePermissionKey(value) === value
   );
 }
+
+export function isAdminPermission(value: string): value is Permission {
+  return value.split(".", 1)[0] === "admin" && isPermissionKey(value);
+}

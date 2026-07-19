@@ -24,11 +24,13 @@ function identityParts(value?: string) {
 }
 
 export function normalizeRoles(user: UserLike): Role[] {
-  const legacyRoles = user.roles;
+  const storedRoles = user.roles;
   const roles = new Set<Role>();
 
-  if (Array.isArray(legacyRoles)) {
-    legacyRoles.forEach((role) => {
+  // Once a user has a canonical roles array it is the source of truth. Legacy
+  // flags must not be merged into it or a deliberately removed role reappears.
+  if (Array.isArray(storedRoles)) {
+    storedRoles.forEach((role) => {
       const normalized = String(role).toLowerCase();
       if ((ALL_ROLES as readonly string[]).includes(normalized)) {
         roles.add(normalized as Role);
@@ -36,11 +38,14 @@ export function normalizeRoles(user: UserLike): Role[] {
         roles.add(ROLES.REPRESENTATIVE);
       }
     });
-  } else {
-    if (legacyRoles?.Admin) roles.add(ROLES.ADMIN);
-    if (legacyRoles?.User) roles.add(ROLES.REPRESENTATIVE);
+
+    return roles.size ? Array.from(roles) : [ROLES.PENTESTER];
   }
 
+  // Legacy role objects and flags remain readable until the first current
+  // user-management write replaces them with a canonical array.
+  if (storedRoles?.Admin) roles.add(ROLES.ADMIN);
+  if (storedRoles?.User) roles.add(ROLES.REPRESENTATIVE);
   if (user.devOps || user.devops) roles.add(ROLES.DEVOPS);
   if (user.security) roles.add(ROLES.PENTESTER);
   if (user.qualityAssurance) roles.add(ROLES.QA);

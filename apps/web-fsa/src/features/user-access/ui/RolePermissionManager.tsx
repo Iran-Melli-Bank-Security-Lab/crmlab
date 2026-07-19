@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
+import { isAdminPermission, ROLES } from "@role-dashboard/authz";
 import {
   Badge as ChakraBadge,
   Box,
@@ -24,6 +25,13 @@ import {
 import type { Permission, Role, User, UserStatus } from "@/shared/types";
 import { getPermissionsFromRoleCatalog } from "@/entities/permission/model/permissionGrants";
 import { getApiErrorMessage } from "@/shared/lib/getApiErrorMessage";
+import {
+  buildUserAccessUpdate,
+  canChangeUserStatus,
+  getVisiblePermissions,
+  getVisibleRoles,
+  preserveAdminPermissions,
+} from "@/features/user-access/model/userAccessUpdate";
 import Badge from "@/shared/ui/primitives/Badge";
 import Button from "@/shared/ui/primitives/Button";
 import Card from "@/shared/ui/primitives/Card";
@@ -97,9 +105,20 @@ function RolePermissionEditor({
   } = useGetRolesAndPermissionsQuery();
   const roleCatalog = rolesAndPermissions?.roles || [];
   const allRoles = roleCatalog.map((role) => role.key);
+  const selectedUserIsAdmin = selectedUser?.roles.includes(ROLES.ADMIN) ?? false;
+  const canChangeSelectedUserStatus = canChangeUserStatus({
+    currentUserId: currentUser?.id,
+    selectedUserId: selectedUser?.id,
+    selectedUserRoles: selectedUser?.roles || [],
+  });
+  const visibleRoles = getVisibleRoles(allRoles, selectedUser?.roles || []);
   const allPermissions = useMemo(
     () => rolesAndPermissions?.permissions || [],
     [rolesAndPermissions?.permissions]
+  );
+  const visiblePermissions = useMemo(
+    () => getVisiblePermissions(allPermissions, selectedUser?.roles || []),
+    [allPermissions, selectedUser?.roles]
   );
   const roleLabels = Object.fromEntries(
     roleCatalog.map((role) => [role.key, role.name])
@@ -107,7 +126,10 @@ function RolePermissionEditor({
 
   const [draftRoles, setDraftRoles] = useState<Role[]>(selectedUser?.roles || []);
   const [draftPermissions, setDraftPermissions] = useState<Permission[]>(
-    selectedUser?.permissions || []
+    getVisiblePermissions(
+      selectedUser?.permissions || [],
+      selectedUser?.roles || []
+    )
   );
   const [draftStatus, setDraftStatus] = useState<UserStatus>(
     selectedUser?.status || "Active"
@@ -115,13 +137,13 @@ function RolePermissionEditor({
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
   const groupedPermissions = useMemo(() => {
-    return allPermissions.reduce<Record<string, Permission[]>>((groups, permission) => {
+    return visiblePermissions.reduce<Record<string, Permission[]>>((groups, permission) => {
       const group = permission.split(".")[0];
       groups[group] = groups[group] || [];
       groups[group].push(permission);
       return groups;
     }, {});
-  }, [allPermissions]);
+  }, [visiblePermissions]);
 
   const handleSelectUser = (userId: string) => {
     onSelectUser(userId);
@@ -130,7 +152,10 @@ function RolePermissionEditor({
   const handleToggleRole = (role: Role) => {
     const nextRoles = toggleValue(draftRoles, role);
     setDraftRoles(nextRoles);
-    setDraftPermissions(getPermissionsFromRoleCatalog(nextRoles, roleCatalog));
+    const nextPermissions = getPermissionsFromRoleCatalog(nextRoles, roleCatalog);
+    setDraftPermissions(
+      preserveAdminPermissions(draftPermissions, nextPermissions, selectedUserIsAdmin)
+    );
   };
 
   const handleSave = async () => {
@@ -141,12 +166,14 @@ function RolePermissionEditor({
     }
 
     try {
-      const updatedUser = await updateUser({
-        id: selectedUser.id,
-        roles: draftRoles,
-        permissions: draftPermissions,
-        status: draftStatus,
-      }).unwrap();
+      const updatedUser = await updateUser(
+        buildUserAccessUpdate({
+          id: selectedUser.id,
+          roles: draftRoles,
+          permissions: draftPermissions,
+          status: draftStatus,
+        })
+      ).unwrap();
       if (currentUser?.id === updatedUser.id) {
         dispatch(updateAuthUser(updatedUser));
       }
@@ -271,7 +298,10 @@ function RolePermissionEditor({
             <Heading as="h4" size="sm" mb={3}>
               {t("userAccess.userState")}
             </Heading>
-            <NativeSelect.Root maxW="260px">
+            <NativeSelect.Root
+              maxW="260px"
+              disabled={!canChangeSelectedUserStatus || isLoading}
+            >
               <NativeSelect.Field
                 value={draftStatus}
                 onChange={(event) => setDraftStatus(event.target.value as UserStatus)}
@@ -298,7 +328,7 @@ function RolePermissionEditor({
               {t("userAccess.roles")}
             </Heading>
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={3}>
-              {allRoles.map((role) => (
+              {visibleRoles.map((role) => (
                 <Box
                   as="label"
                   key={role}
@@ -314,7 +344,7 @@ function RolePermissionEditor({
                 >
                   <input
                     type="checkbox"
-                    disabled={isLoading}
+                    disabled={isLoading || role === ROLES.ADMIN}
                     checked={draftRoles.includes(role)}
                     onChange={() => handleToggleRole(role)}
                   />
@@ -360,7 +390,7 @@ function RolePermissionEditor({
                       >
                         <input
                           type="checkbox"
-                          disabled={isLoading}
+                          disabled={isLoading || isAdminPermission(permission)}
                           checked={draftPermissions.includes(permission)}
                           onChange={() =>
                             setDraftPermissions(toggleValue(draftPermissions, permission))

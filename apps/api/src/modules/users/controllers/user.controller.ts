@@ -2,19 +2,30 @@ import type { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/constants/audit";
 import { HTTP_STATUS } from "@/constants/http";
-import type { Role } from "@/constants/roles";
+import { ROLES, type Role } from "@/constants/roles";
 import type { Permission } from "@/constants/permissions";
 import { writeAuditLog } from "@/modules/audit/services/audit.service";
 import { AppError } from "@/utils/AppError";
 import { sendSuccess } from "@/utils/response";
-import { UserModel } from "../models/user.model";
+import { normalizeRoles, UserModel } from "../models/user.model";
 import {
   getAllPermissionOptions,
   getRolesForDashboard,
   syncRolePermissionsFromConstants,
   updateRolePermissions,
 } from "../services/role.service";
-import { getDefaultPermissionsForRoles, toAuthUserContext, upsertUserPermissions } from "../services/userAuth.service";
+import {
+  getDefaultPermissionsForRoles,
+  getOrCreateUserPermissions,
+  replaceUserRoles,
+  toAuthUserContext,
+  upsertUserPermissions,
+} from "../services/userAuth.service";
+import {
+  assertAdminCannotDeactivateSelf,
+  assertAdminAccessIsNotGranted,
+  protectAdminUserAccess,
+} from "../services/userAccessPolicy.service";
 
 async function getPermissionsForUserUpdate(roles: Role[], permissions?: Permission[]) {
   return Array.isArray(permissions) ? permissions : getDefaultPermissionsForRoles(roles);
@@ -82,25 +93,35 @@ export const deleteUser: RequestHandler = async (req, res, next) => {
 export const updateUserRolesPermissions: RequestHandler = async (req, res, next) => {
   try {
     const userId = String(req.params.id || req.params.userId);
-    const roles = req.body.roles as Role[];
+    const requestedRoles = req.body.roles as Role[];
     const status = req.body.status as "Active" | "Inactive" | undefined;
-    const permissions = await getPermissionsForUserUpdate(roles, req.body.permissions);
+    const currentUser = await UserModel.findById(userId);
 
-    const user = await UserModel.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          roles,
-          ...(status ? { status, isActive: status !== "Inactive" } : {}),
-        },
-        $inc: { sessionVersion: 1 },
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!user) {
+    if (!currentUser) {
       throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
     }
+
+    const currentRoles = normalizeRoles(currentUser);
+    assertAdminCannotDeactivateSelf({
+      actorUserId: req.user?.id,
+      targetUserId: userId,
+      currentRoles,
+      requestedStatus: status,
+    });
+    const currentPermissions = await getOrCreateUserPermissions(currentUser, currentRoles);
+    const requestedPermissions = await getPermissionsForUserUpdate(
+      requestedRoles,
+      req.body.permissions
+    );
+    const { roles, permissions } = protectAdminUserAccess({
+      currentRoles,
+      currentPermissions,
+      requestedRoles,
+      requestedPermissions,
+    });
+    const user = await replaceUserRoles(userId, roles, status);
+
+    if (!user) throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
 
     await upsertUserPermissions(userId, permissions);
 
@@ -122,6 +143,13 @@ export const createUser: RequestHandler = async (req, res, next) => {
   try {
     const password = await bcrypt.hash(req.body.password, 12);
     const { permissions: requestedPermissions, ...userInput } = req.body;
+    if (
+      (userInput.roles !== undefined && !Array.isArray(userInput.roles)) ||
+      (requestedPermissions !== undefined && !Array.isArray(requestedPermissions))
+    ) {
+      throw new AppError("Roles and permissions must be arrays", HTTP_STATUS.BAD_REQUEST);
+    }
+    assertAdminAccessIsNotGranted(userInput.roles || [], requestedPermissions || []);
     const user = await UserModel.create({ ...userInput, password });
     const roles = user.roles as Role[];
     const permissions = await getPermissionsForUserUpdate(roles, requestedPermissions);
@@ -154,6 +182,12 @@ export const updateRolePermissionsForDashboard: RequestHandler = async (req, res
   try {
     const roleKey = String(req.params.key) as Role;
     const permissions = Array.isArray(req.body.permissions) ? req.body.permissions : [];
+    if (roleKey === ROLES.ADMIN) {
+      throw new AppError(
+        "The built-in admin role permissions are read-only",
+        HTTP_STATUS.FORBIDDEN
+      );
+    }
     const role = await updateRolePermissions(roleKey, permissions);
 
     await writeAuditLog({

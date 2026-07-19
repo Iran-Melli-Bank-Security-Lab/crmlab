@@ -28,6 +28,8 @@ Important behavior:
 
 - `passwordHash` uses `select: false`, so it is not returned unless explicitly selected.
 - `roles` default to pentester.
+- A canonical `roles` array is the source of truth. Legacy role objects and
+  boolean flags are normalized only while that array is absent.
 - `sessionVersion` is included in auth context so tokens can be invalidated after role changes.
 
 ### `role.model.ts`

@@ -1,6 +1,7 @@
 import { api } from "@/shared/api/baseApi";
 import { unwrapApiData } from "@/shared/api/unwrapApiData";
 import type { RolesAndPermissions, User, UserFormPayload } from "@/shared/types";
+import { buildUserUpdateRequest } from "./userUpdateRequest";
 
 type UsersPayload = User[] | { users?: User[]; items?: User[] };
 type UsersResponse = UsersPayload | { success?: boolean; data?: UsersPayload };
@@ -51,7 +52,7 @@ export const usersApi = api.injectEndpoints({
       invalidatesTags: ["Users"],
     }),
     updateUser: builder.mutation<User, UserFormPayload & { id: string }>({
-      query: ({ id, ...data }) => ({ url: `/users/${id}`, method: "PUT", body: data }),
+      query: buildUserUpdateRequest,
       transformResponse: normalizeUserResponse,
       invalidatesTags: ["Users", "Auth"],
     }),

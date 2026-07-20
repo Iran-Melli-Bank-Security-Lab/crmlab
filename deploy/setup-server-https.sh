@@ -158,14 +158,14 @@ verify_https() {
 }
 
 verify_http_redirect() {
-  local redirect_url
+  local redirect_result
 
-  redirect_url="$(curl --silent --show-error --head --noproxy '*' \
-    --output /dev/null --write-out '%{redirect_url}' \
+  redirect_result="$(curl --silent --show-error --head --noproxy '*' \
+    --output /dev/null --write-out '%{http_code} %{redirect_url}' \
     http://10.10.10.122/)"
 
-  [[ "$redirect_url" == "${HTTPS_ORIGIN}/" ]] ||
-    fail "The old HTTP origin did not redirect to ${HTTPS_ORIGIN}; check for duplicate enabled Nginx sites"
+  [[ "$redirect_result" == "301 ${HTTPS_ORIGIN}/" ]] ||
+    fail "The old HTTP origin returned '${redirect_result}' instead of '301 ${HTTPS_ORIGIN}/'; check for duplicate enabled Nginx sites"
 }
 
 main() {

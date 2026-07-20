@@ -22,7 +22,7 @@ cd /home/slb/crmlab
 ```
 
 The script runs `npm ci`, creates `apps/api/.env` when absent, generates four
-independent 64-character secrets, prepares persistent uploads, builds both apps,
+independent 64-character secrets, builds both apps,
 starts or reloads PM2, installs the Nginx symlink, validates Nginx, reloads it,
 and checks the backend directly before checking the public API endpoint. If the
 backend fails, it prints the latest PM2 logs and stops before changing Nginx.
@@ -31,6 +31,13 @@ worker traversal permission on `/home/slb` and
 `/home/slb/crmlab`, plus read-only access to
 `/home/slb/crmlab/dist/web-fsa`; it does not make other home files
 world-readable.
+
+Uploaded files are stored outside the repository. By default, the backend uses
+`crmlab-uploads` inside the home directory of the user running Node.js/PM2. It
+creates the directory recursively at startup and refuses to start with a clear
+error when the directory is not writable. Set the optional `UPLOAD_DIR`
+environment variable to use a different location; relative overrides are
+resolved against the backend process working directory.
 
 The API build also compiles the shared `@role-dashboard/authz` workspace package
 to production JavaScript before PM2 starts; PM2 never executes TypeScript source.
@@ -78,8 +85,11 @@ cd /home/slb/crmlab
 ./deploy/setup-server-https.sh
 ```
 
-This uses `deploy/nginx/crm.lab.conf`, replaces the enabled HTTP site symlink,
-sets the application and Socket.IO origins to `https://crm.lab`, enables secure
-host-only cookies, reloads PM2, validates Nginx, and verifies the HTTPS health
-endpoint. The certificate must be trusted by the server running the setup
-script as well as by client browsers.
+This uses `deploy/nginx/crm.lab.conf` and `ecosystem.https.config.cjs`, replaces
+the enabled HTTP site symlink, sets the application and Socket.IO origins to
+`https://crm.lab`, enables secure host-only cookies, reloads PM2, validates
+Nginx, and verifies the HTTPS health endpoint. The frontend uses same-origin
+paths, so the API, Socket.IO, and uploads are available at
+`https://crm.lab/api`, `https://crm.lab/socket.io`, and
+`https://crm.lab/uploads`. The certificate must be trusted by the server
+running the setup script as well as by client browsers.

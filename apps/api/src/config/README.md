@@ -33,10 +33,11 @@ Important values:
 - `accessTokenTtl`: access token lifetime.
 - `refreshTokenTtl`: refresh token lifetime.
 - `cookieDomain`: optional cookie domain.
-- `uploadDir`: upload directory path.
+- `uploadDir`: absolute upload directory path. It uses `UPLOAD_DIR` when set;
+  otherwise it resolves to `crmlab-uploads` in the Node.js process user's home
+  directory.
 
 Why this file matters:
 
 - It prevents scattered direct reads from `process.env`.
 - It gives the rest of the backend a single typed configuration source.
-

@@ -1,10 +1,12 @@
 import http from "http";
 import { createApp } from "@/app/app";
 import { env } from "@/config/env";
+import { initializeUploadStorage } from "@/config/uploadStorage";
 import { connectDB } from "@/db/connect";
 import { closeSocket, setupSocket } from "@/realtime/socket.server";
 
 async function bootstrap() {
+  await initializeUploadStorage();
   await connectDB();
 
   const app = createApp();

@@ -1,4 +1,6 @@
 import dotenv from "dotenv";
+import os from "node:os";
+import path from "node:path";
 import { DEFAULT_CORS_ORIGINS } from "@/constants/cors";
 
 const runtimeNodeEnv = process.env.NODE_ENV;
@@ -102,6 +104,10 @@ if (
   throw new Error("HOST must bind to a non-loopback interface in production");
 }
 
+const uploadDir = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(os.homedir(), "crmlab-uploads");
+
 export const env = {
   nodeEnv,
   host,
@@ -126,7 +132,7 @@ export const env = {
   cookieSecure,
   cookieSameSite: cookieSameSite as "lax" | "strict" | "none",
   trustProxy,
-  uploadDir: process.env.UPLOAD_DIR || "uploads",
+  uploadDir,
 };
 
 export const isProduction = env.nodeEnv === "production";

@@ -5,8 +5,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
-import path from "path";
 import { env, isProduction } from "@/config/env";
+import { uploadDir } from "@/config/uploadStorage";
 import { ROUTES } from "@/constants/routes";
 import { csrfProtection } from "@/middlewares/csrf.middleware";
 import { errorHandler, notFoundHandler } from "@/middlewares/error.middleware";
@@ -69,7 +69,7 @@ export function createApp() {
   app.use(csrfProtection);
   app.use(morgan("dev"));
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500 }));
-  app.use(ROUTES.UPLOADS_STATIC, express.static(path.resolve(env.uploadDir)));
+  app.use(ROUTES.UPLOADS_STATIC, express.static(uploadDir));
 
   app.get(ROUTES.HEALTH, (_req, res) =>
     sendSuccess(res, { ok: true, service: "enterprise-dashboard-backend" })

@@ -1,9 +1,8 @@
-import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import multer from "multer";
-import { env } from "@/config/env";
+import { uploadDir } from "@/config/uploadStorage";
 import { HTTP_STATUS } from "@/constants/http";
 import { ROUTES } from "@/constants/routes";
 import { UPLOADS } from "@/constants/uploads";
@@ -13,11 +12,9 @@ import { deleteUpload, uploadAvatar } from "../controllers/upload.controller";
 
 const router = Router();
 
-fs.mkdirSync(env.uploadDir, { recursive: true });
-
 const storage = multer.diskStorage({
   destination: (_req, _file, callback) => {
-    callback(null, env.uploadDir);
+    callback(null, uploadDir);
   },
   filename: (_req, file, callback) => {
     const extension = path.extname(file.originalname).toLowerCase();

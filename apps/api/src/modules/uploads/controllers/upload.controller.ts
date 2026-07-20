@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { RequestHandler } from "express";
-import { env } from "@/config/env";
+import { resolveUploadFile, uploadDir } from "@/config/uploadStorage";
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/constants/audit";
 import { HTTP_STATUS } from "@/constants/http";
 import { UPLOADS } from "@/constants/uploads";
@@ -77,17 +77,16 @@ export const deleteUpload: RequestHandler = async (req, res, next) => {
             throw new AppError("Invalid upload file id", HTTP_STATUS.BAD_REQUEST);
         }
         const filename = safeUploadFilename(uploadId);
-        const uploadRoot = path.resolve(env.uploadDir);
-        const filePath = path.resolve(uploadRoot, filename);
+        const filePath = resolveUploadFile(filename);
 
-        if (!filePath.startsWith(`${uploadRoot}${path.sep}`)) {
+        if (!filePath.startsWith(`${uploadDir}${path.sep}`)) {
             throw new AppError("Invalid upload path", HTTP_STATUS.BAD_REQUEST);
         }
 
         try {
             await fs.unlink(filePath);
         } catch (error) {
-            const nodeError = error as NodeJS.ErrnoException;
+            const nodeError = error as { code?: string };
 
             if (nodeError.code !== "ENOENT") {
                 throw error;

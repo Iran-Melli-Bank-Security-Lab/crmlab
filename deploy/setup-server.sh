@@ -176,10 +176,6 @@ main() {
   configure_legacy_database
   configure_secrets
 
-  log "Preparing persistent uploads"
-  sudo mkdir -p /var/lib/crmlab/uploads
-  sudo chown "$(id -u):$(id -g)" /var/lib/crmlab/uploads
-
   log "Building frontend and backend"
   npm run build
 

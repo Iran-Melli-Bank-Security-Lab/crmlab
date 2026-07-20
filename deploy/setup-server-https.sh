@@ -12,6 +12,7 @@ readonly NGINX_TARGET="/etc/nginx/sites-enabled/crmlab.conf"
 readonly TLS_CERTIFICATE="/etc/ssl/crmlab/certs/crm.lab.crt"
 readonly TLS_PRIVATE_KEY="/etc/ssl/crmlab/private/crm.lab.key"
 readonly HTTPS_ORIGIN="https://crm.lab"
+readonly PM2_CONFIG="${PROJECT_ROOT}/ecosystem.https.config.cjs"
 readonly PM2_APP_NAME="crmlab-api"
 readonly LEGACY_MONGO_URI="mongodb://127.0.0.1:27017/test"
 readonly LEGACY_DATABASE_NAME="test"
@@ -173,6 +174,7 @@ main() {
 
   [[ -f "$ENV_TEMPLATE" ]] || fail "Missing environment template: ${ENV_TEMPLATE}"
   [[ -f "$NGINX_SOURCE" ]] || fail "Missing Nginx configuration: ${NGINX_SOURCE}"
+  [[ -f "$PM2_CONFIG" ]] || fail "Missing PM2 HTTPS configuration: ${PM2_CONFIG}"
 
   log "Checking the TLS certificate and private key"
   verify_tls_files
@@ -193,10 +195,6 @@ main() {
   configure_production_environment
   configure_secrets
 
-  log "Preparing persistent uploads"
-  sudo mkdir -p /var/lib/crmlab/uploads
-  sudo chown "$(id -u):$(id -g)" /var/lib/crmlab/uploads
-
   log "Building frontend and backend"
   npm run build
 
@@ -206,9 +204,9 @@ main() {
 
   log "Starting the backend with PM2"
   if pm2 describe "$PM2_APP_NAME" >/dev/null 2>&1; then
-    pm2 reload ecosystem.config.cjs --env production --update-env
+    pm2 reload "$PM2_CONFIG" --env production --update-env
   else
-    pm2 start ecosystem.config.cjs --env production
+    pm2 start "$PM2_CONFIG" --env production
   fi
   pm2 save
 

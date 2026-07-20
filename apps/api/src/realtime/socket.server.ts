@@ -144,7 +144,13 @@ export async function setupSocket(server: HttpServer): Promise<RealtimeServer> {
 
   io.engine.on("connection_error", (error) => {
     if (process.env.NODE_ENV !== "test") {
-      console.warn("[Socket.IO connection error]", error.code, error.message);
+      console.warn("[Socket.IO connection error]", {
+        code: error.code,
+        message: error.message,
+        origin: error.req.headers.origin,
+        host: error.req.headers.host,
+        context: error.context,
+      });
     }
   });
 

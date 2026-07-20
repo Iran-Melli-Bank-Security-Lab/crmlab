@@ -41,7 +41,9 @@ export const socketConfig = {
 
 export function isAllowedSocketOrigin(origin?: string): boolean {
   if (!origin) {
-    return !socketConfig.isProduction;
+    // Non-browser clients and some polling/proxy requests do not send Origin.
+    // Authentication is still enforced by socketAuthMiddleware.
+    return true;
   }
 
   try {

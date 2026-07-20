@@ -61,3 +61,25 @@ curl -I http://10.10.10.122/projects/example
 The configured private-IP deployment intentionally uses host-only,
 `SameSite=Lax`, non-Secure cookies because it is plain HTTP. When TLS is added,
 set `COOKIE_SECURE=true`; keep `SameSite=Lax` for this same-origin topology.
+
+## HTTPS setup (`crm.lab`)
+
+The HTTPS Nginx configuration expects these files to exist before setup:
+
+```text
+/etc/ssl/crmlab/certs/crm.lab.crt
+/etc/ssl/crmlab/private/crm.lab.key
+```
+
+Make sure `crm.lab` resolves to the server, then run:
+
+```bash
+cd /home/slb/crmlab
+./deploy/setup-server-https.sh
+```
+
+This uses `deploy/nginx/crm.lab.conf`, replaces the enabled HTTP site symlink,
+sets the application and Socket.IO origins to `https://crm.lab`, enables secure
+host-only cookies, reloads PM2, validates Nginx, and verifies the HTTPS health
+endpoint. The certificate must be trusted by the server running the setup
+script as well as by client browsers.

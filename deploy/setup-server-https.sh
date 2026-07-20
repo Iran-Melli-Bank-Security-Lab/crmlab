@@ -155,6 +155,17 @@ verify_https() {
     "${HTTPS_ORIGIN}/api/health" >/dev/null
 }
 
+verify_http_redirect() {
+  local redirect_url
+
+  redirect_url="$(curl --silent --show-error --head --noproxy '*' \
+    --output /dev/null --write-out '%{redirect_url}' \
+    http://10.10.10.122/)"
+
+  [[ "$redirect_url" == "${HTTPS_ORIGIN}/" ]] ||
+    fail "The old HTTP origin did not redirect to ${HTTPS_ORIGIN}; check for duplicate enabled Nginx sites"
+}
+
 main() {
   if [[ "$EUID" -eq 0 ]]; then
     fail "Run this script as the deployment user, not root; it invokes sudo only where required"
@@ -215,6 +226,9 @@ main() {
 
   log "Installing and validating the HTTPS Nginx configuration"
   install_nginx_config
+
+  log "Verifying the old HTTP origin redirects to HTTPS"
+  verify_http_redirect
 
   log "Verifying the HTTPS deployment"
   verify_https

@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Badge,
   Box,
@@ -19,7 +19,6 @@ import {
   setProjectTableColumnAlias,
   setProjectTableColumnOrder,
   setProjectTableVisibleColumns,
-  setTheme,
 } from "@/features/ui-state/model/uiSlice";
 import type { RootState } from "@/app/store/store";
 import { useLanguage } from "@/features/language/model";
@@ -29,6 +28,8 @@ import {
   useSaveProjectTableSettingsMutation,
   useSyncProjectTableSettings,
 } from "@/features/ui-state/api/projectTableSettingsApi";
+import { useColorMode } from "@/shared/theme/colorMode";
+import PageHeader from "@/shared/ui/layout/PageHeader";
 
 type ColumnAliasEditorProps = {
   dir: "ltr" | "rtl";
@@ -52,8 +53,6 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
   onClear,
 }: ColumnAliasEditorProps) {
   const [draft, setDraft] = useState(value);
-
-  useEffect(() => setDraft(value), [value]);
 
   const normalizedDraft = draft.trim();
 
@@ -111,69 +110,98 @@ const ColumnAliasEditor = memo(function ColumnAliasEditor({
 
 export default function Settings() {
   const { dir, language, t } = useLanguage();
+  const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   useSyncProjectTableSettings(userId);
   const { data: columnRegistry } = useGetProjectTableColumnRegistryQuery(userId || "", {
     skip: !userId,
   });
-  const [saveProjectTableSettings] = useSaveProjectTableSettingsMutation();
+  const [
+    saveProjectTableSettings,
+    { isLoading: isSaving, isError: hasSaveError, isSuccess: hasSaved },
+  ] = useSaveProjectTableSettingsMutation();
   const [resetProjectTableSettings] = useResetProjectTableSettingsMutation();
   const [draggedColumn, setDraggedColumn] = useState<{
     paginationId: string;
     key: string;
   } | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
-  const {
-    theme,
-    visibleProjectColumns,
-    projectTableColumnOrder,
-    projectTableColumnAliases,
-    projectTableSettingsUserId,
-  } = useSelector((state: RootState) => state.ui);
+  const [activeContextId, setActiveContextId] = useState("");
+  const visibleProjectColumns = useSelector(
+    (state: RootState) => state.ui.visibleProjectColumns
+  );
+  const projectTableColumnOrder = useSelector(
+    (state: RootState) => state.ui.projectTableColumnOrder
+  );
+  const projectTableColumnAliases = useSelector(
+    (state: RootState) => state.ui.projectTableColumnAliases
+  );
+  const projectTableSettingsUserId = useSelector(
+    (state: RootState) => state.ui.projectTableSettingsUserId
+  );
   const hasCurrentUserSettings = projectTableSettingsUserId === userId;
   const scopedVisibleColumns = hasCurrentUserSettings ? visibleProjectColumns : {};
   const scopedColumnOrder = hasCurrentUserSettings ? projectTableColumnOrder : {};
   const scopedColumnAliases = hasCurrentUserSettings ? projectTableColumnAliases : {};
-  const allowedContexts = (columnRegistry?.contexts || []).map((context) => ({
-    ...context,
-    paginationId: context.context,
-    label: language === "fa" ? context.faLabel : context.defaultLabel,
-    columns: context.columns
-      .filter((column) => column.isConfigurable && !column.isSensitive)
-      .sort((left, right) => left.defaultOrder - right.defaultOrder),
-  }));
+  const allowedContexts = useMemo(
+    () =>
+      (columnRegistry?.contexts || []).map((context) => ({
+        ...context,
+        paginationId: context.context,
+        label: language === "fa" ? context.faLabel : context.defaultLabel,
+        columns: context.columns
+          .filter((column) => column.isConfigurable && !column.isSensitive)
+          .sort((left, right) => left.defaultOrder - right.defaultOrder),
+      })),
+    [columnRegistry?.contexts, language]
+  );
+  const resolvedActiveContextId = allowedContexts.some(
+    (context) => context.paginationId === activeContextId
+  )
+    ? activeContextId
+    : allowedContexts[0]?.paginationId || "";
+  const activeContext = allowedContexts.find(
+    (context) => context.paginationId === resolvedActiveContextId
+  );
 
-  const persistContext = (
-    context: string,
-    visibleColumns: string[],
-    columnOrder: string[],
-    aliases: Record<string, string>
-  ) => {
-    void saveProjectTableSettings({
-      context,
-      settings: { visibleColumns, columnOrder, aliases },
-    });
-  };
+  const persistContext = useCallback(
+    (
+      context: string,
+      visibleColumns: string[],
+      columnOrder: string[],
+      aliases: Record<string, string>
+    ) => {
+      void saveProjectTableSettings({
+        context,
+        settings: { visibleColumns, columnOrder, aliases },
+      });
+    },
+    [saveProjectTableSettings]
+  );
 
-  const moveColumn = (
-    paginationId: string,
-    keys: string[],
-    index: number,
-    targetIndex: number,
-    visibleColumns: string[],
-    aliases: Record<string, string>
-  ) => {
-    const nextKeys = [...keys];
-    const [key] = nextKeys.splice(index, 1);
-    nextKeys.splice(targetIndex, 0, key);
-    dispatch(setProjectTableColumnOrder({ paginationId, columns: nextKeys }));
-    persistContext(paginationId, visibleColumns, nextKeys, aliases);
-  };
+  const moveColumn = useCallback(
+    (
+      paginationId: string,
+      keys: string[],
+      index: number,
+      targetIndex: number,
+      visibleColumns: string[],
+      aliases: Record<string, string>
+    ) => {
+      if (index === targetIndex || index < 0) return;
+      const nextKeys = [...keys];
+      const [key] = nextKeys.splice(index, 1);
+      nextKeys.splice(targetIndex, 0, key);
+      dispatch(setProjectTableColumnOrder({ paginationId, columns: nextKeys }));
+      persistContext(paginationId, visibleColumns, nextKeys, aliases);
+    },
+    [dispatch, persistContext]
+  );
 
   return (
     <VStack align="stretch" gap={5}>
-      <Heading>{t("settings.title")}</Heading>
+      <PageHeader title={t("settings.title")} />
       <Box as="section" aria-labelledby="appearance-settings-title">
         <Heading id="appearance-settings-title" size="md" mb={3}>
           {t("settings.appearance.title")}
@@ -186,7 +214,7 @@ export default function Settings() {
                 <Text color="var(--apple-muted)" fontSize="sm">
                   {t("settings.currentTheme", {
                     theme: t(
-                      theme === "light" ? "settings.theme.light" : "settings.theme.dark"
+                      colorMode === "light" ? "settings.theme.light" : "settings.theme.dark"
                     ),
                   })}
                 </Text>
@@ -194,10 +222,10 @@ export default function Settings() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
+                onClick={toggleColorMode}
               >
                 {t(
-                  theme === "light" ? "settings.switchToDark" : "settings.switchToLight"
+                  colorMode === "light" ? "settings.switchToDark" : "settings.switchToLight"
                 )}
               </Button>
             </HStack>
@@ -219,14 +247,31 @@ export default function Settings() {
             {t("settings.tables.description")}
           </Text>
         </Box>
-        <Text fontSize="sm" fontWeight="700" mb={2}>
-          {t("settings.tables.selectContext")}
-        </Text>
+        <HStack justify="space-between" align="center" gap={3} mb={2}>
+          <Text fontSize="sm" fontWeight="700">
+            {t("settings.tables.selectContext")}
+          </Text>
+          <Text
+            aria-live="polite"
+            color={hasSaveError ? "var(--apple-danger-text)" : "var(--apple-muted)"}
+            fontSize="xs"
+            fontWeight="700"
+          >
+            {isSaving
+              ? t("settings.projectTables.saving")
+              : hasSaveError
+                ? t("settings.projectTables.saveError")
+                : hasSaved
+                  ? t("settings.projectTables.saved")
+                  : ""}
+          </Text>
+        </HStack>
         {allowedContexts.length === 0 ? (
           <Text color="var(--apple-muted)">{t("settings.tables.noContexts")}</Text>
         ) : (
           <Tabs.Root
-            defaultValue={allowedContexts[0].paginationId}
+            value={resolvedActiveContextId}
+            onValueChange={(event) => setActiveContextId(event.value)}
             variant="enclosed"
             size="sm"
             dir={dir}
@@ -250,7 +295,7 @@ export default function Settings() {
                 </Tabs.Trigger>
               ))}
             </Tabs.List>
-            {allowedContexts.map((context) => {
+            {activeContext && [activeContext].map((context) => {
               const allKeys = context.columns.map((column) => column.columnKey);
               const defaultKeys = context.columns
                 .filter((column) => column.isDefaultVisible)
@@ -284,7 +329,6 @@ export default function Settings() {
                     borderRadius="md"
                     p={4}
                     bg="var(--apple-surface-raised)"
-                    boxShadow="var(--surface-shadow)"
                   >
                     <HStack justify="space-between" mb={4} gap={3} flexWrap="wrap">
                       <Box>
@@ -364,7 +408,9 @@ export default function Settings() {
                             }
                             onDragOver={(event) => {
                               event.preventDefault();
-                              setDropTargetKey(dropTargetId);
+                              if (dropTargetKey !== dropTargetId) {
+                                setDropTargetKey(dropTargetId);
+                              }
                             }}
                             onDrop={(event) => {
                               event.preventDefault();
@@ -414,6 +460,7 @@ export default function Settings() {
                               <Checkbox.Label>{label}</Checkbox.Label>
                             </Checkbox.Root>
                             <ColumnAliasEditor
+                              key={`${key}:${aliases[key] ?? ""}`}
                               dir={dir}
                               value={aliases[key] ?? ""}
                               placeholder={t("settings.projectTables.aliasPlaceholder")}

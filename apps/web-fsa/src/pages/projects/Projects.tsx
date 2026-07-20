@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Badge, Box, chakra, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, chakra, HStack, Text, VStack } from "@chakra-ui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { hasAnyExplicitPermissionGrant } from "@/entities/permission/model/permissionGrants";
 import { useGetProjectsQuery } from "@/entities/project/api/projectsApi";
@@ -13,6 +13,7 @@ import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project } from "@/shared/types";
 import PentesterAssignmentDock from "@/entities/project/ui/assignment/PentesterAssignmentDock";
+import PageHeader from "@/shared/ui/layout/PageHeader";
 
 export default function Projects() {
   const { dir, t } = useLanguage();
@@ -105,50 +106,27 @@ export default function Projects() {
 
   return (
     <VStack align="stretch" gap={{ base: 4, md: 5 }} dir={dir}>
-      <HStack justify="space-between" align="end" flexWrap="wrap" gap={3}>
-        <Box minW={0}>
+      <PageHeader
+        eyebrow={t("projects.badge")}
+        title={t("projects.title")}
+        description={t("projects.description")}
+        meta={
           <Badge
-            bg="var(--apple-blue-soft)"
-            color="var(--apple-blue)"
+            bg="var(--apple-surface-raised)"
             border="1px solid"
-            borderColor="var(--apple-blue-border)"
+            borderColor="var(--apple-border-soft)"
             borderRadius="full"
+            color="var(--apple-secondary)"
+            fontSize="xs"
+            fontWeight="750"
             px={3}
-            py={1}
-            mb={2}
+            py={1.5}
             textTransform="none"
-            fontWeight="850"
           >
-            {t("projects.badge")}
+            {t("projects.availableViews", { count: accessibleViews.length })}
           </Badge>
-          <Heading
-            color="var(--apple-text)"
-            fontSize={{ base: "2xl", md: "2.5rem" }}
-            fontWeight="850"
-            letterSpacing="0"
-            lineHeight="1.12"
-          >
-            {t("projects.title")}
-          </Heading>
-          <Text color="var(--apple-muted)" mt={1.5} fontSize="sm" maxW="760px">
-            {t("projects.description")}
-          </Text>
-        </Box>
-        <Badge
-          bg="var(--apple-surface-raised)"
-          border="1px solid"
-          borderColor="var(--apple-border)"
-          borderRadius="full"
-          color="var(--apple-secondary)"
-          fontSize="xs"
-          fontWeight="750"
-          px={3}
-          py={1.5}
-          textTransform="none"
-        >
-          {t("projects.availableViews", { count: accessibleViews.length })}
-        </Badge>
-      </HStack>
+        }
+      />
 
       {accessibleViews.length > 1 && (
         <HStack

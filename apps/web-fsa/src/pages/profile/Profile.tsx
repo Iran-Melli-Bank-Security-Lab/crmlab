@@ -1,8 +1,9 @@
-import { Heading, SimpleGrid, Text, VStack, Wrap, WrapItem } from "@chakra-ui/react";
+import { SimpleGrid, Text, VStack, Wrap, WrapItem } from "@chakra-ui/react";
 import { useAuth } from "@/features/auth/model/useAuth";
 import { useLanguage } from "@/features/language/model";
 import Card from "@/shared/ui/primitives/Card";
 import Badge from "@/shared/ui/primitives/Badge";
+import PageHeader from "@/shared/ui/layout/PageHeader";
 
 export default function Profile() {
   const { t } = useLanguage();
@@ -10,7 +11,7 @@ export default function Profile() {
 
   return (
     <VStack align="stretch" gap={5}>
-      <Heading>{t("profile.title")}</Heading>
+      <PageHeader title={t("profile.title")} />
       <SimpleGrid columns={{ base: 1, lg: 2 }} gap={5}>
         <Card title={t("profile.userInfo")}>
           <VStack align="stretch" gap={3}>

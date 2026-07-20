@@ -5,10 +5,9 @@ export default function LoadingScreen({ text = "Loading..." }) {
     <Center
       bg="var(--apple-surface-raised)"
       border="1px solid"
-      borderColor="var(--apple-border)"
+      borderColor="var(--apple-border-soft)"
       borderRadius="md"
       p={8}
-      boxShadow="var(--surface-shadow)"
     >
       <HStack>
         <Spinner />

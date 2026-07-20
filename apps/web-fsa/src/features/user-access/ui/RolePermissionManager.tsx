@@ -221,10 +221,10 @@ function RolePermissionEditor({
         gap={6}
       >
         <Box
-          borderRight={{ base: 0, lg: "1px solid" }}
+          borderInlineEnd={{ base: 0, lg: "1px solid" }}
           borderBottom={{ base: "1px solid", lg: 0 }}
           borderColor="var(--apple-border-soft)"
-          pr={{ base: 0, lg: 4 }}
+          pe={{ base: 0, lg: 4 }}
           pb={{ base: 4, lg: 0 }}
         >
           <Heading as="h3" size="sm" mb={4}>
@@ -236,7 +236,7 @@ function RolePermissionEditor({
                 as="button"
                 key={user.id}
                 onClick={() => handleSelectUser(user.id)}
-                textAlign="left"
+                textAlign="start"
                 p={4}
                 border="1px solid"
                 borderColor={

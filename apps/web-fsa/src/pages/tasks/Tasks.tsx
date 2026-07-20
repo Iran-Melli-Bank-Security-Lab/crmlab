@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { TaskContract, TaskPriority, TaskStatus } from "@role-dashboard/contracts";
-import { Badge, Box, Heading, HStack, Table, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Table, Text, VStack } from "@chakra-ui/react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { useGetTasksQuery } from "@/entities/task/api/tasksApi";
@@ -12,6 +12,7 @@ import { useLanguage, type TranslationKey } from "@/features/language/model";
 import EmptyState from "@/shared/ui/feedback/EmptyState";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
+import PageHeader from "@/shared/ui/layout/PageHeader";
 
 type TaskColumnKey =
   | "title"
@@ -186,22 +187,31 @@ function TaskCell({
 export default function Tasks() {
   const { dir, language, t } = useLanguage();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
-  const uiSettings = useSelector((state: RootState) => state.ui);
+  const projectTableSettingsUserId = useSelector(
+    (state: RootState) => state.ui.projectTableSettingsUserId
+  );
+  const configuredVisibleColumns = useSelector(
+    (state: RootState) => state.ui.visibleProjectColumns[TASK_CONTEXT]
+  );
+  const configuredColumnOrder = useSelector(
+    (state: RootState) => state.ui.projectTableColumnOrder[TASK_CONTEXT]
+  );
+  const configuredAliases = useSelector(
+    (state: RootState) => state.ui.projectTableColumnAliases[TASK_CONTEXT]
+  );
   const { data: tasks = [], error, isLoading } = useGetTasksQuery();
   useSyncProjectTableSettings(userId);
   const { data: registry } = useGetProjectTableColumnRegistryQuery(userId || "", {
     skip: !userId,
   });
-  const hasCurrentUserSettings = uiSettings.projectTableSettingsUserId === userId;
-  const configuredVisibleColumns = hasCurrentUserSettings
-    ? uiSettings.visibleProjectColumns[TASK_CONTEXT]
+  const hasCurrentUserSettings = projectTableSettingsUserId === userId;
+  const visibleColumnSettings = hasCurrentUserSettings
+    ? configuredVisibleColumns
     : undefined;
-  const configuredColumnOrder = hasCurrentUserSettings
-    ? uiSettings.projectTableColumnOrder[TASK_CONTEXT]
+  const columnOrderSettings = hasCurrentUserSettings
+    ? configuredColumnOrder
     : undefined;
-  const aliases = hasCurrentUserSettings
-    ? uiSettings.projectTableColumnAliases[TASK_CONTEXT] || {}
-    : {};
+  const aliases = hasCurrentUserSettings ? configuredAliases || {} : {};
 
   const columns = useMemo(() => {
     const definitions = registry?.contexts
@@ -223,12 +233,12 @@ export default function Tasks() {
           maxWidth: undefined,
         }));
     const visibleKeys =
-      configuredVisibleColumns ??
+      visibleColumnSettings ??
       available
         .filter((column) => column.isDefaultVisible)
         .map((column) => column.columnKey);
     const orderedKeys =
-      configuredColumnOrder ?? available.map((column) => column.columnKey);
+      columnOrderSettings ?? available.map((column) => column.columnKey);
     const positions = new Map(orderedKeys.map((key, index) => [key, index]));
 
     return available
@@ -238,32 +248,15 @@ export default function Tasks() {
           (positions.get(left.columnKey) ?? available.length) -
           (positions.get(right.columnKey) ?? available.length)
       );
-  }, [configuredColumnOrder, configuredVisibleColumns, registry?.contexts, t]);
+  }, [columnOrderSettings, registry?.contexts, t, visibleColumnSettings]);
 
   return (
     <VStack align="stretch" gap={{ base: 4, md: 5 }} dir={dir}>
-      <HStack justify="space-between" align="end" gap={4} flexWrap="wrap">
-        <Box maxW="760px">
-          <Badge
-            bg="var(--apple-blue-soft)"
-            color="var(--apple-blue)"
-            borderRadius="full"
-            px={3}
-            py={1}
-            mb={2}
-            fontWeight="800"
-            textTransform="none"
-          >
-            {t("tasks.badge")}
-          </Badge>
-          <Heading color="var(--apple-text)" fontSize={{ base: "2xl", md: "3xl" }}>
-            {t("tasks.title")}
-          </Heading>
-          <Text color="var(--apple-muted)" mt={2} fontSize="sm" lineHeight="1.7">
-            {t("tasks.description")}
-          </Text>
-        </Box>
-        {!isLoading && !error && (
+      <PageHeader
+        eyebrow={t("tasks.badge")}
+        title={t("tasks.title")}
+        description={t("tasks.description")}
+        meta={!isLoading && !error ? (
           <Badge
             bg="var(--apple-surface-raised)"
             border="1px solid"
@@ -276,8 +269,8 @@ export default function Tasks() {
           >
             {t("tasks.total", { count: tasks.length })}
           </Badge>
-        )}
-      </HStack>
+        ) : undefined}
+      />
 
       {isLoading && <LoadingScreen text={t("tasks.loading")} />}
       {error && <ErrorState error={error} title={t("tasks.errorTitle")} />}

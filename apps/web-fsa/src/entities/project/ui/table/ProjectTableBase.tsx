@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Center,
+  chakra,
   Grid,
   HStack,
   IconButton,
@@ -555,8 +556,6 @@ export default function ProjectTableBase({
                       minW={column.minW}
                       maxW={column.maxW ?? "280px"}
                       textAlign={column.align}
-                      cursor={column.sortable ? "pointer" : "default"}
-                      onClick={() => handleSort(column)}
                       aria-sort={
                         sort.key === column.key
                           ? sort.direction === "asc"
@@ -584,7 +583,17 @@ export default function ProjectTableBase({
                         bg: "var(--apple-border-soft)",
                       }}
                     >
-                      <HStack justify={column.align === "end" ? "end" : "start"} gap={1}>
+                      <HStack
+                        as={column.sortable ? chakra.button : undefined}
+                        width="full"
+                        justify={column.align === "end" ? "end" : "start"}
+                        gap={1}
+                        cursor={column.sortable ? "pointer" : "default"}
+                        onClick={column.sortable ? () => handleSort(column) : undefined}
+                        _focusVisible={
+                          column.sortable ? { boxShadow: "var(--focus-ring)" } : undefined
+                        }
+                      >
                         <Text as="span" truncate title={headerLabel}>
                           {headerLabel}
                         </Text>

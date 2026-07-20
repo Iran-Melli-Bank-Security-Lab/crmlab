@@ -130,6 +130,7 @@ install_nginx_config() {
 
 verify_backend() {
   if curl --fail --silent --show-error --retry 10 --retry-delay 2 \
+    --retry-connrefused \
     http://127.0.0.1:4000/api/health >/dev/null; then
     printf 'Backend health check passed on 127.0.0.1:4000\n'
     return 0
@@ -199,6 +200,7 @@ main() {
 
   log "Verifying the deployment"
   curl --fail --silent --show-error --retry 10 --retry-delay 2 \
+    --retry-connrefused \
     http://10.10.10.122/api/health >/dev/null
 
   printf '\nDeployment completed successfully.\n'

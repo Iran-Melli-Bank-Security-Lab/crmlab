@@ -138,6 +138,7 @@ install_nginx_config() {
 
 verify_backend() {
   if curl --fail --silent --show-error --retry 10 --retry-delay 2 \
+    --retry-connrefused \
     http://127.0.0.1:4000/api/health >/dev/null; then
     printf 'Backend health check passed on 127.0.0.1:4000\n'
     return 0
@@ -150,6 +151,7 @@ verify_backend() {
 
 verify_https() {
   curl --fail --silent --show-error --retry 10 --retry-delay 2 \
+    --retry-connrefused \
     --noproxy '*' \
     --resolve crm.lab:443:127.0.0.1 \
     "${HTTPS_ORIGIN}/api/health" >/dev/null

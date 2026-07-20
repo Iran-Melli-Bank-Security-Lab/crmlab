@@ -170,8 +170,8 @@ function NavigationPanel({
     fontWeight="650"
     textDecoration="none"
     _hover={{ textDecoration: "none" }}
-    _focus={{ outline: "none", boxShadow: "none" }}
-    _focusVisible={{ outline: "none", boxShadow: "none" }}
+    _focus={{ outline: "none" }}
+    _focusVisible={{ outline: "none" }}
     css={{
       "&": {
         width: "100%",
@@ -188,8 +188,8 @@ function NavigationPanel({
         color: "var(--apple-blue)",
       },
 
-      "&:focus .nav-item, &:focus-visible .nav-item": {
-        boxShadow: "none",
+      "&:focus-visible .nav-item": {
+        boxShadow: "var(--focus-ring)",
         outline: "none",
       },
 
@@ -232,8 +232,7 @@ function NavigationPanel({
           bg: "var(--apple-blue-soft)",
           borderColor: "transparent",
         }}
-        _focus={{ boxShadow: "none", outline: "none" }}
-        _focusVisible={{ boxShadow: "none", outline: "none" }}
+        _focus={{ outline: "none" }}
       >
         <Box
           className="nav-accent"
@@ -317,13 +316,12 @@ export default function Sidebar() {
           display={{ base: "none", md: "block" }}
           w="292px"
           bg="var(--apple-surface-glass)"
-          borderRight="1px solid"
+          borderInlineEnd="1px solid"
           borderColor="var(--apple-border-soft)"
           minH="100vh"
           position="sticky"
           top={0}
           flexShrink={0}
-          backdropFilter="blur(20px) saturate(180%)"
         >
           <NavigationPanel sections={sections} />
         </Box>

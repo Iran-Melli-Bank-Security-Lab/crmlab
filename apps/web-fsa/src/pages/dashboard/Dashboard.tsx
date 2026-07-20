@@ -1,4 +1,4 @@
-import { Badge, Box, Heading, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { hasAnyExplicitPermissionGrant } from "@/entities/permission/model/permissionGrants";
 import { usePermission } from "@/features/access-control/model/usePermission";
 import { useLanguage } from "@/features/language/model";
@@ -7,6 +7,7 @@ import {
   dashboardWidgetComponents,
   EmptyDashboardState,
 } from "@/widgets/dashboard/ui/DashboardWidgets";
+import PageHeader from "@/shared/ui/layout/PageHeader";
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -17,39 +18,16 @@ export default function Dashboard() {
 
   return (
     <VStack align="stretch" gap={6}>
-      <HStack justify="space-between" align="end" flexWrap="wrap" gap={4}>
-        <Box>
-          <Badge
-            bg="var(--apple-blue-soft)"
-            color="var(--apple-blue)"
-            border="1px solid"
-            borderColor="var(--apple-blue-border)"
-            borderRadius="full"
-            px={3}
-            py={1}
-            mb={3}
-            textTransform="none"
-            fontWeight="850"
-          >
-            {t("dashboard.badge")}
-          </Badge>
-          <Heading
-            color="var(--apple-text)"
-            fontSize={{ base: "2xl", md: "3xl" }}
-            fontWeight="850"
-            letterSpacing="0"
-            lineHeight="1.12"
-          >
-            {t("dashboard.title")}
-          </Heading>
-          <Text color="var(--apple-muted)" mt={2} fontSize="md">
-          {t("dashboard.description")}
-        </Text>
-        </Box>
-        <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
-          {t("dashboard.visibleWidgets", { count: visibleWidgets.length })}
-        </Text>
-      </HStack>
+      <PageHeader
+        eyebrow={t("dashboard.badge")}
+        title={t("dashboard.title")}
+        description={t("dashboard.description")}
+        meta={
+          <Text color="var(--apple-muted)" fontSize="sm" fontWeight="700">
+            {t("dashboard.visibleWidgets", { count: visibleWidgets.length })}
+          </Text>
+        }
+      />
 
       {visibleWidgets.length === 0 ? (
         <EmptyDashboardState />

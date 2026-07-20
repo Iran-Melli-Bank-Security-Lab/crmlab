@@ -5,27 +5,32 @@ export default function Card({
   accentColor,
   title,
   children,
+  interactive = false,
 }: {
   accentColor?: string;
   title?: string;
   children: React.ReactNode;
+  interactive?: boolean;
 }) {
   return (
     <Box
       position="relative"
       bg="var(--apple-surface-raised)"
       border="1px solid"
-      borderColor="var(--apple-border)"
+      borderColor="var(--apple-border-soft)"
       borderRadius="md"
-      boxShadow="var(--surface-shadow)"
+      boxShadow="0 1px 2px rgba(0, 0, 0, 0.04)"
       overflow="hidden"
       p={{ base: 5, md: 6 }}
-      backdropFilter="blur(18px)"
-      transition="box-shadow 160ms ease, border-color 160ms ease"
-      _hover={{
-        borderColor: "var(--apple-border)",
-        boxShadow: "var(--surface-shadow-hover)",
-      }}
+      transition={interactive ? "box-shadow 160ms ease, border-color 160ms ease" : undefined}
+      _hover={
+        interactive
+          ? {
+              borderColor: "var(--apple-blue-border)",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.07)",
+            }
+          : undefined
+      }
     >
       {accentColor && (
         <Box

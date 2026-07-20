@@ -23,7 +23,6 @@ if (typeof window !== "undefined") {
 type UiState = {
   drawerOpen: boolean;
   sidebarOpen: boolean;
-  theme: string;
   visibleProjectColumns: Record<string, string[]>;
   projectTableColumnOrder: Record<string, string[]>;
   projectTableColumnAliases: Record<string, Record<string, string>>;
@@ -33,7 +32,6 @@ type UiState = {
 const initialState: UiState = {
   drawerOpen: false,
   sidebarOpen: true,
-  theme: localStorage.getItem("theme") || "light",
   visibleProjectColumns: {},
   projectTableColumnOrder: {},
   projectTableColumnAliases: {},
@@ -52,10 +50,6 @@ const uiSlice = createSlice({
     },
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
-    },
-    setTheme: (state, action) => {
-      state.theme = action.payload;
-      localStorage.setItem("theme", action.payload);
     },
     hydrateProjectTableSettings: (
       state,
@@ -118,7 +112,6 @@ export const {
   closeDrawer,
   openDrawer,
   toggleSidebar,
-  setTheme,
   hydrateProjectTableSettings,
   setProjectTableVisibleColumns,
   setProjectTableColumnOrder,

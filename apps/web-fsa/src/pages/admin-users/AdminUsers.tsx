@@ -1,4 +1,4 @@
-import { Heading, HStack, SimpleGrid, Stat, Text, VStack } from "@chakra-ui/react";
+import { SimpleGrid, Stat, Text, VStack } from "@chakra-ui/react";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import EmptyState from "@/shared/ui/feedback/EmptyState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
@@ -7,6 +7,7 @@ import RolePermissionManager from "@/features/user-access/ui/RolePermissionManag
 import { useLanguage } from "@/features/language/model";
 import { useGetUsersQuery } from "@/entities/user/api/usersApi";
 import type { User } from "@/shared/types";
+import PageHeader from "@/shared/ui/layout/PageHeader";
 
 function getUsersList(response: unknown): User[] {
   if (Array.isArray(response)) return response;
@@ -36,14 +37,10 @@ export default function AdminUsers() {
 
   return (
     <VStack align="stretch" gap={5}>
-      <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
-        <div>
-          <Heading>{t("adminUsers.title")}</Heading>
-          <Text color="gray.600" mt={2}>
-            {t("adminUsers.description")}
-          </Text>
-        </div>
-      </HStack>
+      <PageHeader
+        title={t("adminUsers.title")}
+        description={t("adminUsers.description")}
+      />
 
       <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
         <Card>
@@ -68,7 +65,7 @@ export default function AdminUsers() {
 
       {adminUsers > 1 && (
         <Card>
-          <Text color="gray.600">
+          <Text color="var(--apple-muted)">
             {t("adminUsers.adminNotice", { count: adminUsers })}
           </Text>
         </Card>

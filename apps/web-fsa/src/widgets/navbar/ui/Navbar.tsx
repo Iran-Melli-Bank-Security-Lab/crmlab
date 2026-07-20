@@ -29,8 +29,7 @@ export default function Navbar() {
       position="sticky"
       top={0}
       zIndex={5}
-      boxShadow="var(--surface-shadow)"
-      backdropFilter="blur(20px) saturate(180%)"
+      boxShadow="0 1px 2px rgba(0, 0, 0, 0.03)"
     >
       <HStack gap={4} minW={0}>
         <Button
@@ -62,7 +61,7 @@ export default function Navbar() {
           </Wrap>
         </Box>
       </HStack>
-      <HStack gap={3}>
+      <HStack gap={{ base: 1, sm: 2 }} flexShrink={0}>
         <LanguageSwitcher />
         <ThemeIconButton />
         <NotificationCenter />

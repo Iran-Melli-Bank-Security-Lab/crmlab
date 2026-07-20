@@ -574,6 +574,9 @@ const en = {
   "settings.projectTables.visibleCount": "{selected} of {total} columns visible",
   "settings.projectTables.restoreDefaults": "Restore defaults",
   "settings.projectTables.reorder": "Drag to reorder {column}",
+  "settings.projectTables.saving": "Saving changes...",
+  "settings.projectTables.saved": "Changes saved",
+  "settings.projectTables.saveError": "Changes could not be saved",
   "adminUsers.title": "User Management",
   "adminUsers.description":
     "Manage users, role assignments, permissions, and account states.",
@@ -1161,6 +1164,9 @@ const fa: Record<TranslationKey, string> = {
   "settings.projectTables.visibleCount": "{selected} ستون از {total} ستون قابل نمایش است",
   "settings.projectTables.restoreDefaults": "بازیابی پیش‌فرض‌ها",
   "settings.projectTables.reorder": "برای تغییر جایگاه {column} بکشید",
+  "settings.projectTables.saving": "در حال ذخیره تغییرات...",
+  "settings.projectTables.saved": "تغییرات ذخیره شد",
+  "settings.projectTables.saveError": "ذخیره تغییرات انجام نشد",
   "adminUsers.title": "مدیریت کاربران",
   "adminUsers.description":
     "کاربران، تخصیص نقش‌ها، دسترسی‌ها و وضعیت حساب‌ها را مدیریت کنید.",

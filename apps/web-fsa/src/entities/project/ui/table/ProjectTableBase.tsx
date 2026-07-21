@@ -208,6 +208,7 @@ export default function ProjectTableBase({
   emptyTitle = "No projects found",
   actionLabel = "Open",
   onAction,
+  onOpenPentestWorkspace,
   onRowClick,
   onRowDoubleClick,
   onCreateFromProject,
@@ -310,12 +311,6 @@ export default function ProjectTableBase({
     }),
     [projects]
   );
-
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -614,7 +609,7 @@ export default function ProjectTableBase({
                     </Table.ColumnHeader>
                   );
                 })}
-                {onAction && (
+                {(onAction || onOpenPentestWorkspace) && (
                   <Table.ColumnHeader
                     minW="100px"
                     textAlign="end"
@@ -665,19 +660,21 @@ export default function ProjectTableBase({
                         width="full"
                       >
                         <Box minW={0} maxW="full" flex="1">
-                          {column.key === "assignedUserIds" && onAssignPentesters ? (
-                            <Button
-                              variant="secondary"
-                              minH="30px"
-                              h="30px"
-                              px={3}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                onAssignPentesters(project);
-                              }}
-                            >
-                              {t("projectTable.assign")}
-                            </Button>
+                          {column.key === "assignedUserIds" ? (
+                            onAssignPentesters && project.allowedActions?.includes("assign-pentesters") ? (
+                              <Button
+                                variant="secondary"
+                                minH="30px"
+                                h="30px"
+                                px={3}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onAssignPentesters(project);
+                                }}
+                              >
+                                {t("projectTable.assign")}
+                              </Button>
+                            ) : <Text color="var(--apple-muted)">—</Text>
                           ) : column.render ? (
                             column.render(project, t)
                           ) : (
@@ -707,25 +704,46 @@ export default function ProjectTableBase({
                       </HStack>
                     </Table.Cell>
                   ))}
-                  {onAction && (
+                  {(onAction || onOpenPentestWorkspace) && (
                     <Table.Cell
                       textAlign="end"
                       borderColor="var(--apple-border-soft)"
                       px={{ base: 3, md: 4 }}
                       py={3}
                     >
-                      <Button
-                        variant="secondary"
-                        minH="30px"
-                        h="30px"
-                        px={3}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onAction(project);
-                        }}
-                      >
-                        {actionLabel}
-                      </Button>
+                      <HStack gap={2} justify="end">
+                        {onOpenPentestWorkspace &&
+                          project.allowedActions?.includes("open-pentest-workspace") && (
+                            <Button
+                              variant="secondary"
+                              minH="30px"
+                              h="30px"
+                              px={3}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onOpenPentestWorkspace(project);
+                              }}
+                            >
+                              {t("projectTable.workspace")}
+                            </Button>
+                          )}
+                        {onAction &&
+                          (!project.allowedActions ||
+                            project.allowedActions.includes("view-project")) && (
+                            <Button
+                              variant="secondary"
+                              minH="30px"
+                              h="30px"
+                              px={3}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onAction(project);
+                              }}
+                            >
+                              {actionLabel}
+                            </Button>
+                          )}
+                      </HStack>
                     </Table.Cell>
                   )}
                 </Table.Row>

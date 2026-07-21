@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { ProjectTableColumnContract } from "@role-dashboard/contracts";
 import { useDispatch } from "react-redux";
 import { api } from "@/shared/api/baseApi";
 import { unwrapApiData } from "@/shared/api/unwrapApiData";
@@ -8,20 +9,7 @@ import {
   type ProjectTableSettings,
 } from "../model/uiSlice";
 
-export type ProjectTableColumnDefinition = {
-  columnKey: string;
-  defaultLabel: string;
-  faLabel: string;
-  tableContexts: string[];
-  dataType: "text" | "date" | "status" | "user" | "link" | "count" | "action";
-  isConfigurable: boolean;
-  isDefaultVisible: boolean;
-  defaultOrder: number;
-  minWidth?: string;
-  maxWidth?: string;
-  requiredPermission?: string;
-  isSensitive: false;
-};
+export type ProjectTableColumnDefinition = ProjectTableColumnContract;
 
 export type ProjectTableColumnRegistry = {
   contexts: Array<{

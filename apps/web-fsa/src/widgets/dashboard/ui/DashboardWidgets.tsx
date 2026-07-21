@@ -3,7 +3,6 @@ import type { ComponentType } from "react";
 import { Box, HStack, SimpleGrid, Stat, Text, VStack } from "@chakra-ui/react";
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
 import { useGetProjectsQuery } from "@/entities/project/api/projectsApi";
-import { projectViewRegistry } from "@/entities/project/model/projectViewRegistry";
 import { useGetUsersQuery } from "@/entities/user/api/usersApi";
 import PermissionGate from "@/features/access-control/ui/PermissionGate";
 import { useLanguage } from "@/features/language/model";
@@ -57,7 +56,7 @@ function AdminPlatformWidget() {
         </Stat.Root>
         <Stat.Root>
           <Stat.Label color={appleMuted} fontWeight="800">{t("dashboard.widgets.adminPlatform.projectViews")}</Stat.Label>
-          <Stat.ValueText color={appleText} fontWeight="850">{projectViewRegistry.length}</Stat.ValueText>
+          <Stat.ValueText color={appleText} fontWeight="850">1</Stat.ValueText>
           <Stat.HelpText color={appleMuted}>{t("dashboard.widgets.adminPlatform.permissionBased")}</Stat.HelpText>
         </Stat.Root>
         <Stat.Root>
@@ -115,7 +114,7 @@ function SecurityReviewWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=security">{t("dashboard.widgets.security.open")}</Link>
+          <Link to="/projects">{t("dashboard.widgets.security.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.SECURITY_PROJECTS_ASSIGN]}>
           <Button>{t("dashboard.widgets.security.assign")}</Button>
@@ -136,7 +135,7 @@ function PentestWorkWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=pentest">{t("dashboard.widgets.pentest.open")}</Link>
+          <Link to="/projects">{t("dashboard.widgets.pentest.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.PENTEST_VULNERABILITIES_CREATE]}>
           <Button>{t("dashboard.widgets.pentest.addVulnerability")}</Button>
@@ -158,7 +157,7 @@ function DevOpsDeliveryWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=devops">{t("dashboard.widgets.devops.open")}</Link>
+          <Link to="/projects">{t("dashboard.widgets.devops.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.DEVOPS_DEPLOYMENTS_CREATE]}>
           <Button>{t("dashboard.widgets.devops.start")}</Button>
@@ -177,7 +176,7 @@ function QualityReviewWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=quality">{t("dashboard.widgets.quality.open")}</Link>
+          <Link to="/projects">{t("dashboard.widgets.quality.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.QUALITY_PROJECTS_ASSIGN]}>
           <Button>{t("dashboard.widgets.security.assign")}</Button>
@@ -196,7 +195,7 @@ function QaWorkWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=qa">{t("dashboard.widgets.qa.open")}</Link>
+          <Link to="/projects">{t("dashboard.widgets.qa.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.QA_TEST_CASES_CREATE]}>
           <Button>{t("dashboard.widgets.qa.create")}</Button>
@@ -215,7 +214,7 @@ function RepresentativeWorkWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects?view=representative">{t("dashboard.widgets.customer.open")}</Link>
+          <Link to="/projects">{t("dashboard.widgets.customer.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.REPRESENTATIVE_TICKETS_CREATE]}>
           <Button>{t("dashboard.widgets.customer.create")}</Button>

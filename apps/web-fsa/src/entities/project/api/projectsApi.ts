@@ -113,6 +113,7 @@ function normalizeProject(project: ApiProjectResponse): Project {
     pipeline: devopsInfo.pipeline || "-",
     devopsInfo,
     lastActivity: project.updatedAt || project.createdAt || new Date().toISOString(),
+    allowedActions: project.allowedActions,
   };
 }
 
@@ -132,8 +133,15 @@ function normalizeProjectDetailResponse(response: ProjectDetailResponse): Projec
 
 export const projectsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getProjects: builder.query<Project[], ProjectListView>({
-      query: (view) => ({ url: "/projects", params: { view } }),
+    getProjects: builder.query<
+      Project[],
+      ProjectListView | { view?: ProjectListView; columns?: string[] }
+    >({
+      query: (request) => {
+        const view = typeof request === "string" ? request : request.view;
+        const columns = typeof request === "string" ? undefined : request.columns;
+        return { url: "/projects", params: { view, ...(columns?.length ? { columns: columns.join(",") } : {}) } };
+      },
       transformResponse: normalizeProjectsResponse,
       providesTags: ["Projects"],
     }),

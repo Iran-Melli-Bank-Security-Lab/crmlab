@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { TranslationKey } from "@/features/language/model";
 import type { Project, ProjectAssignment } from "@/shared/types";
+import type { ProjectListView } from "@/shared/types/api/projects";
 
 export type Align = "start" | "center" | "end";
 export type SortDirection = "asc" | "desc";
@@ -39,6 +40,7 @@ export type ProjectTableBaseProps = {
   emptyTitle?: string;
   actionLabel?: string;
   onAction?: (project: ProjectTableRow) => void;
+  onOpenPentestWorkspace?: (project: ProjectTableRow) => void;
   onRowClick?: (project: ProjectTableRow) => void;
   onRowDoubleClick?: (project: ProjectTableRow) => void;
   onCreateFromProject?: (project: ProjectTableRow) => void;
@@ -46,6 +48,7 @@ export type ProjectTableBaseProps = {
 };
 
 export type ProjectTableViewProps = {
+  view?: ProjectListView;
   projects: ProjectTableRow[];
   title: string;
   onCreateFromProject?: (project: ProjectTableRow) => void;

@@ -68,4 +68,6 @@ export type ApiProjectResponse = {
   testExpiresAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  allowedActions?: ProjectRowActionContract[];
 };
+import type { ProjectRowActionContract } from "@role-dashboard/contracts";

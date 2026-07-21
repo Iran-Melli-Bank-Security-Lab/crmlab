@@ -151,7 +151,7 @@ export default function Settings() {
         paginationId: context.context,
         label: language === "fa" ? context.faLabel : context.defaultLabel,
         columns: context.columns
-          .filter((column) => column.isConfigurable && !column.isSensitive)
+          .filter((column) => column.isConfigurable)
           .sort((left, right) => left.defaultOrder - right.defaultOrder),
       })),
     [columnRegistry?.contexts, language]

@@ -5,6 +5,10 @@ export type {
 } from "./auth";
 export type { ApiErrorContract } from "./api";
 export type { RoleCatalogItemContract, RolesAndPermissionsContract } from "./rbac";
+export type {
+  ProjectRowActionContract,
+  ProjectTableColumnContract,
+} from "./projectTable";
 export type { UploadResponseContract } from "./upload";
 export type { UserContract, UserFormPayloadContract, UserStatus } from "./user";
 export type {

@@ -14,7 +14,9 @@ export function getAllowedProjectTableContexts(permissions: Permission[]) {
   return (Object.keys(PROJECT_TABLE_CONTEXT_REGISTRY) as ProjectTableContext[]).filter(
     (context) => {
       const requiredPermission = getProjectTableContextRequiredPermission(context);
-      return !requiredPermission || permissions.includes(requiredPermission);
+      if (requiredPermission && !permissions.includes(requiredPermission)) return false;
+      return context !== "user-projects" ||
+        getProjectTableColumnDefinitions(context, permissions).length > 0;
     }
   );
 }
@@ -24,7 +26,7 @@ export function getAllowedProjectTableColumnRegistry(permissions: Permission[]) 
     context,
     defaultLabel: PROJECT_TABLE_CONTEXT_REGISTRY[context].defaultLabel,
     faLabel: PROJECT_TABLE_CONTEXT_REGISTRY[context].faLabel,
-    columns: getProjectTableColumnDefinitions(context),
+    columns: getProjectTableColumnDefinitions(context, permissions),
   }));
 }
 
@@ -35,65 +37,96 @@ export function requireAllowedProjectTableContext(
   if (!(context in PROJECT_TABLE_CONTEXT_REGISTRY)) {
     throw new AppError("Unknown project table context", HTTP_STATUS.BAD_REQUEST);
   }
-
-  const typedContext = context as ProjectTableContext;
-  const requiredPermission = getProjectTableContextRequiredPermission(typedContext);
-  if (requiredPermission && !permissions.includes(requiredPermission)) {
+  if (!getAllowedProjectTableContexts(permissions).includes(context as ProjectTableContext)) {
     throw new AppError("Forbidden project table context", HTTP_STATUS.FORBIDDEN);
   }
-  return typedContext;
+  return context as ProjectTableContext;
 }
 
-export function validateProjectTableSettings(
-  context: ProjectTableContext,
-  body: unknown
-) {
+type SettingsInput = {
+  visibleColumns: unknown;
+  columnOrder: unknown;
+  aliases: unknown;
+};
+
+function readSettingsObject(body: unknown): SettingsInput {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new AppError("Invalid project table settings", HTTP_STATUS.BAD_REQUEST);
   }
-
   const input = body as Record<string, unknown>;
   const allowedBodyKeys = new Set(["visibleColumns", "columnOrder", "aliases"]);
   if (Object.keys(input).some((key) => !allowedBodyKeys.has(key))) {
-    throw new AppError(
-      "Unexpected project table settings field",
-      HTTP_STATUS.BAD_REQUEST
-    );
+    throw new AppError("Unexpected project table settings field", HTTP_STATUS.BAD_REQUEST);
   }
+  return input as SettingsInput;
+}
 
-  const allowedColumns = new Set<string>(
-    getProjectTableColumnDefinitions(context)
-      .filter((column) => column.isConfigurable && !column.isSensitive)
-      .map((column) => column.columnKey)
+function normalizeProjectTableSettings(
+  context: ProjectTableContext,
+  body: unknown,
+  permissions: Permission[],
+  rejectUnauthorized: boolean
+) {
+  const input = readSettingsObject(body);
+  const definitions = getProjectTableColumnDefinitions(context, permissions);
+  const allowedColumns = new Set(definitions.map((column) => column.columnKey));
+  const configurableColumns = new Set(
+    definitions.filter((column) => column.isConfigurable).map((column) => column.columnKey)
   );
+  const mandatoryColumns = definitions
+    .filter((column) => column.isMandatory)
+    .map((column) => column.columnKey);
+
   const readColumns = (value: unknown, field: string) => {
     if (!Array.isArray(value) || value.some((key) => typeof key !== "string")) {
       throw new AppError(`Invalid ${field}`, HTTP_STATUS.BAD_REQUEST);
     }
-    return [...new Set(value as string[])].filter((key) => allowedColumns.has(key));
+    const unique = [...new Set(value as string[])];
+    const unauthorized = unique.filter((key) => !allowedColumns.has(key));
+    if (rejectUnauthorized && unauthorized.length) {
+      throw new AppError(`Unauthorized ${field}: ${unauthorized.join(", ")}`, HTTP_STATUS.FORBIDDEN);
+    }
+    return unique.filter((key) => allowedColumns.has(key));
   };
 
-  if (
-    !input.aliases ||
-    typeof input.aliases !== "object" ||
-    Array.isArray(input.aliases)
-  ) {
+  if (!input.aliases || typeof input.aliases !== "object" || Array.isArray(input.aliases)) {
     throw new AppError("Invalid aliases", HTTP_STATUS.BAD_REQUEST);
   }
-  const aliases = Object.fromEntries(
-    Object.entries(input.aliases as Record<string, unknown>)
-      .map(([key, value]) => {
-        if (typeof value !== "string" || value.trim().length > 80) {
-          throw new AppError("Invalid column alias", HTTP_STATUS.BAD_REQUEST);
-        }
-        return [key, value.trim()];
-      })
-      .filter(([key, value]) => allowedColumns.has(key) && value)
-  );
+  const aliasEntries = Object.entries(input.aliases as Record<string, unknown>);
+  for (const [key, value] of aliasEntries) {
+    if (typeof value !== "string" || value.trim().length > 80) {
+      throw new AppError("Invalid column alias", HTTP_STATUS.BAD_REQUEST);
+    }
+    if (rejectUnauthorized && !configurableColumns.has(key)) {
+      throw new AppError(`Unauthorized alias: ${key}`, HTTP_STATUS.FORBIDDEN);
+    }
+  }
+  const aliases = Object.fromEntries(aliasEntries
+    .map(([key, value]) => [key, String(value).trim()])
+    .filter(([key, value]) => configurableColumns.has(key) && value));
 
+  const visible = readColumns(input.visibleColumns, "visibleColumns");
+  const order = readColumns(input.columnOrder, "columnOrder");
   return {
-    visibleColumns: readColumns(input.visibleColumns, "visibleColumns"),
-    columnOrder: readColumns(input.columnOrder, "columnOrder"),
+    visibleColumns: [...mandatoryColumns, ...visible.filter((key) => !mandatoryColumns.includes(key))],
+    columnOrder: [...order, ...definitions.map((column) => column.columnKey)
+      .filter((key) => !order.includes(key))],
     aliases,
   };
+}
+
+export function validateProjectTableSettings(
+  context: ProjectTableContext,
+  body: unknown,
+  permissions: Permission[]
+) {
+  return normalizeProjectTableSettings(context, body, permissions, true);
+}
+
+export function sanitizeStoredProjectTableSettings(
+  context: ProjectTableContext,
+  body: unknown,
+  permissions: Permission[]
+) {
+  return normalizeProjectTableSettings(context, body, permissions, false);
 }

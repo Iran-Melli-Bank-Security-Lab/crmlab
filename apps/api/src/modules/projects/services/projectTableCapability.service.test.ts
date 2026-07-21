@@ -1,0 +1,236 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { PERMISSIONS, type Permission } from "@/constants/permissions";
+import {
+  assertProjectAssignmentActionAllowed,
+  requireProjectListView,
+  resolveProjectListQueryCapabilities,
+  resolveProjectRowSourceFields,
+  resolveProjectRowActions,
+  resolveRequestedProjectColumns,
+} from "./projectTableCapability.service";
+import {
+  sanitizeStoredProjectTableSettings,
+  validateProjectTableSettings,
+} from "@/modules/settings/services/projectTableSetting.service";
+import { canAccessProject } from "@/middlewares/projectAccess.middleware";
+import { ROLES } from "@/constants/roles";
+
+const keys = (permissions: Permission[]) =>
+  resolveRequestedProjectColumns(undefined, permissions).map((column) => column.columnKey);
+
+test("single-workflow users receive only columns granted by effective permissions", () => {
+  const devops = keys([
+    PERMISSIONS.DEVOPS_PROJECTS_READ,
+    PERMISSIONS.DEVOPS_DEPLOYMENTS_READ,
+  ]);
+  assert.ok(devops.includes("environment"));
+  assert.ok(devops.includes("repository"));
+  assert.ok(!devops.includes("riskScore"));
+
+  const pentest = keys([
+    PERMISSIONS.PENTEST_PROJECTS_READ,
+    PERMISSIONS.PENTEST_VULNERABILITIES_READ,
+  ]);
+  assert.ok(pentest.includes("assignmentStatus"));
+  assert.ok(pentest.includes("riskScore"));
+  assert.ok(!pentest.includes("environment"));
+
+  const qa = keys([PERMISSIONS.QA_PROJECTS_READ, PERMISSIONS.QA_TEST_CASES_READ]);
+  assert.ok(qa.includes("testCoverage"));
+  assert.ok(!qa.includes("repository"));
+});
+
+test("multiple and overlapping permissions produce a de-duplicated union", () => {
+  const permissions = [
+    PERMISSIONS.DEVOPS_PROJECTS_READ,
+    PERMISSIONS.DEVOPS_DEPLOYMENTS_READ,
+    PERMISSIONS.QA_PROJECTS_READ,
+    PERMISSIONS.QA_PROJECTS_READ,
+  ];
+  const columns = keys(permissions);
+  assert.equal(columns.length, new Set(columns).size);
+  assert.ok(columns.includes("environment"));
+  assert.ok(columns.includes("assignmentStatus"));
+});
+
+test("view strategies narrow the permission union to workflow-relevant columns", () => {
+  const permissions = [
+    PERMISSIONS.DEVOPS_PROJECTS_READ,
+    PERMISSIONS.DEVOPS_DEPLOYMENTS_READ,
+    PERMISSIONS.QA_PROJECTS_READ,
+  ];
+  const devops = resolveRequestedProjectColumns(undefined, permissions, "devops")
+    .map((column) => column.columnKey);
+  const qa = resolveRequestedProjectColumns(undefined, permissions, "qa")
+    .map((column) => column.columnKey);
+  assert.ok(devops.includes("repository"));
+  assert.ok(!devops.includes("assignmentStatus"));
+  assert.ok(qa.includes("assignmentStatus"));
+  assert.ok(!qa.includes("repository"));
+});
+
+test("unified rows do not compose sensitive fields from unrelated permission scopes", () => {
+  const permissions = [
+    PERMISSIONS.PENTEST_PROJECTS_READ,
+    PERMISSIONS.PENTEST_VULNERABILITIES_READ,
+    PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
+  ];
+  const requested = resolveRequestedProjectColumns(undefined, permissions)
+    .map((column) => column.columnKey);
+  const pentestFields = resolveProjectRowSourceFields(permissions, ["pentest"], requested);
+  const representativeFields = resolveProjectRowSourceFields(
+    permissions,
+    ["representative"],
+    requested
+  );
+  assert.ok(!pentestFields.includes("letterNumber"));
+  assert.ok(representativeFields.includes("letterNumber"));
+});
+
+test("a user without project table permissions receives no non-admin columns", () => {
+  assert.deepEqual(keys([]), []);
+});
+
+test("a requested view requires its own permission even when another view is granted", () => {
+  assert.equal(
+    requireProjectListView("devops", [PERMISSIONS.DEVOPS_PROJECTS_READ]),
+    "devops"
+  );
+  assert.throws(
+    () => requireProjectListView("representative", [PERMISSIONS.DEVOPS_PROJECTS_READ]),
+    (error: unknown) => error instanceof Error && "statusCode" in error && error.statusCode === 403
+  );
+  assert.throws(() => requireProjectListView("forged", [PERMISSIONS.DEVOPS_PROJECTS_READ]));
+});
+
+test("the canonical project list is unified when no legacy view is requested", () => {
+  assert.equal(
+    requireProjectListView(undefined, [
+      PERMISSIONS.PENTEST_PROJECTS_READ,
+      PERMISSIONS.SECURITY_PROJECTS_READ,
+    ]),
+    "unified"
+  );
+  assert.throws(() => requireProjectListView(undefined, []));
+});
+
+test("unauthorized columns, sort fields, and filters are rejected", () => {
+  const permissions = [PERMISSIONS.DEVOPS_PROJECTS_READ];
+  assert.throws(
+    () => resolveRequestedProjectColumns("summary,repository", permissions),
+    (error: unknown) => error instanceof Error && "statusCode" in error && error.statusCode === 403
+  );
+  assert.throws(() => resolveProjectListQueryCapabilities({ sort: "repository" }, permissions));
+  assert.throws(() => resolveProjectListQueryCapabilities({
+    filters: JSON.stringify({ owner: "someone" }),
+  }, permissions));
+});
+
+test("projection fields contain only fields required by authorized columns", () => {
+  const result = resolveProjectListQueryCapabilities(
+    { columns: "summary,status" },
+    [PERMISSIONS.DEVOPS_PROJECTS_READ]
+  );
+  assert.deepEqual(result.columnKeys, ["summary", "status"]);
+  assert.ok(result.projectionFields.includes("projectName"));
+  assert.ok(result.projectionFields.includes("status"));
+  assert.ok(!result.projectionFields.includes("devopsInfo.repository"));
+});
+
+test("pagination is bounded for large-list protection", () => {
+  const permissions = [PERMISSIONS.DEVOPS_PROJECTS_READ];
+  assert.deepEqual(
+    resolveProjectListQueryCapabilities({ page: "5000", pageSize: "100" }, permissions, "devops")
+      .pageSize,
+    100
+  );
+  assert.throws(() =>
+    resolveProjectListQueryCapabilities({ page: "1", pageSize: "101" }, permissions, "devops")
+  );
+});
+
+test("row actions are a permission union and protected assignment actions reject callers", () => {
+  assert.deepEqual(
+    resolveProjectRowActions([
+      PERMISSIONS.PENTEST_PROJECTS_READ,
+      PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
+      PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
+    ]),
+    ["view-project", "open-pentest-workspace", "assign-pentesters"]
+  );
+  assert.throws(() =>
+    assertProjectAssignmentActionAllowed(
+      [PERMISSIONS.QUALITY_PROJECTS_ASSIGN],
+      "pentester",
+      "security"
+    )
+  );
+  assert.doesNotThrow(() =>
+    assertProjectAssignmentActionAllowed(
+      [PERMISSIONS.SECURITY_PROJECTS_ASSIGN],
+      "pentester",
+      "security"
+    )
+  );
+});
+
+test("stored settings are re-sanitized after permission removal and restored safely", () => {
+  const stored = {
+    visibleColumns: ["summary", "environment", "repository", "obsolete"],
+    columnOrder: ["repository", "summary", "environment", "obsolete"],
+    aliases: { repository: "Repo", obsolete: "Bad" },
+  };
+  const removed = sanitizeStoredProjectTableSettings(
+    "user-projects",
+    stored,
+    [PERMISSIONS.QA_PROJECTS_READ]
+  );
+  assert.deepEqual(removed.visibleColumns, ["summary"]);
+  assert.ok(!removed.columnOrder.includes("repository"));
+  assert.deepEqual(removed.aliases, {});
+
+  const restored = sanitizeStoredProjectTableSettings(
+    "user-projects",
+    stored,
+    [PERMISSIONS.DEVOPS_PROJECTS_READ, PERMISSIONS.DEVOPS_DEPLOYMENTS_READ]
+  );
+  assert.ok(restored.visibleColumns.includes("repository"));
+  assert.equal(restored.aliases.repository, "Repo");
+});
+
+test("manipulated and malformed settings are rejected while mandatory columns remain", () => {
+  assert.throws(() => validateProjectTableSettings("user-projects", {
+    visibleColumns: ["repository"],
+    columnOrder: ["repository"],
+    aliases: {},
+  }, [PERMISSIONS.QA_PROJECTS_READ]));
+  assert.throws(() => validateProjectTableSettings("user-projects", {
+    visibleColumns: "summary",
+    columnOrder: [],
+    aliases: {},
+  }, [PERMISSIONS.QA_PROJECTS_READ]));
+
+  const valid = validateProjectTableSettings("user-projects", {
+    visibleColumns: [], columnOrder: [], aliases: {},
+  }, [PERMISSIONS.QA_PROJECTS_READ]);
+  assert.ok(valid.visibleColumns.includes("summary"));
+});
+
+test("admin view authorization remains separate", () => {
+  assert.equal(
+    requireProjectListView("admin", [PERMISSIONS.ADMIN_SYSTEM_MANAGE]),
+    "admin"
+  );
+  assert.throws(() => requireProjectListView("admin", [PERMISSIONS.PENTEST_PROJECTS_READ]));
+});
+
+test("row-level access remains independent from table capabilities", () => {
+  const user = {
+    id: "user-1",
+    roles: [ROLES.DEVOPS],
+    permissions: [PERMISSIONS.DEVOPS_PROJECTS_READ],
+  } as Express.UserContext;
+  assert.equal(canAccessProject(user, { devops: "user-2" }), false);
+  assert.equal(canAccessProject(user, { devops: "user-1" }), true);
+});

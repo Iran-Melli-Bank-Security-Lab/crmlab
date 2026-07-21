@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { projectTablePresets } from "../columns";
+import { adminProjectTableColumns } from "../columns";
 import ProjectTableBase from "../ProjectTableBase";
 import type { ProjectTableRow, ProjectTableViewProps } from "../types";
 
@@ -18,7 +18,7 @@ export default function AdminProjectsTable({
       paginationId="admin"
       title={title}
       projects={projects}
-      columns={projectTablePresets.admin}
+      columns={adminProjectTableColumns}
       actionLabel="Details"
       onAction={openDetails}
       onRowClick={openDetails}

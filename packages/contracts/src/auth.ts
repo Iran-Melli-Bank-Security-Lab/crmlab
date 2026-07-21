@@ -1,4 +1,4 @@
-import type { UserContract } from "./user";
+import type { UserContract } from "./user.js";
 
 export type LoginRequestContract = {
   username: string;

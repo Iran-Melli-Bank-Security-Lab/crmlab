@@ -41,6 +41,15 @@ export const sidebarItems: SidebarItem[] = [
     sectionKey: "sidebar.workspace",
   },
   {
+    icon: "bell",
+    title: "Notifications",
+    titleKey: "sidebar.notifications",
+    path: "/notifications",
+    permissions: [],
+    section: "Workspace",
+    sectionKey: "sidebar.workspace",
+  },
+  {
     icon: "plus",
     title: "Create Project",
     titleKey: "sidebar.createProject",

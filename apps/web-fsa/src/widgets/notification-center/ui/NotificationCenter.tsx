@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Badge,
@@ -219,13 +219,13 @@ function NotificationItem({
     }
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     handleActivate();
   };
 
-  const handleMarkReadClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleMarkReadClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     void markReadIfNeeded();
   };
@@ -344,6 +344,7 @@ function NotificationItem({
 
 export default function NotificationCenter() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [browserPermission, setBrowserPermission] =
     useState<BrowserNotificationPermission>(() => getBrowserNotificationPermission());
@@ -356,10 +357,6 @@ export default function NotificationCenter() {
     markAllRead,
     markRead,
   } = useNotifications();
-
-  useEffect(() => {
-    setBrowserPermission(getBrowserNotificationPermission());
-  }, []);
 
   const handleEnableBrowserNotifications = async () => {
     const permission = await requestBrowserNotificationPermission();
@@ -527,6 +524,21 @@ export default function NotificationCenter() {
                       {t("notifications.markAllRead")}
                     </ChakraButton>
                   )}
+                  <ChakraButton
+                    color="var(--apple-blue)"
+                    fontSize="xs"
+                    fontWeight="800"
+                    h="32px"
+                    px={2.5}
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate("/notifications");
+                    }}
+                  >
+                    {t("notifications.viewAll")}
+                  </ChakraButton>
                 </HStack>
               </Flex>
             </Popover.Header>
@@ -565,7 +577,7 @@ export default function NotificationCenter() {
                 </VStack>
               ) : (
                 <Box maxH="540px" overflowY="auto" overscrollBehavior="contain">
-                  {notifications.map((notification) => (
+                  {notifications.slice(0, 20).map((notification) => (
                     <NotificationItem
                       key={notification.id}
                       notification={notification}

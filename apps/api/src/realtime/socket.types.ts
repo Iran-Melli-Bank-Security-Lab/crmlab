@@ -1,8 +1,8 @@
 // src/realtime/socket.types.ts
 
 import { SOCKET_EVENTS } from "@/constants/socket";
-import type { NotificationPriority, NotificationType } from "@/constants/notifications";
 import type { ProjectType } from "@/constants/projects";
+import type { NotificationContract } from "@role-dashboard/contracts";
 import type { Server, Socket } from "socket.io";
 
 export type AuthSocketUser = {
@@ -23,18 +23,13 @@ export type SocketConnectedPayload = {
   connectedAt: string;
 };
 
-export type NotificationPayload = {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  priority: NotificationPriority;
-  isRead: boolean;
+export type NotificationPayload = Omit<
+  NotificationContract,
+  "createdAt" | "updatedAt" | "userId"
+> & {
   userId: string;
-  projectId?: string;
-  entityId?: string;
-  actionUrl?: string;
   createdAt: Date;
+  updatedAt?: Date;
 };
 
 export type ProjectEventPayload = {

@@ -5,11 +5,11 @@ import { Server as SocketIOServer } from "socket.io";
 import type { Server as HttpServer } from "http";
 
 import { SOCKET_EVENTS } from "@/constants/socket";
-import { NotificationModel } from "@/modules/notifications/models/notification.model";
 import {
-  serializeCompatibleNotification,
-  unreadNotificationFilter,
-} from "@/modules/notifications/services/notificationCompatibility.service";
+  listNotifications,
+  markAllNotificationsReadForUser,
+  markNotificationReadForUser,
+} from "@/modules/notifications/services/notification.service";
 import { socketAuthMiddleware } from "./socket.auth";
 import { socketConfig, isAllowedSocketOrigin } from "./socket.config";
 import { createSocketRedisClients, type SocketRedisClients } from "./socket.redis";
@@ -30,16 +30,10 @@ async function syncSocketNotifications(socket: RealtimeSocket) {
   const userId = socket.data.user?.id;
   if (!userId) return;
 
-  const [notifications, unreadCount] = await Promise.all([
-    NotificationModel.find({ userId }).sort({ createdAt: -1 }).limit(50),
-    NotificationModel.countDocuments(unreadNotificationFilter(userId)),
-  ]);
+  const result = await listNotifications(userId, { limit: 50 });
 
-  socket.emit(
-    SOCKET_EVENTS.NOTIFICATIONS_SYNC,
-    notifications.map(serializeCompatibleNotification)
-  );
-  socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: unreadCount });
+  socket.emit(SOCKET_EVENTS.NOTIFICATIONS_SYNC, result.items);
+  socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: result.unreadCount });
 }
 
 export async function setupSocket(server: HttpServer): Promise<RealtimeServer> {
@@ -111,18 +105,7 @@ export async function setupSocket(server: HttpServer): Promise<RealtimeServer> {
 
     socket.on("notification:mark_read", async ({ id }) => {
       try {
-        const notification = await NotificationModel.findOneAndUpdate(
-          { _id: id, userId: user.id },
-          { $set: { isRead: true, seen: true, seenAt: new Date() } },
-          { new: true }
-        );
-        if (!notification) return;
-
-        socket.emit(SOCKET_EVENTS.NOTIFICATION_READ, { id, isRead: true });
-        const unreadCount = await NotificationModel.countDocuments(
-          unreadNotificationFilter(user.id)
-        );
-        socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: unreadCount });
+        await markNotificationReadForUser(user.id, id);
       } catch (error) {
         console.warn("[socket:notification:mark_read] failed", error);
       }
@@ -130,12 +113,7 @@ export async function setupSocket(server: HttpServer): Promise<RealtimeServer> {
 
     socket.on("notifications:mark_all_read", async () => {
       try {
-        await NotificationModel.updateMany(
-          unreadNotificationFilter(user.id),
-          { $set: { isRead: true, seen: true, seenAt: new Date() } }
-        );
-        socket.emit(SOCKET_EVENTS.NOTIFICATIONS_READ_ALL, { isRead: true });
-        socket.emit(SOCKET_EVENTS.NOTIFICATIONS_UNREAD_COUNT, { count: 0 });
+        await markAllNotificationsReadForUser(user.id);
       } catch (error) {
         console.warn("[socket:notifications:mark_all_read] failed", error);
       }

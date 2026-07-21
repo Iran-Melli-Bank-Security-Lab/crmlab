@@ -9,6 +9,7 @@ const Profile = lazy(() => import("@/pages/profile/Profile"));
 const Settings = lazy(() => import("@/pages/settings/Settings"));
 const Projects = lazy(() => import("@/pages/projects/Projects"));
 const Tasks = lazy(() => import("@/pages/tasks/Tasks"));
+const Notifications = lazy(() => import("@/pages/notifications/Notifications"));
 const ProjectDetails = lazy(() => import("@/pages/project-details/ProjectDetails"));
 const CreateProject = lazy(() => import("@/pages/create-project/CreateProject"));
 const PentestWorkspacePage = lazy(
@@ -34,6 +35,11 @@ export const protectedRouteConfig = [
   {
     path: "/tasks",
     element: Tasks,
+    permissions: [],
+  },
+  {
+    path: "/notifications",
+    element: Notifications,
     permissions: [],
   },
   {

@@ -1,7 +1,27 @@
+import type {
+  NotificationPriorityContract,
+  NotificationTypeContract,
+} from "@role-dashboard/contracts";
+
 export const NOTIFICATION_TYPES = {
+  PROJECT_CREATED: "project.created",
   PROJECT_ASSIGNED: "project.assigned",
+  PROJECT_COMPLETED: "project.completed",
+  PROJECT_REPORT_SUBMITTED: "project.report_submitted",
   TASK_ASSIGNED: "task.assigned",
   VULNERABILITY_CREATED: "vulnerability.created",
+  VULNERABILITY_UPDATED: "vulnerability.updated",
+  VULNERABILITY_APPROVED: "vulnerability.approved",
+  VULNERABILITY_REJECTED: "vulnerability.rejected",
+  DEPLOYMENT_STARTED: "deployment.started",
+  DEPLOYMENT_FAILED: "deployment.failed",
+  TICKET_CREATED: "ticket.created",
+  TICKET_UPDATED: "ticket.updated",
+  QA_TESTCASE_CREATED: "qa.testcase.created",
+  QA_RESULT_SUBMITTED: "qa.result.submitted",
+  QA_RESULT_APPROVED: "qa.result.approved",
+  QA_RESULT_REJECTED: "qa.result.rejected",
+  USER_ROLE_UPDATED: "user.role_updated",
   SYSTEM_ANNOUNCEMENT: "system.announcement",
 } as const;
 
@@ -14,7 +34,5 @@ export const NOTIFICATION_PRIORITIES = {
 
 export const NOTIFICATION_PRIORITY_VALUES = Object.values(NOTIFICATION_PRIORITIES);
 
-export type NotificationType =
-  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
-export type NotificationPriority =
-  (typeof NOTIFICATION_PRIORITIES)[keyof typeof NOTIFICATION_PRIORITIES];
+export type NotificationType = NotificationTypeContract;
+export type NotificationPriority = NotificationPriorityContract;

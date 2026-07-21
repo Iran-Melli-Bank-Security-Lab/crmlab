@@ -2,15 +2,15 @@ export type {
   AuthResponseContract,
   LoginRequestContract,
   RegisterRequestContract,
-} from "./auth";
-export type { ApiErrorContract } from "./api";
-export type { RoleCatalogItemContract, RolesAndPermissionsContract } from "./rbac";
+} from "./auth.js";
+export type { ApiErrorContract } from "./api.js";
+export type { RoleCatalogItemContract, RolesAndPermissionsContract } from "./rbac.js";
 export type {
   ProjectRowActionContract,
   ProjectTableColumnContract,
-} from "./projectTable";
-export type { UploadResponseContract } from "./upload";
-export type { UserContract, UserFormPayloadContract, UserStatus } from "./user";
+} from "./projectTable.js";
+export type { UploadResponseContract } from "./upload.js";
+export type { UserContract, UserFormPayloadContract, UserStatus } from "./user.js";
 export type {
   CreateTaskRequestContract,
   TaskAssigneeContract,
@@ -18,7 +18,7 @@ export type {
   TaskPriority,
   TaskStatus,
   UpdateTaskRequestContract,
-} from "./task";
+} from "./task.js";
 export type {
   AssignedSecurityStandardContract,
   AssignedSecurityStandardNodeContract,
@@ -37,4 +37,12 @@ export type {
   SecurityStandardNodeContract,
   SecurityStandardSummaryContract,
   SecurityStandardTreeContract,
-} from "./securityScope";
+} from "./securityScope.js";
+export type {
+  NotificationContract,
+  NotificationEntityContract,
+  NotificationPageContract,
+  NotificationPriorityContract,
+  NotificationReadFilterContract,
+  NotificationTypeContract,
+} from "./notification.js";

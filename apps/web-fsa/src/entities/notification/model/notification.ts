@@ -1,25 +1,14 @@
-export type NotificationType =
-  | "project.created"
-  | "project.assigned"
-  | "project.completed"
-  | "project.report_submitted"
-  | "task.assigned"
-  | "vulnerability.created"
-  | "vulnerability.updated"
-  | "vulnerability.approved"
-  | "vulnerability.rejected"
-  | "deployment.started"
-  | "deployment.failed"
-  | "ticket.created"
-  | "ticket.updated"
-  | "qa.testcase.created"
-  | "qa.result.submitted"
-  | "qa.result.approved"
-  | "qa.result.rejected"
-  | "user.role_updated"
-  | "system.announcement";
+import type {
+  NotificationContract,
+  NotificationEntityContract,
+  NotificationPageContract,
+  NotificationPriorityContract,
+  NotificationReadFilterContract,
+  NotificationTypeContract,
+} from "@role-dashboard/contracts";
 
-export type NotificationPriority = "low" | "medium" | "high" | "critical";
+export type NotificationType = NotificationTypeContract;
+export type NotificationPriority = NotificationPriorityContract;
 
 export function normalizeNotificationPriority(value: unknown): NotificationPriority {
   const normalized = String(value || "").toLowerCase();
@@ -38,44 +27,15 @@ export type NotificationActor = {
   role?: string;
 };
 
-export type NotificationEntity = {
-  id: string;
-  type:
-    | "project"
-    | "task"
-    | "vulnerability"
-    | "deployment"
-    | "ticket"
-    | "qa_testcase"
-    | "qa_result"
-    | "user"
-    | "system";
-  label?: string;
-};
+export type NotificationEntity = NotificationEntityContract;
 
-export type AppNotification = {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  priority: NotificationPriority;
-  isRead: boolean;
-  createdAt: string;
-  updatedAt?: string;
+export type AppNotification = NotificationContract & {
   expiresAt?: string;
-
-  userId?: string;
   roleIds?: string[];
   channels?: NotificationChannel[];
   deliveryStatus?: NotificationDeliveryStatus;
 
   actor?: NotificationActor;
-  entity?: NotificationEntity;
-  projectId?: string;
-  entityId?: string;
-
-  actionUrl?: string;
-  metadata?: Record<string, unknown>;
 };
 
 export type NotificationConnectionStatus =
@@ -91,3 +51,20 @@ export type NotificationSocketEvent =
   | { event: "notification:deleted"; payload: { id: string } }
   | { event: "notifications:sync"; payload: AppNotification[] }
   | { event: "notifications:unread_count"; payload: { count: number } };
+
+export type NotificationReadFilter = NotificationReadFilterContract;
+
+export type NotificationPage = Omit<NotificationPageContract, "items"> & { items: AppNotification[] };
+
+export function normalizeNotification(notification: AppNotification): AppNotification {
+  const createdAtValue = notification.createdAt as unknown;
+  const updatedAtValue = notification.updatedAt as unknown;
+  return {
+    ...notification,
+    id: String(notification.id),
+    createdAt: createdAtValue instanceof Date ? createdAtValue.toISOString() : String(createdAtValue),
+    updatedAt: updatedAtValue instanceof Date ? updatedAtValue.toISOString() : updatedAtValue ? String(updatedAtValue) : undefined,
+    isRead: Boolean(notification.isRead),
+    priority: normalizeNotificationPriority(notification.priority),
+  };
+}

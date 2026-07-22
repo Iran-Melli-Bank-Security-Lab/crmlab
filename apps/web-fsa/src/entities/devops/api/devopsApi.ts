@@ -10,13 +10,32 @@ export type DevopsInfo = {
   sharedVm?: { endpoints: ApplicationEndpoint[] };
   separateVm?: { serverIpAddress: string; serverPort: number; vmUsername: string; vmPassword: SecretEdit; users: Array<{ assignmentId: string; userId: string; serverUsername: string; serverPassword: SecretEdit; vmIpAddress: string; vmPort: number; endpoints: ApplicationEndpoint[] }> };
 };
-export type DevopsWorkspace = { projectId: string; assignedUsers: AssignedUser[]; info: DevopsInfo | null };
+export type DevopsAccessAccount = {
+  authenticationMethod: "username_password" | "username_password_otp";
+  username: string;
+  password: string;
+  otp?: { type?: string; deliveryMethod?: string; instructions?: string };
+};
+export type DevopsAccessEndpoint = Omit<ApplicationEndpoint, "authenticationAccounts"> & {
+  authenticationAccounts: DevopsAccessAccount[];
+};
+export type DevopsAccess =
+  | { mode: "shared"; assignmentState: "available"; endpoints: DevopsAccessEndpoint[]; updatedAt?: string }
+  | { mode: "personal"; assignmentState: "unassigned"; endpoints: []; updatedAt?: string }
+  | { mode: "personal"; assignmentState: "available"; serverIpAddress?: string; serverPort?: number; vmIpAddress: string; vmPort: number; username: string; password: string; endpoints: DevopsAccessEndpoint[]; updatedAt?: string };
+export type DevopsWorkspace = { projectId: string; assignedUsers: AssignedUser[]; info: DevopsInfo | null; access: DevopsAccess | null };
+export type DevopsWorkspaceQuery = { projectId: string; userId: string };
 
 export const devopsApi = api.injectEndpoints({ endpoints: (builder) => ({
-  getDevopsWorkspace: builder.query<DevopsWorkspace, string>({
-    query: (projectId) => `/devops/projects/${projectId}`,
+  getDevopsWorkspace: builder.query<DevopsWorkspace, DevopsWorkspaceQuery>({
+    // userId is intentionally not sent to the server. It only isolates credential-bearing cache entries.
+    query: ({ projectId }) => `/devops/projects/${projectId}`,
     transformResponse: (response) => unwrapApiData<DevopsWorkspace>(response),
-    providesTags: (_r, _e, id) => [{ type: "DevOps", id }],
+    keepUnusedDataFor: 0,
+    providesTags: (_r, _e, { projectId, userId }) => [
+      { type: "DevOps", id: projectId },
+      { type: "DevOps", id: `${projectId}:${userId}` },
+    ],
   }),
   saveDevopsWorkspace: builder.mutation<DevopsWorkspace, { projectId: string; info: DevopsInfo }>({
     query: ({ projectId, info }) => ({ url: `/devops/projects/${projectId}`, method: "PUT", body: info }),

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "534a11dcd44feb55",
+  "sourceFingerprint": "4bc387ddaf9584e5",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -59,7 +59,7 @@
     "vendored source"
   ],
   "stats": {
-    "indexedFiles": 325,
+    "indexedFiles": 327,
     "domains": 13,
     "apiEndpoints": 60,
     "frontendRoutes": 22
@@ -2777,7 +2777,7 @@
             "apps/web-fsa/src/entities/pentest/ui/modules/ModuleFallback.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "1eddb218fd88"
+          "contentHash": "d336768a9c5d"
         },
         {
           "path": "apps/web-fsa/src/pages/pentest-workspace/PentestWorkspacePage.tsx",
@@ -4744,7 +4744,7 @@
             "apps/api/src/modules/devops/services/devopsInfo.service.ts",
             "apps/api/src/modules/devops/validators/devops.validators.ts"
           ],
-          "contentHash": "8ff0bfa6397a"
+          "contentHash": "826a69c6b8e7"
         },
         {
           "path": "apps/api/src/modules/devops/models/projectDevopsInfo.model.ts",
@@ -4803,12 +4803,32 @@
           ],
           "symbols": [
             "EncryptedSecret",
-            "encryptSecret"
+            "encryptSecret",
+            "decryptSecret"
           ],
           "related": [
             "apps/api/src/config/env.ts"
           ],
-          "contentHash": "667fa5cd102b"
+          "contentHash": "3b3cb3457167"
+        },
+        {
+          "path": "apps/api/src/modules/devops/services/devopsInfo.service.test.ts",
+          "kind": "test",
+          "responsibility": "Regression tests for devops Info service test.",
+          "keywords": [
+            "api",
+            "modules",
+            "devops",
+            "services",
+            "info",
+            "service",
+            "test"
+          ],
+          "related": [
+            "apps/api/src/modules/devops/services/credentialCipher.service.ts",
+            "apps/api/src/modules/devops/services/devopsInfo.service.ts"
+          ],
+          "contentHash": "18ec45a0fd22"
         },
         {
           "path": "apps/api/src/modules/devops/services/devopsInfo.service.ts",
@@ -4824,6 +4844,7 @@
             "DevOps"
           ],
           "symbols": [
+            "buildProjectDevopsAccessView",
             "getProjectDevopsWorkspace",
             "saveProjectDevopsInfo"
           ],
@@ -4834,7 +4855,7 @@
             "apps/api/src/modules/devops/services/credentialCipher.service.ts",
             "apps/api/src/modules/devops/validators/devops.validators.ts"
           ],
-          "contentHash": "916727296fb1"
+          "contentHash": "1e37c8d563fb"
         },
         {
           "path": "apps/api/src/modules/devops/validators/devops.validators.test.ts",
@@ -4889,14 +4910,39 @@
             "ApplicationEndpoint",
             "AssignedUser",
             "DevopsInfo",
-            "DevopsWorkspace",
-            "devopsApi"
+            "DevopsAccessAccount",
+            "DevopsAccessEndpoint",
+            "DevopsAccess"
           ],
           "related": [
             "apps/web-fsa/src/shared/api/baseApi.ts",
             "apps/web-fsa/src/shared/api/unwrapApiData.ts"
           ],
-          "contentHash": "4aa1bbc14b7c"
+          "contentHash": "bee1066dcaa9"
+        },
+        {
+          "path": "apps/web-fsa/src/entities/devops/ui/DevopsAccessCard.tsx",
+          "kind": "component",
+          "responsibility": "React UI component for Devops Access Card.",
+          "keywords": [
+            "web",
+            "entities",
+            "devops",
+            "access",
+            "card",
+            "tsx",
+            "DevOps"
+          ],
+          "symbols": [
+            "default"
+          ],
+          "related": [
+            "apps/web-fsa/src/entities/devops/api/devopsApi.ts",
+            "apps/web-fsa/src/features/auth/model/useAuth.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx",
+            "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
+          ],
+          "contentHash": "25614767376c"
         },
         {
           "path": "apps/web-fsa/src/entities/devops/ui/DevopsWorkspace.tsx",
@@ -4915,12 +4961,12 @@
           ],
           "related": [
             "apps/web-fsa/src/entities/devops/api/devopsApi.ts",
+            "apps/web-fsa/src/features/auth/model/useAuth.ts",
             "apps/web-fsa/src/shared/lib/getApiErrorMessage.ts",
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
-            "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx",
-            "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
+            "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
           ],
-          "contentHash": "71daf805112c"
+          "contentHash": "86266e122c12"
         }
       ]
     },
@@ -5504,7 +5550,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "eb98a474956f"
+          "contentHash": "310ab54e8204"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",

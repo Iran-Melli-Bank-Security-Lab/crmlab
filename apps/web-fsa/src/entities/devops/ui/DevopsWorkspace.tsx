@@ -7,6 +7,7 @@ import Input from "@/shared/ui/primitives/Input";
 import Select from "@/shared/ui/primitives/Select";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
+import { useAuth } from "@/features/auth/model/useAuth";
 import { useGetDevopsWorkspaceQuery, useSaveDevopsWorkspaceMutation, type ApplicationEndpoint, type AuthenticationAccount, type DevopsInfo, type SecretEdit } from "../api/devopsApi";
 
 const id = () => globalThis.crypto.randomUUID();
@@ -44,7 +45,11 @@ function EndpointEditor({ endpoint, requireAddress, onChange, onRemove }: { endp
 }
 
 export default function DevopsWorkspace({ projectId }: { projectId: string }) {
-  const { data, error, isLoading } = useGetDevopsWorkspaceQuery(projectId);
+  const { user } = useAuth();
+  const { data, error, isLoading } = useGetDevopsWorkspaceQuery(
+    { projectId, userId: user?.id || "anonymous" },
+    { skip: !user?.id }
+  );
   const [save, saveState] = useSaveDevopsWorkspaceMutation();
   const [form, setForm] = useState<DevopsInfo | null>(null); const [dirty, setDirty] = useState(false); const [review, setReview] = useState(false);
   // The API snapshot seeds a long-lived local draft exactly once; later query refreshes must not overwrite unsaved work.

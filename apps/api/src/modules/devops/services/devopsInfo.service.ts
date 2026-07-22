@@ -6,7 +6,7 @@ import { UserModel } from "@/modules/users/models/user.model";
 import { AppError } from "@/utils/AppError";
 import { ProjectDevopsInfoModel } from "../models/projectDevopsInfo.model";
 import type { DevopsInfoInput } from "../validators/devops.validators";
-import { encryptSecret, type EncryptedSecret } from "./credentialCipher.service";
+import { decryptSecret, encryptSecret, type EncryptedSecret } from "./credentialCipher.service";
 
 type SecretInput = { value: string } | { unchanged: true };
 function secret(input: SecretInput, existing?: EncryptedSecret): EncryptedSecret {
@@ -58,10 +58,91 @@ function ensureWebProject(project: { platform?: string[] }) {
   }
 }
 
+type RevealedAccount = {
+  authenticationMethod: "username_password" | "username_password_otp";
+  username: string;
+  password: string;
+  otp?: { type?: string; deliveryMethod?: string; instructions?: string };
+};
+
+type RevealedEndpoint = {
+  id: string;
+  url?: string;
+  ipAddress?: string;
+  port?: number;
+  description?: string;
+  authenticationAccounts: RevealedAccount[];
+};
+
+function revealEndpoints(items: any[] = []): RevealedEndpoint[] {
+  return items.map((endpoint) => ({
+    id: endpoint.clientId,
+    url: endpoint.url,
+    ipAddress: endpoint.ipAddress,
+    port: endpoint.port,
+    description: endpoint.description,
+    authenticationAccounts: (endpoint.authenticationAccounts || []).map((account: any) => ({
+      authenticationMethod: account.authenticationMethod,
+      username: account.username,
+      password: decryptSecret(account.password),
+      // OTP seed values are deliberately never returned. Delivery guidance is safe to expose.
+      otp: account.otp
+        ? {
+            type: account.otp.type,
+            deliveryMethod: account.otp.deliveryMethod,
+            instructions: account.otp.instructions,
+          }
+        : undefined,
+    })),
+  }));
+}
+
+export function buildProjectDevopsAccessView(
+  stored: any,
+  actorId: string,
+  ownAssignmentIds: Set<string>
+) {
+  if (!stored || ownAssignmentIds.size === 0) return null;
+
+  if (stored.deploymentMode === "shared_vm") {
+    return {
+      mode: "shared" as const,
+      assignmentState: "available" as const,
+      endpoints: revealEndpoints(stored.sharedVm?.endpoints || []),
+      updatedAt: stored.updatedAt,
+    };
+  }
+
+  const personal = (stored.separateVm?.users || []).find(
+    (item: any) =>
+      String(item.userId) === actorId && ownAssignmentIds.has(String(item.assignmentId))
+  );
+  if (!personal) {
+    return {
+      mode: "personal" as const,
+      assignmentState: "unassigned" as const,
+      endpoints: [],
+      updatedAt: stored.updatedAt,
+    };
+  }
+
+  return {
+    mode: "personal" as const,
+    assignmentState: "available" as const,
+    serverIpAddress: stored.separateVm?.serverIpAddress,
+    serverPort: stored.separateVm?.serverPort,
+    vmIpAddress: personal.vmIpAddress,
+    vmPort: personal.vmPort,
+    username: personal.serverUsername,
+    password: decryptSecret(personal.serverPassword),
+    endpoints: revealEndpoints(personal.endpoints || []),
+    updatedAt: stored.updatedAt,
+  };
+}
+
 export async function getProjectDevopsWorkspace(projectId: string, actor: Express.UserContext) {
   const project = await ProjectModel.findById(projectId).lean();
   if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
-  ensureWebProject(project);
 
   const assignments = await ProjectAssignmentModel.find({
     $or: [{ projectId }, { project: projectId }],
@@ -82,10 +163,14 @@ export async function getProjectDevopsWorkspace(projectId: string, actor: Expres
     };
   });
 
-  const stored = await ProjectDevopsInfoModel.findOne({ projectId }).lean();
-  if (!stored) return { projectId, assignedUsers, info: null };
   const canManage = actor.permissions.includes("devops.deployments.update.assigned" as any) || actor.permissions.includes("admin.system.manage.all" as any);
   const ownAssignmentIds = new Set(assignments.filter((item) => String(item.userId || item.pentester) === actor.id).map((item) => String(item._id)));
+  if (!canManage && ownAssignmentIds.size === 0) {
+    throw new AppError("Forbidden: active project assignment required", HTTP_STATUS.FORBIDDEN);
+  }
+  const visibleAssignedUsers = canManage ? assignedUsers : assignedUsers.filter((item) => item.userId === actor.id);
+  const stored = await ProjectDevopsInfoModel.findOne({ projectId }).lean();
+  if (!stored) return { projectId, assignedUsers: visibleAssignedUsers, info: null, access: null };
   const masked = (value: any) => value ? { isSet: true } : { isSet: false };
   const endpoints = (items: any[] = []) => items.map((endpoint) => ({
     id: endpoint.clientId, url: endpoint.url, ipAddress: endpoint.ipAddress, port: endpoint.port, description: endpoint.description,
@@ -97,7 +182,9 @@ export async function getProjectDevopsWorkspace(projectId: string, actor: Expres
   const allUserInfo = stored.separateVm?.users || [];
   const visibleUserInfo = canManage ? allUserInfo : allUserInfo.filter((item) => ownAssignmentIds.has(String(item.assignmentId)));
   return {
-    projectId, assignedUsers: canManage ? assignedUsers : assignedUsers.filter((item) => item.userId === actor.id),
+    projectId,
+    assignedUsers: visibleAssignedUsers,
+    access: buildProjectDevopsAccessView(stored, actor.id, ownAssignmentIds),
     info: {
       deploymentMode: stored.deploymentMode,
       sharedVm: stored.sharedVm ? { endpoints: endpoints(stored.sharedVm.endpoints) } : undefined,

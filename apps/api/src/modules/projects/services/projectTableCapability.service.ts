@@ -1,6 +1,6 @@
 import {
   PROJECT_RESPONSIBILITY_REGISTRY,
-  type ProjectResponsibilityKey,
+  type ProjectResponsibilityContextContract,
 } from "@role-dashboard/contracts";
 import { HTTP_STATUS } from "@/constants/http";
 import { PERMISSIONS, type Permission } from "@/constants/permissions";
@@ -12,7 +12,6 @@ import {
   getProjectColumnSourceFields,
   getProjectTableColumnDefinitions,
 } from "@/modules/settings/models/projectTableColumnRegistry.model";
-import { resolveResponsibilityRowActions } from "./projectResponsibility.service";
 
 export const NON_ADMIN_PROJECT_VIEWS = [
   "security", "pentest", "devops", "quality", "qa", "representative",
@@ -62,15 +61,15 @@ export function requireProjectListView(
 }
 
 export function resolveProjectRowActions(
-  permissions: readonly Permission[],
-  responsibilities: readonly ProjectResponsibilityKey[],
+  context: ProjectResponsibilityContextContract,
   view?: NonAdminProjectView
 ): ProjectRowAction[] {
-  return [...resolveResponsibilityRowActions(responsibilities, permissions)]
+  return (Object.keys(context.capabilities) as ProjectRowAction[])
     .filter((action): action is ProjectRowAction =>
       (action === "view-project" ||
         action === "open-pentest-workspace" ||
         action === "assign-pentesters") &&
+      context.capabilities[action] &&
       (!view ||
       action === "view-project" ||
       (action === "open-pentest-workspace" && view === "pentest") ||

@@ -1,5 +1,6 @@
 import type {
   ProjectResponsibilityKey,
+  ProjectResponsibilityContextContract,
   ProjectRowActionContract,
 } from "@role-dashboard/contracts";
 
@@ -75,4 +76,5 @@ export type ApiProjectResponse = {
   updatedAt?: string;
   allowedActions?: ProjectRowActionContract[];
   myResponsibilities?: ProjectResponsibilityKey[];
+  responsibilityContext?: ProjectResponsibilityContextContract;
 };

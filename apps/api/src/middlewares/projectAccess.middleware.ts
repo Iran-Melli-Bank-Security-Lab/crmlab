@@ -5,6 +5,11 @@ import { ROLES } from "@/constants/roles";
 import { ProjectModel } from "@/modules/projects/models/project.model";
 import { AppError } from "@/utils/AppError";
 import { ProjectAssignmentModel } from "@/modules/projects/models/projectAssignment.model";
+import type { ProjectCapabilityKey } from "@role-dashboard/contracts";
+import {
+  assertProjectCapability,
+  resolveProjectResponsibilityContext,
+} from "@/modules/projects/services/projectResponsibility.service";
 
 type ProjectIdSource = "params.id" | "params.projectId" | "body.projectId";
 
@@ -92,6 +97,40 @@ export const requireProjectAccess = (source: ProjectIdSource = "params.id"): Req
         throw new AppError("Forbidden: project is not assigned to this user", HTTP_STATUS.FORBIDDEN);
       }
 
+      req.project = project;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+export const requireProjectCapability = (
+  capability: ProjectCapabilityKey,
+  source: ProjectIdSource = "params.id"
+): RequestHandler => {
+  return async (req, _res, next) => {
+    try {
+      const projectId = getProjectId(req, source);
+      const project = projectId ? await ProjectModel.findById(projectId) : null;
+      if (!project || !req.user) {
+        throw new AppError("Forbidden: project capability is unavailable", HTTP_STATUS.FORBIDDEN);
+      }
+      const assignments = await ProjectAssignmentModel.find({
+        $and: [
+          { $or: [{ projectId: project._id }, { project: project._id }] },
+          { $or: [{ userId: req.user.id }, { pentester: req.user.id }] },
+          { status: { $ne: "removed" } },
+        ],
+      })
+        .select("projectId project userId pentester assignmentRole status")
+        .lean();
+      const context = resolveProjectResponsibilityContext({
+        user: req.user,
+        project: project.toObject(),
+        assignments,
+      });
+      assertProjectCapability(context, capability);
       req.project = project;
       next();
     } catch (error) {

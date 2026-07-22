@@ -179,7 +179,11 @@ export const projectTableColumns = {
     minW: "190px",
     maxW: "300px",
     render: (project) => (
-      <ProjectResponsibilities responsibilities={project.myResponsibilities} />
+      <ProjectResponsibilities
+        responsibilities={
+          project.responsibilityContext?.responsibilityKeys || project.myResponsibilities
+        }
+      />
     ),
   },
   assignmentStatus: {

@@ -16,6 +16,7 @@ import {
 import { getProjectTableColumnDefinitions } from "@/modules/settings/models/projectTableColumnRegistry.model";
 import { canAccessProject } from "@/middlewares/projectAccess.middleware";
 import { ROLES } from "@/constants/roles";
+import { resolveProjectResponsibilityContext } from "./projectResponsibility.service";
 
 const keys = (permissions: Permission[]) =>
   resolveRequestedProjectColumns(undefined, permissions).map((column) => column.columnKey);
@@ -152,19 +153,29 @@ test("pagination is bounded for large-list protection", () => {
 });
 
 test("row actions are a permission union and protected assignment actions reject callers", () => {
+  const multiRoleContext = resolveProjectResponsibilityContext({
+    user: {
+      id: "user-1",
+      permissions: [
+        PERMISSIONS.PENTEST_PROJECTS_READ,
+        PERMISSIONS.SECURITY_PROJECTS_READ,
+        PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
+      ],
+    },
+    project: { type: "security", projectManager: "user-1" },
+    assignments: [{ userId: "user-1", assignmentRole: "pentester" }],
+  });
   assert.deepEqual(
-    resolveProjectRowActions([
-      PERMISSIONS.PENTEST_PROJECTS_READ,
-      PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
-      PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
-    ], ["pentester", "security_manager"]),
+    resolveProjectRowActions(multiRoleContext),
     ["view-project", "open-pentest-workspace", "assign-pentesters"]
   );
+  const devopsContext = resolveProjectResponsibilityContext({
+    user: { id: "user-1", permissions: [PERMISSIONS.DEVOPS_PROJECTS_READ] },
+    project: { type: "devops" },
+    assignments: [{ userId: "user-1", assignmentRole: "devops" }],
+  });
   assert.deepEqual(
-    resolveProjectRowActions(
-      [PERMISSIONS.PENTEST_PROJECTS_READ, PERMISSIONS.DEVOPS_PROJECTS_READ],
-      ["devops"]
-    ),
+    resolveProjectRowActions(devopsContext),
     ["view-project"]
   );
   assert.throws(() =>

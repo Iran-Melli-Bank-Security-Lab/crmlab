@@ -1,5 +1,13 @@
 import { PERMISSIONS, type Permission } from "@role-dashboard/authz";
-import type { ProjectRowActionContract } from "./projectTable.js";
+
+export const PROJECT_CAPABILITY_KEYS = [
+  "view-project",
+  "open-pentest-workspace",
+  "assign-pentesters",
+  "assign-project-members",
+] as const;
+
+export type ProjectCapabilityKey = (typeof PROJECT_CAPABILITY_KEYS)[number];
 
 export type ProjectResponsibilityIcon =
   | "crown"
@@ -32,9 +40,17 @@ export type ProjectResponsibilityDefinition = {
   order: number;
   projectViews: readonly string[];
   projectTypes?: readonly string[];
-  legacyProjectFields?: readonly string[];
+  projectAssignmentFields?: readonly string[];
+  legacyAssignmentUserFields?: readonly string[];
+  legacyFallbackProjectFields?: readonly string[];
   readPermissions: readonly Permission[];
-  actions: Partial<Record<ProjectRowActionContract, readonly Permission[]>>;
+  capabilities: Partial<Record<ProjectCapabilityKey, readonly Permission[]>>;
+};
+
+export type ProjectResponsibilityContextContract = {
+  responsibilityKeys: ProjectResponsibilityKey[];
+  assignments: Record<ProjectResponsibilityKey, boolean>;
+  capabilities: Record<ProjectCapabilityKey, boolean>;
 };
 
 const viewAction = (permissions: readonly Permission[]) => ({
@@ -53,9 +69,9 @@ const projectResponsibilityDefinitions = [
     colorPalette: "red",
     order: 10,
     projectViews: ["pentest"],
-    legacyProjectFields: ["assignedUserIds"],
+    legacyAssignmentUserFields: ["pentester"],
     readPermissions: [PERMISSIONS.PENTEST_PROJECTS_READ],
-    actions: {
+    capabilities: {
       ...viewAction([PERMISSIONS.PENTEST_PROJECTS_READ]),
       "open-pentest-workspace": [PERMISSIONS.PENTEST_PROJECTS_READ],
     },
@@ -72,7 +88,7 @@ const projectResponsibilityDefinitions = [
     order: 20,
     projectViews: ["qa"],
     readPermissions: [PERMISSIONS.QA_PROJECTS_READ],
-    actions: viewAction([PERMISSIONS.QA_PROJECTS_READ]),
+    capabilities: viewAction([PERMISSIONS.QA_PROJECTS_READ]),
   },
   {
     key: "devops",
@@ -86,7 +102,7 @@ const projectResponsibilityDefinitions = [
     order: 30,
     projectViews: ["devops"],
     readPermissions: [PERMISSIONS.DEVOPS_PROJECTS_READ],
-    actions: viewAction([PERMISSIONS.DEVOPS_PROJECTS_READ]),
+    capabilities: viewAction([PERMISSIONS.DEVOPS_PROJECTS_READ]),
   },
   {
     key: "security_manager",
@@ -100,11 +116,12 @@ const projectResponsibilityDefinitions = [
     order: 40,
     projectViews: ["security"],
     projectTypes: ["security"],
-    legacyProjectFields: ["projectManager"],
+    projectAssignmentFields: ["projectManager"],
     readPermissions: [PERMISSIONS.SECURITY_PROJECTS_READ],
-    actions: {
+    capabilities: {
       ...viewAction([PERMISSIONS.SECURITY_PROJECTS_READ]),
       "assign-pentesters": [PERMISSIONS.SECURITY_PROJECTS_ASSIGN],
+      "assign-project-members": [PERMISSIONS.SECURITY_PROJECTS_ASSIGN],
     },
   },
   {
@@ -119,9 +136,12 @@ const projectResponsibilityDefinitions = [
     order: 50,
     projectViews: ["quality"],
     projectTypes: ["quality"],
-    legacyProjectFields: ["qualityManager", "projectManager"],
+    projectAssignmentFields: ["qualityManager", "projectManager"],
     readPermissions: [PERMISSIONS.QUALITY_PROJECTS_READ],
-    actions: viewAction([PERMISSIONS.QUALITY_PROJECTS_READ]),
+    capabilities: {
+      ...viewAction([PERMISSIONS.QUALITY_PROJECTS_READ]),
+      "assign-project-members": [PERMISSIONS.QUALITY_PROJECTS_ASSIGN],
+    },
   },
   {
     key: "devops_manager",
@@ -134,9 +154,9 @@ const projectResponsibilityDefinitions = [
     colorPalette: "orange",
     order: 60,
     projectViews: ["devops"],
-    legacyProjectFields: ["devops"],
+    projectAssignmentFields: ["devops"],
     readPermissions: [PERMISSIONS.DEVOPS_PROJECTS_READ],
-    actions: viewAction([PERMISSIONS.DEVOPS_PROJECTS_READ]),
+    capabilities: viewAction([PERMISSIONS.DEVOPS_PROJECTS_READ]),
   },
   {
     key: "representative",
@@ -149,9 +169,9 @@ const projectResponsibilityDefinitions = [
     colorPalette: "teal",
     order: 70,
     projectViews: ["representative"],
-    legacyProjectFields: ["representative"],
+    projectAssignmentFields: ["representative"],
     readPermissions: [PERMISSIONS.REPRESENTATIVE_PROJECTS_READ],
-    actions: viewAction([PERMISSIONS.REPRESENTATIVE_PROJECTS_READ]),
+    capabilities: viewAction([PERMISSIONS.REPRESENTATIVE_PROJECTS_READ]),
   },
   {
     key: "admin",
@@ -165,7 +185,7 @@ const projectResponsibilityDefinitions = [
     order: 80,
     projectViews: ["admin"],
     readPermissions: [PERMISSIONS.ADMIN_SYSTEM_MANAGE],
-    actions: viewAction([PERMISSIONS.ADMIN_SYSTEM_MANAGE]),
+    capabilities: viewAction([PERMISSIONS.ADMIN_SYSTEM_MANAGE]),
   },
 ] as const satisfies readonly ProjectResponsibilityDefinition[];
 

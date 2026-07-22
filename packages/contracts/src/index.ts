@@ -12,10 +12,13 @@ export type {
 export {
   PROJECT_RESPONSIBILITY_BY_KEY,
   PROJECT_RESPONSIBILITY_REGISTRY,
+  PROJECT_CAPABILITY_KEYS,
+  type ProjectCapabilityKey,
   type ProjectResponsibilityColor,
   type ProjectResponsibilityDefinition,
   type ProjectResponsibilityIcon,
   type ProjectResponsibilityKey,
+  type ProjectResponsibilityContextContract,
 } from "./projectResponsibility.js";
 export type { UploadResponseContract } from "./upload.js";
 export type { UserContract, UserFormPayloadContract, UserStatus } from "./user.js";

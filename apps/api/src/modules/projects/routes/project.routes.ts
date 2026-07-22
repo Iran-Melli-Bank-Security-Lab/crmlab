@@ -5,7 +5,10 @@ import {
   requireAnyPermission,
   requirePermission,
 } from "@/middlewares/permission.middleware";
-import { requireProjectAccess } from "@/middlewares/projectAccess.middleware";
+import {
+  requireProjectAccess,
+  requireProjectCapability,
+} from "@/middlewares/projectAccess.middleware";
 import { PERMISSIONS } from "@/constants/permissions";
 import { validate } from "@/middlewares/validate.middleware";
 import {
@@ -67,15 +70,15 @@ router.get(
 );
 router.put(
   "/:id/security-scope",
-  requireProjectAccess("params.id"),
   requirePermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN),
+  requireProjectCapability("assign-pentesters", "params.id"),
   validate(projectSecurityScopeSchema),
   putProjectSecurityScope
 );
 router.get(
   "/:id/pentester-scopes",
-  requireProjectAccess("params.id"),
   requirePermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN),
+  requireProjectCapability("assign-pentesters", "params.id"),
   getProjectPentesterScopes
 );
 router.get(
@@ -93,20 +96,20 @@ router.get(
 );
 router.get(
   ROUTES.PROJECTS.ELIGIBLE_ASSIGNEES,
-  requireProjectAccess("params.id"),
   requireAnyPermission(
     PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
     PERMISSIONS.QUALITY_PROJECTS_ASSIGN
   ),
+  requireProjectCapability("assign-project-members", "params.id"),
   getEligibleProjectAssignees
 );
 router.post(
   ROUTES.PROJECTS.ASSIGN_USERS,
-  requireProjectAccess("params.id"),
   requireAnyPermission(
     PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
     PERMISSIONS.QUALITY_PROJECTS_ASSIGN
   ),
+  requireProjectCapability("assign-project-members", "params.id"),
   validate(assignUsersSchema),
   assignUsersToProject
 );

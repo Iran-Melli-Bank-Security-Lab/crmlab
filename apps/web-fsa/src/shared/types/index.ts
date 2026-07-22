@@ -9,6 +9,7 @@ import type {
   UserStatus as ContractUserStatus,
   ProjectRowActionContract,
   ProjectResponsibilityKey,
+  ProjectResponsibilityContextContract,
 } from "@role-dashboard/contracts";
 import type { ProjectPlatform as ApiProjectPlatform } from "@/shared/types/api/projects";
 import type {
@@ -89,6 +90,7 @@ export type Project = {
   lastActivity: string;
   allowedActions?: ProjectRowActionContract[];
   myResponsibilities?: ProjectResponsibilityKey[];
+  responsibilityContext?: ProjectResponsibilityContextContract;
 };
 
 export type ProjectAssignment = Project & {

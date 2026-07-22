@@ -2,16 +2,19 @@
 
 This repository is an enterprise monorepo.
 
+Follow the root `AGENTS.md` index-first navigation workflow. Read the relevant
+domain in `PROJECT_INDEX.md` (or `.codex/project-index.json`) before broad
+repository searches, and regenerate the index after structural changes.
+
 ## Main Locations
 
 ```txt
 apps/web-fsa              Feature-Sliced React frontend
+apps/api                  Express/Mongoose/Socket.IO backend
 packages/authz            shared roles and permissions
 packages/contracts        shared API contracts
 docs                      architecture notes
 ```
-
-`apps/api` is the planned backend location.
 
 ## Commands
 

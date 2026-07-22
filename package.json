@@ -26,6 +26,8 @@
     "seed:api": "npm --workspace enterprise-dashboard-backend run seed",
     "seed:security-standards": "npm --workspace enterprise-dashboard-backend run seed:security-standards",
     "seed:security-standards:wstg": "npm --workspace enterprise-dashboard-backend run seed:security-standards:wstg",
+    "index:project": "node scripts/generate-project-index.mjs",
+    "index:project:check": "node scripts/generate-project-index.mjs --check",
     "msw:init": "msw init apps/web-fsa/public/ --save"
   },
   "dependencies": {},

@@ -38,6 +38,7 @@ test("legacy status and category fields map to the canonical contract", () => {
   assert.equal(isNotificationRead({ isRead: false, seen: true }), true);
   assert.equal(isNotificationRead({ isRead: false, seen: false, status: "sent" }), false);
   assert.equal(normalizeNotificationType("alert", "report"), "project.report_submitted");
+  assert.equal(normalizeNotificationType("project_assigned"), "project.assigned");
 
   const payload = serializeCompatibleNotification({
     _id: { toString: () => "legacy-report", getTimestamp: () => new Date("2025-01-01T00:00:00Z") },

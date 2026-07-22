@@ -107,6 +107,12 @@ if (
 const uploadDir = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.join(os.homedir(), "crmlab-uploads");
+const projectRoot = process.env.PROJECT_ROOT
+  ? path.resolve(process.env.PROJECT_ROOT)
+  : path.resolve(__dirname, "../../../..");
+const pocUploadDir = process.env.POC_UPLOAD_DIR
+  ? path.resolve(process.env.POC_UPLOAD_DIR)
+  : path.join(projectRoot, "upload");
 
 export const env = {
   nodeEnv,
@@ -133,6 +139,8 @@ export const env = {
   cookieSameSite: cookieSameSite as "lax" | "strict" | "none",
   trustProxy,
   uploadDir,
+  projectRoot,
+  pocUploadDir,
 };
 
 export const isProduction = env.nodeEnv === "production";

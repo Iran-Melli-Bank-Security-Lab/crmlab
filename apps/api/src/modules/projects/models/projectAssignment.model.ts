@@ -7,6 +7,33 @@ import {
 import { SECURITY_SCOPE_MODES } from "../constants/securityScope";
 import { LEGACY_COLLECTIONS } from "@/constants/legacyCollections";
 
+export const PROJECT_ASSIGNMENT_IDENTITY_INDEX = {
+  name: "projectId_1_userId_1_version_1_assignmentRole_1",
+  key: { projectId: 1, userId: 1, version: 1, assignmentRole: 1 },
+  options: {
+    unique: true,
+    partialFilterExpression: {
+      projectId: { $exists: true },
+      userId: { $exists: true },
+      version: { $type: "string" },
+      assignmentRole: { $type: "string" },
+    },
+  },
+} as const;
+
+export const LEGACY_PENTESTER_IDENTITY_INDEX = {
+  name: "project_1_pentester_1_version_1",
+  key: { project: 1, pentester: 1, version: 1 },
+  options: {
+    unique: true,
+    partialFilterExpression: {
+      project: { $exists: true },
+      pentester: { $exists: true },
+      version: { $type: "string" },
+    },
+  },
+} as const;
+
 const securityScopeSchema = new Schema(
   {
     standardKey: { type: String, required: true, trim: true, lowercase: true },
@@ -108,26 +135,17 @@ projectAssignmentSchema.pre("validate", function () {
 });
 
 projectAssignmentSchema.index(
-  { projectId: 1, userId: 1, version: 1, assignmentRole: 1 },
+  PROJECT_ASSIGNMENT_IDENTITY_INDEX.key,
   {
-    unique: true,
-    partialFilterExpression: {
-      projectId: { $exists: true },
-      userId: { $exists: true },
-      version: { $type: "string" },
-      assignmentRole: { $type: "string" },
-    },
+    name: PROJECT_ASSIGNMENT_IDENTITY_INDEX.name,
+    ...PROJECT_ASSIGNMENT_IDENTITY_INDEX.options,
   }
 );
 projectAssignmentSchema.index(
-  { project: 1, pentester: 1, version: 1 },
+  LEGACY_PENTESTER_IDENTITY_INDEX.key,
   {
-    unique: true,
-    partialFilterExpression: {
-      project: { $exists: true },
-      pentester: { $exists: true },
-      version: { $type: "string" },
-    },
+    name: LEGACY_PENTESTER_IDENTITY_INDEX.name,
+    ...LEGACY_PENTESTER_IDENTITY_INDEX.options,
   }
 );
 projectAssignmentSchema.index({ userId: 1, status: 1, updatedAt: -1 });

@@ -13,6 +13,7 @@ import {
   sanitizeStoredProjectTableSettings,
   validateProjectTableSettings,
 } from "@/modules/settings/services/projectTableSetting.service";
+import { getProjectTableColumnDefinitions } from "@/modules/settings/models/projectTableColumnRegistry.model";
 import { canAccessProject } from "@/middlewares/projectAccess.middleware";
 import { ROLES } from "@/constants/roles";
 
@@ -215,6 +216,36 @@ test("manipulated and malformed settings are rejected while mandatory columns re
     visibleColumns: [], columnOrder: [], aliases: {},
   }, [PERMISSIONS.QA_PROJECTS_READ]);
   assert.ok(valid.visibleColumns.includes("summary"));
+});
+
+test("Project is the first configurable mandatory column in every project table", () => {
+  const userColumns = getProjectTableColumnDefinitions(
+    "user-projects",
+    [PERMISSIONS.QA_PROJECTS_READ]
+  );
+  const adminColumns = getProjectTableColumnDefinitions(
+    "admin",
+    [PERMISSIONS.ADMIN_SYSTEM_MANAGE]
+  );
+
+  for (const columns of [userColumns, adminColumns]) {
+    assert.equal(columns[0]?.columnKey, "summary");
+    assert.equal(columns[0]?.defaultLabel, "Project");
+    assert.equal(columns[0]?.isConfigurable, true);
+    assert.equal(columns[0]?.isDefaultVisible, true);
+    assert.equal(columns[0]?.isMandatory, true);
+  }
+});
+
+test("legacy project table settings insert a missing Project column first", () => {
+  const sanitized = sanitizeStoredProjectTableSettings("user-projects", {
+    visibleColumns: ["assignmentStatus"],
+    columnOrder: ["assignmentStatus", "priority"],
+    aliases: {},
+  }, [PERMISSIONS.QA_PROJECTS_READ]);
+
+  assert.equal(sanitized.visibleColumns[0], "summary");
+  assert.equal(sanitized.columnOrder[0], "summary");
 });
 
 test("admin view authorization remains separate", () => {

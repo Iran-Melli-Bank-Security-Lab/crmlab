@@ -434,7 +434,9 @@ export default function Settings() {
                               alignItems="center"
                               gap={2}
                               checked={enabledKeys.includes(key)}
+                              disabled={column.isMandatory}
                               onCheckedChange={(details) => {
+                                if (column.isMandatory) return;
                                 const nextVisibleColumns =
                                   details.checked === true
                                     ? [...enabledKeys, key]

@@ -62,6 +62,7 @@ export function normalizeNotificationType(value: unknown, category?: unknown): N
   const normalized = String(value || "").trim();
   const legacyAliases: Record<string, NotificationType> = {
     projectAssigned: NOTIFICATION_TYPES.PROJECT_ASSIGNED,
+    project_assigned: NOTIFICATION_TYPES.PROJECT_ASSIGNED,
     taskAssigned: NOTIFICATION_TYPES.TASK_ASSIGNED,
     findingCreated: NOTIFICATION_TYPES.VULNERABILITY_CREATED,
     reportSubmitted: NOTIFICATION_TYPES.PROJECT_REPORT_SUBMITTED,

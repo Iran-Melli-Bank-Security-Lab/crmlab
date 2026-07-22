@@ -1,4 +1,5 @@
 import mongoose, { type QueryFilter } from "mongoose";
+import { createHash } from "node:crypto";
 import type { NotificationDocument } from "../models/notification.model";
 import { NotificationModel } from "../models/notification.model";
 import { type NotificationPriority, type NotificationType } from "@/constants/notifications";
@@ -126,6 +127,23 @@ async function emitCreatedNotifications(userId: string, payloads: NotificationPa
   emitUnreadNotificationCount(userId, await getUnreadNotificationCount(userId));
 }
 
+function isDuplicateKeyError(error: unknown) {
+  return Boolean(
+    error && typeof error === "object" && "code" in error &&
+    (error as { code?: number }).code === 11000
+  );
+}
+
+function deterministicNotificationId(userId: string, dedupeKey: string) {
+  const hex = createHash("sha256")
+    .update(userId)
+    .update("\0")
+    .update(dedupeKey)
+    .digest("hex")
+    .slice(0, 24);
+  return new mongoose.Types.ObjectId(hex);
+}
+
 export async function createNotification(input: CreateNotificationInput) {
   const [payload] = await createNotifications([input]);
   return payload;
@@ -149,26 +167,64 @@ export async function createNotifications(
     input,
   ])).values());
 
-  const idempotentInputs = uniqueInputs.filter((input) => input.dedupeKey);
-  const existing = idempotentInputs.length
-    ? await NotificationModel.find({
-        $or: idempotentInputs.map((input) => ({ userId: input.userId, dedupeKey: input.dedupeKey })),
-      })
-    : [];
-  const existingKeys = new Set(existing.map((document) => `${document.userId}:${document.dedupeKey}`));
-  const newInputs = uniqueInputs.filter((input) => !input.dedupeKey || !existingKeys.has(`${input.userId}:${input.dedupeKey}`));
-
-  const documents = newInputs.length
+  const idempotentInputs = uniqueInputs.filter(
+    (input): input is typeof input & { dedupeKey: string } => Boolean(input.dedupeKey)
+  );
+  const nonIdempotentInputs = uniqueInputs.filter((input) => !input.dedupeKey);
+  const idempotentResults = await Promise.all(idempotentInputs.map(async (input) => {
+    const values = {
+      ...input,
+      _id: deterministicNotificationId(input.userId, input.dedupeKey),
+      isRead: false,
+      seen: false,
+      status: "sent",
+    };
+    try {
+      return { document: await NotificationModel.create(values), created: true };
+    } catch (error) {
+      if (!isDuplicateKeyError(error)) throw error;
+      const document = await NotificationModel.findOne({
+        userId: input.userId,
+        dedupeKey: input.dedupeKey,
+      });
+      if (!document) throw error;
+      return { document, created: false };
+    }
+  }));
+  const nonIdempotentDocuments = nonIdempotentInputs.length
     ? await NotificationModel.insertMany(
-        newInputs.map((input) => ({ ...input, userId: input.userId, isRead: false, seen: false, status: "sent" })),
+        nonIdempotentInputs.map((input) => ({
+          ...input,
+          userId: input.userId,
+          isRead: false,
+          seen: false,
+          status: "sent",
+        })),
         { ordered: true }
       )
     : [];
-  const payloads = documents.map(serializeNotification);
+  const documents = [
+    ...idempotentResults.map((result) => result.document),
+    ...nonIdempotentDocuments,
+  ];
+  const createdDocuments = [
+    ...idempotentResults.flatMap((result) => result.created ? [result.document] : []),
+    ...nonIdempotentDocuments,
+  ];
+  const payloads = createdDocuments.map(serializeNotification);
   const byUser = new Map<string, NotificationPayload[]>();
   payloads.forEach((payload) => byUser.set(payload.userId, [...(byUser.get(payload.userId) || []), payload]));
-  await Promise.all(Array.from(byUser, ([userId, userPayloads]) => emitCreatedNotifications(userId, userPayloads)));
-  return [...existing.map(serializeNotification), ...payloads];
+  const deliveryResults = await Promise.allSettled(
+    Array.from(byUser, ([userId, userPayloads]) =>
+      emitCreatedNotifications(userId, userPayloads)
+    )
+  );
+  deliveryResults.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error("Durable notifications were created, but realtime delivery failed", result.reason);
+    }
+  });
+  return documents.map(serializeNotification);
 }
 
 export async function markNotificationReadForUser(userId: string, id: string) {

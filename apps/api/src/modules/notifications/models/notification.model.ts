@@ -1,6 +1,18 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 import { NOTIFICATION_PRIORITIES } from "@/constants/notifications";
 
+export const NOTIFICATION_DEDUPE_INDEX = {
+  name: "userId_1_dedupeKey_1",
+  key: { userId: 1, dedupeKey: 1 },
+  options: {
+    unique: true,
+    partialFilterExpression: {
+      userId: { $exists: true },
+      dedupeKey: { $type: "string" },
+    },
+  },
+} as const;
+
 const notificationSchema = new Schema(
   {
     // userId is canonical. The aliases remain declared so legacy records can be
@@ -42,7 +54,10 @@ const notificationSchema = new Schema(
 notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, projectId: 1, createdAt: -1 });
 notificationSchema.index({ type: 1, createdAt: -1 });
-notificationSchema.index({ userId: 1, dedupeKey: 1 }, { unique: true, sparse: true });
+notificationSchema.index(NOTIFICATION_DEDUPE_INDEX.key, {
+  name: NOTIFICATION_DEDUPE_INDEX.name,
+  ...NOTIFICATION_DEDUPE_INDEX.options,
+});
 
 export type NotificationDocument = InferSchemaType<typeof notificationSchema> & { _id: mongoose.Types.ObjectId };
 export const NotificationModel = mongoose.model<NotificationDocument>("Notification", notificationSchema);

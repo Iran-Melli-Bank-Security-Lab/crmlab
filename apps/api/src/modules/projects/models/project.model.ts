@@ -2,6 +2,19 @@ import mongoose, { Schema, type InferSchemaType } from "mongoose";
 import { PROJECT_STATUS, PROJECT_TYPE_VALUES, type ProjectType } from "@/constants/projects";
 import { LEGACY_COLLECTIONS } from "@/constants/legacyCollections";
 
+export const PROJECT_IDENTITY_INDEX = {
+  name: "projectName_1_version_1_letterNumber_1_type_1",
+  key: { projectName: 1, version: 1, letterNumber: 1, type: 1 },
+  options: {
+    unique: true,
+    partialFilterExpression: {
+      projectName: { $type: "string" },
+      version: { $type: "string" },
+      letterNumber: { $type: "string" },
+    },
+  },
+} as const;
+
 const projectIdentifierSchema = new Schema(
   {
     developer: { type: String, trim: true },
@@ -116,14 +129,10 @@ projectSchema.index({ projectName: 1 });
 projectSchema.index({ projectGroupId: 1, createdAt: -1 });
 projectSchema.index({ canonicalName: 1, createdAt: -1 });
 projectSchema.index(
-  { projectName: 1, version: 1, letterNumber: 1, type: 1 },
+  PROJECT_IDENTITY_INDEX.key,
   {
-    unique: true,
-    partialFilterExpression: {
-      projectName: { $type: "string" },
-      version: { $type: "string" },
-      letterNumber: { $type: "string" },
-    },
+    name: PROJECT_IDENTITY_INDEX.name,
+    ...PROJECT_IDENTITY_INDEX.options,
   }
 );
 projectSchema.index({ ownerId: 1, status: 1, createdAt: -1 });

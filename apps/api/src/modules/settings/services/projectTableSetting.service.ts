@@ -107,10 +107,17 @@ function normalizeProjectTableSettings(
 
   const visible = readColumns(input.visibleColumns, "visibleColumns");
   const order = readColumns(input.columnOrder, "columnOrder");
+  const missingLeadingColumns = definitions
+    .filter((column) => column.defaultOrder === 0 && !order.includes(column.columnKey))
+    .map((column) => column.columnKey);
   return {
     visibleColumns: [...mandatoryColumns, ...visible.filter((key) => !mandatoryColumns.includes(key))],
-    columnOrder: [...order, ...definitions.map((column) => column.columnKey)
-      .filter((key) => !order.includes(key))],
+    columnOrder: [
+      ...missingLeadingColumns,
+      ...order,
+      ...definitions.map((column) => column.columnKey)
+        .filter((key) => !order.includes(key) && !missingLeadingColumns.includes(key)),
+    ],
     aliases,
   };
 }

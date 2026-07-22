@@ -83,7 +83,7 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
   }),
   summary: column({
     defaultLabel: "Project", faLabel: "پروژه", dataType: "text",
-    minWidth: "260px", maxWidth: "360px", isConfigurable: false,
+    minWidth: "260px", maxWidth: "360px",
     isMandatory: true, filterable: true, sourceFields: ["projectName"],
     requiredPermissions: NON_ADMIN_PROJECT_READ_PERMISSIONS,
   }),
@@ -237,9 +237,13 @@ const ADMIN_COLUMNS = [
   "status", "owner", "assignee", "testExpiresAt", "createdAt",
 ] as const;
 
-const USER_COLUMNS = Object.keys(PROJECT_TABLE_COLUMN_CATALOG).filter(
-  (key) => !["title", "description", "deadline", "updatedAt"].includes(key)
-);
+const USER_COLUMNS = [
+  "summary",
+  ...Object.keys(PROJECT_TABLE_COLUMN_CATALOG).filter(
+    (key) => key !== "summary" &&
+      !["title", "description", "deadline", "updatedAt"].includes(key)
+  ),
+];
 
 export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   summary: ["security", "pentest", "devops", "quality", "qa", "representative"],
@@ -316,7 +320,7 @@ export function getProjectTableColumnDefinitions(
         columnKey,
         ...publicDefinition,
         ...(context !== "user-projects"
-          ? { isConfigurable: true, isMandatory: false, isSensitive: false }
+          ? { isConfigurable: true, isSensitive: false }
           : {}),
         tableContexts: [context],
         defaultOrder,

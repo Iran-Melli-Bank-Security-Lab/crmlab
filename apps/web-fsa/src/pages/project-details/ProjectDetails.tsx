@@ -1,4 +1,5 @@
 import { Badge, Box, Heading, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
 import { useGetProjectQuery } from "@/entities/project/api/projectsApi";
@@ -45,12 +46,23 @@ const disciplineLabels: Record<ProjectDiscipline, string> = {
   platform: "Platform",
 };
 
+const platformLabels: Record<string, string> = {
+  web: "Web",
+  mobile: "Mobile",
+  desktop: "Desktop",
+};
+
+function formatProjectPlatform(platform?: string) {
+  if (!platform) return "No platform";
+  return platformLabels[platform.toLowerCase()] || platform;
+}
+
 function DetailPanel({
   title,
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <Box
@@ -70,7 +82,7 @@ function DetailPanel({
   );
 }
 
-function DetailItem({ label, value }: { label: string; value?: React.ReactNode }) {
+function DetailItem({ label, value }: { label: string; value?: ReactNode }) {
   return (
     <Box minW={0}>
       <Text color="var(--apple-muted)" fontSize="xs" fontWeight="800" textTransform="uppercase">
@@ -171,7 +183,7 @@ export default function ProjectDetails() {
             {project.name}
           </Heading>
           <Text color="var(--apple-muted)" mt={2} fontSize="md">
-            {project.client} - {project.platform || "No platform"} - Due {formatDate(project.dueDate)}
+            {project.client} - {formatProjectPlatform(project.platform)} - Due {formatDate(project.dueDate)}
           </Text>
         </Box>
 
@@ -210,6 +222,7 @@ export default function ProjectDetails() {
             <DetailItem label="Group" value={formatCompactGroupId(project.projectGroupId)} />
             <DetailItem label="Canonical name" value={project.canonicalName} />
             <DetailItem label="Version" value={project.version} />
+            <DetailItem label="Platform" value={formatProjectPlatform(project.platform)} />
             <DetailItem label="Letter number" value={project.letterNumber} />
             <DetailItem label="Created" value={formatDate(project.createdAt)} />
             <DetailItem label="Test expires" value={formatDate(project.testExpiresAt)} />

@@ -260,8 +260,8 @@ export default function ProjectTableBase({
     key: ProjectTableColumn["key"];
     direction: SortDirection;
   }>({
-    key: "dueDate",
-    direction: "asc",
+    key: "createdAt",
+    direction: "desc",
   });
 
   const filteredProjects = useMemo(() => {

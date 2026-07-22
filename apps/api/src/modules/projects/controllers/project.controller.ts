@@ -2,7 +2,6 @@ import type { RequestHandler } from "express";
 import mongoose, { type QueryFilter } from "mongoose";
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/constants/audit";
 import { HTTP_STATUS } from "@/constants/http";
-import { NOTIFICATION_PRIORITIES, NOTIFICATION_TYPES } from "@/constants/notifications";
 import { PERMISSIONS } from "@/constants/permissions";
 import {
   PROJECT_ASSIGNMENT_ROLES,
@@ -11,14 +10,12 @@ import {
   type ProjectType,
 } from "@/constants/projects";
 import { ROLES } from "@/constants/roles";
-import { ROUTES } from "@/constants/routes";
 import type { Role } from "@/constants/roles";
 import { ProjectModel, type ProjectDocument } from "../models/project.model";
 import { ProjectAssignmentModel } from "../models/projectAssignment.model";
 import { UserModel } from "@/modules/users/models/user.model";
 import { toAuthUserContext } from "@/modules/users/services/userAuth.service";
 import { writeAuditLog } from "@/modules/audit/services/audit.service";
-import { createNotifications } from "@/modules/notifications/services/notification.service";
 import { addConnectedUsersToProject, emitToProject } from "@/realtime/socket.delivery";
 import { SOCKET_EVENTS } from "@/constants/socket";
 import { AppError } from "@/utils/AppError";
@@ -47,6 +44,7 @@ import {
   resolvePentesterSecurityScope,
   saveProjectSecurityScope,
 } from "../services/projectSecurityScope.service";
+import { notifyProjectAssignments } from "../services/projectAssignmentNotification.service";
 
 type ProjectRecipientField =
   | "projectManager"
@@ -152,33 +150,6 @@ async function validateProjectRecipients(
   }
 }
 
-function buildProjectRecipientNotifications(
-  recipients: Partial<Record<ProjectRecipientField, string>>,
-  projectId: string,
-  projectName: string
-) {
-  const rolesByUserId = new Map<string, string[]>();
-
-  for (const [field, userId] of Object.entries(recipients)) {
-    if (!userId) continue;
-
-    const roles = rolesByUserId.get(userId) || [];
-    roles.push(recipientRules[field as ProjectRecipientField].label);
-    rolesByUserId.set(userId, roles);
-  }
-
-  return Array.from(rolesByUserId, ([userId, roles]) => ({
-    userId,
-    projectId,
-    type: NOTIFICATION_TYPES.PROJECT_ASSIGNED,
-    title: "New project assignment",
-    message: `You were assigned to ${projectName} as ${roles.join(" and ")}.`,
-    priority: NOTIFICATION_PRIORITIES.HIGH,
-    actionUrl: ROUTES.FRONTEND.PROJECT_DETAILS(projectId),
-    entityId: projectId,
-  }));
-}
-
 function buildInitialProjectAssignments({
   assignedById,
   projectId,
@@ -250,6 +221,56 @@ function isDuplicateKeyError(error: unknown): error is { code: number } {
       "code" in error &&
       (error as { code?: number }).code === 11000
   );
+}
+
+async function insertProject(values: Record<string, unknown>) {
+  try {
+    return await ProjectModel.create(values);
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      throw new AppError(
+        "A project with the same name, version, letter number, and type already exists",
+        HTTP_STATUS.CONFLICT
+      );
+    }
+    throw error;
+  }
+}
+
+async function rollbackProjectCreation(
+  projectId: string,
+  projectMemberIds: string[]
+) {
+  const results = await Promise.allSettled([
+    ProjectAssignmentModel.deleteMany({
+      $or: [{ projectId }, { project: projectId }],
+    }),
+    UserModel.updateMany(
+      { _id: { $in: projectMemberIds } },
+      { $pull: { projectIds: projectId } }
+    ),
+    ProjectModel.deleteOne({ _id: projectId }),
+  ]);
+  const rollbackErrors = results.flatMap((result) =>
+    result.status === "rejected" ? [result.reason] : []
+  );
+  if (rollbackErrors.length) {
+    console.error("Project creation rollback was incomplete", {
+      projectId,
+      errors: rollbackErrors,
+    });
+  }
+}
+
+async function runProjectPostCommitEffect(
+  label: string,
+  effect: () => Promise<unknown> | unknown
+) {
+  try {
+    await effect();
+  } catch (error) {
+    console.error(`Project created, but ${label} failed`, error);
+  }
 }
 
 async function upsertProjectAssignment({
@@ -327,6 +348,24 @@ function normalizeLegacyProject<T extends Record<string, unknown>>(project: T) {
     id: String(project._id),
   };
 }
+
+const PROJECT_DETAIL_CORE_FIELDS = [
+  "_id",
+  "projectName",
+  "projectGroupId",
+  "canonicalName",
+  "version",
+  "platform",
+  "type",
+  "projectType",
+  "status",
+  "expireDay",
+  "expireDayQuality",
+  "testExpiresAt",
+  "createdAt",
+  "created_date",
+  "updatedAt",
+] as const;
 
 function pickProjectFields(
   project: Record<string, unknown>,
@@ -565,7 +604,9 @@ export const getProjects: RequestHandler = async (req, res, next) => {
     }
     query = capabilities?.sort
       ? query.sort({ [capabilities.sort.field]: capabilities.sort.direction })
-      : query.sort({ created_date: -1, createdAt: -1 });
+      // ObjectId order is the reliable common creation order for both legacy
+      // documents (`created_date`) and canonical documents (`createdAt`).
+      : query.sort({ _id: -1 });
     if (capabilities?.page || capabilities?.pageSize) {
       const page = capabilities.page || 1;
       const pageSize = capabilities.pageSize || 20;
@@ -648,7 +689,12 @@ export const getProject: RequestHandler = async (req, res, next) => {
       : resolveProjectListQueryCapabilities({}, req.user!.permissions);
     let projectQuery = ProjectModel.findById(projectId);
     if (capabilities) {
-      projectQuery = projectQuery.select(capabilities.projectionFields.join(" "));
+      // Detail pages require a stable set of non-sensitive identity fields.
+      // Table-column visibility controls must not remove values such as
+      // platform or project type from an otherwise authorized project detail.
+      projectQuery = projectQuery.select(
+        [...new Set([...PROJECT_DETAIL_CORE_FIELDS, ...capabilities.projectionFields])].join(" ")
+      );
     }
     const project = await projectQuery.lean();
 
@@ -790,42 +836,73 @@ export const createProject: RequestHandler = async (req, res, next) => {
       )
     );
 
-    const project = await ProjectModel.create({
+    const project = await insertProject({
       ...projectData,
       ownerId: req.user!.id,
     });
     const projectId = project._id.toString();
+    try {
+      const initialAssignments = buildInitialProjectAssignments({
+        assignedById: req.user!.id,
+        projectId,
+        projectManagerId: projectData.projectManager,
+        qualityManagerId: projectData.qualityManager,
+        devopsManagerId: projectData.devops,
+        projectType: project.type,
+        version: project.version,
+      });
 
-    await UserModel.updateMany(
-      { _id: { $in: projectMemberIds } },
-      { $addToSet: { projectIds: projectId } }
-    );
+      if (initialAssignments.length) {
+        const createdAssignments = await ProjectAssignmentModel.insertMany(
+          initialAssignments,
+          { ordered: true }
+        );
+        project.userProject = createdAssignments.map((assignment) => assignment._id);
+        project.assignedUserIds = Array.from(
+          new Set(initialAssignments.map((assignment) => assignment.userId))
+        ).map((userId) => new mongoose.Types.ObjectId(userId));
+        await project.save();
+      }
 
-    const initialAssignments = buildInitialProjectAssignments({
-      assignedById: req.user!.id,
-      projectId,
-      projectManagerId: projectData.projectManager,
-      qualityManagerId: projectData.qualityManager,
-      devopsManagerId: projectData.devops,
-      projectType: project.type,
-      version: project.version,
-    });
-
-    if (initialAssignments.length) {
-      const createdAssignments = await ProjectAssignmentModel.insertMany(
-        initialAssignments,
-        { ordered: false }
+      await UserModel.updateMany(
+        { _id: { $in: projectMemberIds } },
+        { $addToSet: { projectIds: projectId } }
       );
-      project.userProject = createdAssignments.map((assignment) => assignment._id);
-      await project.save();
+    } catch (error) {
+      await rollbackProjectCreation(projectId, projectMemberIds);
+      if (isDuplicateKeyError(error)) {
+        throw new AppError(
+          "An initial project assignment conflicts with an existing assignment",
+          HTTP_STATUS.CONFLICT
+        );
+      }
+      throw error;
     }
 
-    await createNotifications(
-      buildProjectRecipientNotifications(recipients, projectId, project.projectName)
+    await runProjectPostCommitEffect("assignment notification delivery", async () => {
+      const assignments = await ProjectAssignmentModel.find({ projectId })
+        .select("_id userId pentester assignmentRole")
+        .lean();
+      await notifyProjectAssignments({
+        projectId,
+        projectName: project.projectName,
+        assignedById: req.user!.id,
+        assignments: assignments.flatMap((assignment) => {
+          const userId = assignment.userId || assignment.pentester;
+          return userId ? [{
+            assignmentId: String(assignment._id),
+            userId: String(userId),
+            assignmentRole: assignment.assignmentRole,
+          }] : [];
+        }),
+      });
+    });
+    await runProjectPostCommitEffect("realtime room synchronization", () =>
+      addConnectedUsersToProject(projectMemberIds, projectId)
     );
-
-    await addConnectedUsersToProject(projectMemberIds, projectId);
-    emitToProject(projectId, SOCKET_EVENTS.PROJECT_CREATED, toProjectEvent(project));
+    await runProjectPostCommitEffect("project-created realtime delivery", () =>
+      emitToProject(projectId, SOCKET_EVENTS.PROJECT_CREATED, toProjectEvent(project))
+    );
 
     await writeAuditLog({
       req,
@@ -1073,8 +1150,8 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       });
     }
 
-    if (requestedUserIds.length) {
-      await Promise.all(
+    const requestedAssignments = requestedUserIds.length
+      ? await Promise.all(
         requestedUserIds.map((userId) =>
           upsertProjectAssignment({
             projectId,
@@ -1099,8 +1176,8 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
             },
           })
         )
-      );
-    }
+      )
+      : [];
 
     const remainingAssignments = await ProjectAssignmentModel.find({ projectId }).select(
       "_id userId"
@@ -1140,20 +1217,24 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       );
     }
 
-    if (addedUserIds.length) {
-      await createNotifications(
-        addedUserIds.map((userId) => ({
-          userId,
-          projectId,
-          type: NOTIFICATION_TYPES.PROJECT_ASSIGNED,
-          title: "You were assigned to a project",
-          message: `You have been assigned to ${project?.projectName || "a project"}.`,
-          priority: NOTIFICATION_PRIORITIES.HIGH,
-          actionUrl: ROUTES.FRONTEND.PROJECT_DETAILS(projectId),
-          entityId: projectId,
-        }))
-      );
+    const addedUserIdSet = new Set(addedUserIds);
+    const addedAssignments = requestedAssignments.filter((assignment) =>
+      addedUserIdSet.has(String(assignment.userId || assignment.pentester))
+    );
+    if (addedAssignments.length) {
+      await notifyProjectAssignments({
+        projectId,
+        projectName: project?.projectName || existingProject.projectName,
+        assignedById: req.user!.id,
+        assignments: addedAssignments.map((assignment) => ({
+          assignmentId: String(assignment._id),
+          userId: String(assignment.userId || assignment.pentester),
+          assignmentRole: assignment.assignmentRole,
+        })),
+      });
+    }
 
+    if (addedUserIds.length) {
       await addConnectedUsersToProject(addedUserIds, projectId);
     }
 

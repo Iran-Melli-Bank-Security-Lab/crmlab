@@ -27,7 +27,8 @@ Fields:
 
 Indexes:
 
-- `projectName + version` unique when both legacy fields exist.
+- `projectName + version + letterNumber + type` is unique when the legacy
+  identity fields exist. Startup replaces the obsolete two-field unique index.
 - owner/status, type/status, manager/status, legacy assigned users, letter number, and identifier doc id.
 
 ### `projectAssignment.model.ts`

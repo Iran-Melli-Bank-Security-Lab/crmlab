@@ -34,8 +34,12 @@ Important values:
 - `refreshTokenTtl`: refresh token lifetime.
 - `cookieDomain`: optional cookie domain.
 - `uploadDir`: absolute upload directory path. It uses `UPLOAD_DIR` when set;
-  otherwise it resolves to `crmlab-uploads` in the Node.js process user's home
-  directory.
+  otherwise it resolves to the `crmlab-uploads` directory in the Node.js process user's home.
+- `projectRoot`: absolute project root, inferred from the API module location or
+  overridden with `PROJECT_ROOT`.
+- `pocUploadDir`: absolute POC root from `POC_UPLOAD_DIR`, defaulting to the
+  existing `<projectRoot>/upload` directory. Files retain the compatible
+  `<projectId>/<bug title>/<filename>` layout.
 
 Why this file matters:
 

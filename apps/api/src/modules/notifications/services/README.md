@@ -1,5 +1,9 @@
 # Notification Services
 
+Notification creation is durable and idempotent when a `dedupeKey` is supplied.
+Realtime delivery happens only after persistence and does not invalidate a
+successfully stored notification if a socket delivery fails.
+
 This folder contains notification business logic.
 
 ## Files

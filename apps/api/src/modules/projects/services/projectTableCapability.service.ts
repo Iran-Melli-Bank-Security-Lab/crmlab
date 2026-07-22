@@ -1,3 +1,7 @@
+import {
+  PROJECT_RESPONSIBILITY_REGISTRY,
+  type ProjectResponsibilityKey,
+} from "@role-dashboard/contracts";
 import { HTTP_STATUS } from "@/constants/http";
 import { PERMISSIONS, type Permission } from "@/constants/permissions";
 import { PROJECT_ASSIGNMENT_ROLES, PROJECT_TYPES } from "@/constants/projects";
@@ -8,6 +12,7 @@ import {
   getProjectColumnSourceFields,
   getProjectTableColumnDefinitions,
 } from "@/modules/settings/models/projectTableColumnRegistry.model";
+import { resolveResponsibilityRowActions } from "./projectResponsibility.service";
 
 export const NON_ADMIN_PROJECT_VIEWS = [
   "security", "pentest", "devops", "quality", "qa", "representative",
@@ -16,24 +21,14 @@ export type NonAdminProjectView = typeof NON_ADMIN_PROJECT_VIEWS[number];
 export type ProjectListMode = "admin" | "unified" | NonAdminProjectView;
 export type ProjectRowAction = "view-project" | "open-pentest-workspace" | "assign-pentesters";
 
-export const PROJECT_VIEW_PERMISSIONS: Record<NonAdminProjectView, Permission> = {
-  security: PERMISSIONS.SECURITY_PROJECTS_READ,
-  pentest: PERMISSIONS.PENTEST_PROJECTS_READ,
-  devops: PERMISSIONS.DEVOPS_PROJECTS_READ,
-  quality: PERMISSIONS.QUALITY_PROJECTS_READ,
-  qa: PERMISSIONS.QA_PROJECTS_READ,
-  representative: PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
-};
-
-const ACTION_PERMISSIONS: Record<ProjectRowAction, Permission[]> = {
-  "view-project": Object.values(PROJECT_VIEW_PERMISSIONS),
-  "open-pentest-workspace": [PERMISSIONS.PENTEST_PROJECTS_READ],
-  "assign-pentesters": [PERMISSIONS.SECURITY_PROJECTS_ASSIGN],
-};
-
-function uniquePermissions(permissions: readonly Permission[]) {
-  return [...new Set(permissions)];
-}
+export const PROJECT_VIEW_PERMISSIONS = Object.fromEntries(
+  NON_ADMIN_PROJECT_VIEWS.map((view) => [
+    view,
+    [...new Set(PROJECT_RESPONSIBILITY_REGISTRY
+      .filter((definition) => definition.projectViews.includes(view))
+      .flatMap((definition) => definition.readPermissions))],
+  ])
+) as Record<NonAdminProjectView, Permission[]>;
 
 export function requireProjectListView(
   value: unknown,
@@ -47,8 +42,8 @@ export function requireProjectListView(
     return view;
   }
   if (!view) {
-    if (!Object.values(PROJECT_VIEW_PERMISSIONS).some((permission) =>
-      permissions.includes(permission)
+    if (!Object.values(PROJECT_VIEW_PERMISSIONS).some((requiredPermissions) =>
+      requiredPermissions.some((permission) => permissions.includes(permission))
     )) {
       throw new AppError("Forbidden project list", HTTP_STATUS.FORBIDDEN);
     }
@@ -58,7 +53,9 @@ export function requireProjectListView(
     throw new AppError("Unknown project view", HTTP_STATUS.BAD_REQUEST);
   }
   const typedView = view as NonAdminProjectView;
-  if (!permissions.includes(PROJECT_VIEW_PERMISSIONS[typedView])) {
+  if (!PROJECT_VIEW_PERMISSIONS[typedView].some((permission) =>
+    permissions.includes(permission)
+  )) {
     throw new AppError("Forbidden project view", HTTP_STATUS.FORBIDDEN);
   }
   return typedView;
@@ -66,16 +63,19 @@ export function requireProjectListView(
 
 export function resolveProjectRowActions(
   permissions: readonly Permission[],
+  responsibilities: readonly ProjectResponsibilityKey[],
   view?: NonAdminProjectView
 ): ProjectRowAction[] {
-  const effective = uniquePermissions(permissions);
-  return (Object.keys(ACTION_PERMISSIONS) as ProjectRowAction[]).filter((action) =>
-    (!view ||
+  return [...resolveResponsibilityRowActions(responsibilities, permissions)]
+    .filter((action): action is ProjectRowAction =>
+      (action === "view-project" ||
+        action === "open-pentest-workspace" ||
+        action === "assign-pentesters") &&
+      (!view ||
       action === "view-project" ||
       (action === "open-pentest-workspace" && view === "pentest") ||
-      (action === "assign-pentesters" && view === "security")) &&
-    ACTION_PERMISSIONS[action].some((permission) => effective.includes(permission))
-  );
+      (action === "assign-pentesters" && view === "security"))
+    );
 }
 
 export function assertProjectAssignmentActionAllowed(

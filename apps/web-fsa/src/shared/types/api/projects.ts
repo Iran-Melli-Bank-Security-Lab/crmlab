@@ -1,3 +1,8 @@
+import type {
+  ProjectResponsibilityKey,
+  ProjectRowActionContract,
+} from "@role-dashboard/contracts";
+
 export type ProjectType = "security" | "quality";
 export type ProjectPlatform = "web" | "mobile" | "desktop";
 export type CertificateAuthority = "bank" | "afta" | "standards";
@@ -69,5 +74,5 @@ export type ApiProjectResponse = {
   createdAt?: string;
   updatedAt?: string;
   allowedActions?: ProjectRowActionContract[];
+  myResponsibilities?: ProjectResponsibilityKey[];
 };
-import type { ProjectRowActionContract } from "@role-dashboard/contracts";

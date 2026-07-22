@@ -87,6 +87,11 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
     isMandatory: true, filterable: true, sourceFields: ["projectName"],
     requiredPermissions: NON_ADMIN_PROJECT_READ_PERMISSIONS,
   }),
+  myResponsibilities: column({
+    defaultLabel: "My Role", faLabel: "نقش من", dataType: "status",
+    minWidth: "190px", maxWidth: "300px", sortable: false,
+    sourceFields: [], requiredPermissions: NON_ADMIN_PROJECT_READ_PERMISSIONS,
+  }),
   assignmentStatus: column({
     defaultLabel: "Assignment", faLabel: "تخصیص", dataType: "status",
     minWidth: "150px", sourceFields: [],
@@ -247,6 +252,7 @@ const USER_COLUMNS = [
 
 export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   summary: ["security", "pentest", "devops", "quality", "qa", "representative"],
+  myResponsibilities: ["security", "pentest", "devops", "quality", "qa", "representative"],
   assignmentStatus: ["pentest", "qa"],
   priority: ["security", "pentest", "devops", "quality", "qa"],
   scope: ["pentest", "qa"],

@@ -157,8 +157,15 @@ test("row actions are a permission union and protected assignment actions reject
       PERMISSIONS.PENTEST_PROJECTS_READ,
       PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
       PERMISSIONS.SECURITY_PROJECTS_ASSIGN,
-    ]),
+    ], ["pentester", "security_manager"]),
     ["view-project", "open-pentest-workspace", "assign-pentesters"]
+  );
+  assert.deepEqual(
+    resolveProjectRowActions(
+      [PERMISSIONS.PENTEST_PROJECTS_READ, PERMISSIONS.DEVOPS_PROJECTS_READ],
+      ["devops"]
+    ),
+    ["view-project"]
   );
   assert.throws(() =>
     assertProjectAssignmentActionAllowed(
@@ -235,6 +242,9 @@ test("Project is the first configurable mandatory column in every project table"
     assert.equal(columns[0]?.isDefaultVisible, true);
     assert.equal(columns[0]?.isMandatory, true);
   }
+  assert.equal(userColumns[1]?.columnKey, "myResponsibilities");
+  assert.equal(userColumns[1]?.isConfigurable, true);
+  assert.equal(userColumns[1]?.isDefaultVisible, true);
 });
 
 test("legacy project table settings insert a missing Project column first", () => {

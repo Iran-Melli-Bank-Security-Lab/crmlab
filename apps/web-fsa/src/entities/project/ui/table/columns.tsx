@@ -8,6 +8,7 @@ import type {
 import type { TranslationKey } from "@/features/language/model";
 import { formatCompactGroupId } from "./formatters";
 import ProjectSummary from "./ProjectSummary";
+import ProjectResponsibilities from "./ProjectResponsibilities";
 import type { ProjectTableColumn } from "./types";
 
 const statusLabelKeys: Record<ProjectStatus, TranslationKey> = {
@@ -170,6 +171,16 @@ export const projectTableColumns = {
     sortable: true,
     render: (project) => <ProjectSummary project={project} />,
     sortValue: (project) => project.name,
+  },
+  myResponsibilities: {
+    key: "myResponsibilities",
+    label: "My Role",
+    labelKey: "projectTable.columns.myResponsibilities",
+    minW: "190px",
+    maxW: "300px",
+    render: (project) => (
+      <ProjectResponsibilities responsibilities={project.myResponsibilities} />
+    ),
   },
   assignmentStatus: {
     key: "assignmentStatus",

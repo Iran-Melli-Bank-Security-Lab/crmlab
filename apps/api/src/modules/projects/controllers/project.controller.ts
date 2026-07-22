@@ -25,6 +25,7 @@ import {
   mapCreateProjectRequest,
 } from "../services/project.mapper";
 import {
+  NON_ADMIN_PROJECT_VIEWS,
   assertProjectAssignmentActionAllowed,
   requireProjectListView,
   resolveProjectListQueryCapabilities,
@@ -45,6 +46,12 @@ import {
   saveProjectSecurityScope,
 } from "../services/projectSecurityScope.service";
 import { notifyProjectAssignments } from "../services/projectAssignmentNotification.service";
+import {
+  getResponsibilityProjectIdsByView,
+  groupUserAssignmentRoles,
+  resolveProjectResponsibilities,
+  resolveResponsibilityViews,
+} from "../services/projectResponsibility.service";
 
 type ProjectRecipientField =
   | "projectManager"
@@ -367,6 +374,16 @@ const PROJECT_DETAIL_CORE_FIELDS = [
   "updatedAt",
 ] as const;
 
+const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
+  "assignedUserIds",
+  "type",
+  "projectType",
+  "projectManager",
+  "qualityManager",
+  "devops",
+  "representative",
+] as const;
+
 function pickProjectFields(
   project: Record<string, unknown>,
   sourceFields: readonly string[]
@@ -403,17 +420,10 @@ async function getProjectListFilter(
 ): Promise<{
   filter: QueryFilter<ProjectDocument>;
   pentestProjectIds: Set<string>;
-  assignmentProjectIds: Record<Exclude<NonAdminProjectView, "representative">, Set<string>>;
+  assignmentProjectIds: Record<NonAdminProjectView, Set<string>>;
+  assignmentRolesByProject: Map<string, string[]>;
 }> {
   const userId = user.id;
-  const assignmentRoleFilter = view === "pentest"
-    ? { $or: [
-        { assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
-        { assignmentRole: { $exists: false } },
-      ] }
-    : view === "qa"
-      ? { assignmentRole: PROJECT_ASSIGNMENT_ROLES.QA }
-      : undefined;
   const assignments = await ProjectAssignmentModel.find({
     $and: [
       { $or: [
@@ -423,49 +433,33 @@ async function getProjectListFilter(
         { manager: userId },
       ] },
       { status: { $ne: "removed" } },
-      ...(assignmentRoleFilter ? [assignmentRoleFilter] : []),
     ],
   }).select("projectId project userId pentester managerId manager assignmentRole");
   const assignedProjectIds = assignments.flatMap((assignment) => {
     const projectId = assignment.projectId || assignment.project;
     return projectId ? [projectId] : [];
   });
-  const isDirectAssignment = (assignment: typeof assignments[number]) =>
-    String(assignment.userId || assignment.pentester || "") === userId;
-  const projectIdsForRoles = (roles: string[], includeMissingRole = false) =>
-    assignments.flatMap((assignment) => {
-      if (!isDirectAssignment(assignment)) return [];
-      if (
-        !roles.includes(String(assignment.assignmentRole || "")) &&
-        !(includeMissingRole && !assignment.assignmentRole)
-      ) return [];
-      const projectId = assignment.projectId || assignment.project;
-      return projectId ? [projectId] : [];
-    });
-  const pentestProjectIds = new Set(projectIdsForRoles(
-    [PROJECT_ASSIGNMENT_ROLES.PENTESTER],
-    true
-  ).map(String));
+  const assignmentRolesByProject = groupUserAssignmentRoles(assignments, userId);
+  const pentestProjectIds = getResponsibilityProjectIdsByView(
+    assignmentRolesByProject,
+    "pentest"
+  );
   const assignmentProjectIds = {
-    security: new Set(projectIdsForRoles([
-      PROJECT_ASSIGNMENT_ROLES.SECURITY_MANAGER,
-      PROJECT_ASSIGNMENT_ROLES.MANAGER,
-    ]).map(String)),
-    quality: new Set(projectIdsForRoles([
-      PROJECT_ASSIGNMENT_ROLES.QUALITY_MANAGER,
-      PROJECT_ASSIGNMENT_ROLES.MANAGER,
-    ]).map(String)),
-    devops: new Set(projectIdsForRoles([
-      PROJECT_ASSIGNMENT_ROLES.DEVOPS,
-      PROJECT_ASSIGNMENT_ROLES.DEVOPS_MANAGER,
-    ]).map(String)),
+    security: getResponsibilityProjectIdsByView(assignmentRolesByProject, "security"),
+    quality: getResponsibilityProjectIdsByView(assignmentRolesByProject, "quality"),
+    devops: getResponsibilityProjectIdsByView(assignmentRolesByProject, "devops"),
     pentest: pentestProjectIds,
-    qa: new Set(projectIdsForRoles([PROJECT_ASSIGNMENT_ROLES.QA]).map(String)),
+    qa: getResponsibilityProjectIdsByView(assignmentRolesByProject, "qa"),
+    representative: getResponsibilityProjectIdsByView(
+      assignmentRolesByProject,
+      "representative"
+    ),
   };
   const result = (filter: QueryFilter<ProjectDocument>) => ({
     filter,
     pentestProjectIds,
     assignmentProjectIds,
+    assignmentRolesByProject,
   });
 
   switch (view) {
@@ -496,8 +490,15 @@ async function getProjectListFilter(
     case "representative":
       return result({ $or: [{ representative: userId }, { _id: { $in: assignedProjectIds } }] });
     case "pentest":
+      return result({ $or: [
+        { assignedUserIds: userId },
+        { _id: { $in: [...pentestProjectIds] } },
+      ] });
     case "qa":
-      return result({ $or: [{ assignedUserIds: userId }, { _id: { $in: assignedProjectIds } }] });
+      return result({ $or: [
+        { assignedUserIds: userId },
+        { _id: { $in: [...assignmentProjectIds.qa] } },
+      ] });
     case "unified": {
       const scopes: QueryFilter<ProjectDocument>[] = [];
       if (user.permissions.includes(PERMISSIONS.SECURITY_PROJECTS_READ)) {
@@ -527,7 +528,10 @@ async function getProjectListFilter(
         scopes.push({ $or: [{ devops: userId }, { _id: { $in: devopsAssignmentIds } }] });
       }
       if (user.permissions.includes(PERMISSIONS.REPRESENTATIVE_PROJECTS_READ)) {
-        scopes.push({ representative: userId });
+        scopes.push({ $or: [
+          { representative: userId },
+          { _id: { $in: [...assignmentProjectIds.representative] } },
+        ] });
       }
       if (user.permissions.includes(PERMISSIONS.PENTEST_PROJECTS_READ)) {
         scopes.push({ $or: [
@@ -589,18 +593,10 @@ export const getProjects: RequestHandler = async (req, res, next) => {
       : access.filter;
     let query = ProjectModel.find(combinedFilter);
     if (capabilities) {
-      const internalFields = view === "unified"
-        ? [
-            "assignedUserIds",
-            "type",
-            "projectType",
-            "projectManager",
-            "qualityManager",
-            "devops",
-            "representative",
-          ]
-        : [];
-      query = query.select([...capabilities.projectionFields, ...internalFields].join(" "));
+      query = query.select([
+        ...capabilities.projectionFields,
+        ...PROJECT_RESPONSIBILITY_SOURCE_FIELDS,
+      ].join(" "));
     }
     query = capabilities?.sort
       ? query.sort({ [capabilities.sort.field]: capabilities.sort.direction })
@@ -617,62 +613,43 @@ export const getProjects: RequestHandler = async (req, res, next) => {
       res,
       projects.map((project) => {
         if (isAdminView) return normalizeLegacyProject(project);
-        let allowedActions = resolveProjectRowActions(
+        const projectId = String(project._id);
+        const myResponsibilities = resolveProjectResponsibilities({
+          project,
+          userId: req.user!.id,
+          assignmentRoles: access.assignmentRolesByProject.get(projectId) || [],
+        });
+        const allowedActions = resolveProjectRowActions(
           req.user!.permissions,
+          myResponsibilities,
           view === "unified" ? undefined : view
         );
         let responseSource: Record<string, unknown> = project;
         if (view === "unified") {
-          const projectId = String(project._id);
-          const projectType = getEffectiveProjectType(project);
-          const isLegacyPentestAssignment = (project.assignedUserIds || [])
-            .some((id) => String(id) === req.user!.id);
-          const rowViews: NonAdminProjectView[] = [];
-          if (
-            req.user!.permissions.includes(PERMISSIONS.SECURITY_PROJECTS_READ) &&
-            projectType === PROJECT_TYPES.SECURITY &&
-            (String(project.projectManager || "") === req.user!.id ||
-              access.assignmentProjectIds.security.has(projectId))
-          ) rowViews.push("security");
-          if (
-            req.user!.permissions.includes(PERMISSIONS.QUALITY_PROJECTS_READ) &&
-            projectType === PROJECT_TYPES.QUALITY &&
-            ([project.qualityManager, project.projectManager].some(
-              (id) => String(id || "") === req.user!.id
-            ) || access.assignmentProjectIds.quality.has(projectId))
-          ) rowViews.push("quality");
-          if (
-            req.user!.permissions.includes(PERMISSIONS.DEVOPS_PROJECTS_READ) &&
-            (String(project.devops || "") === req.user!.id ||
-              access.assignmentProjectIds.devops.has(projectId))
-          ) rowViews.push("devops");
-          if (
-            req.user!.permissions.includes(PERMISSIONS.REPRESENTATIVE_PROJECTS_READ) &&
-            String(project.representative || "") === req.user!.id
-          ) rowViews.push("representative");
-          if (
-            req.user!.permissions.includes(PERMISSIONS.PENTEST_PROJECTS_READ) &&
-            (access.pentestProjectIds.has(projectId) || isLegacyPentestAssignment)
-          ) rowViews.push("pentest");
-          if (
-            req.user!.permissions.includes(PERMISSIONS.QA_PROJECTS_READ) &&
-            access.assignmentProjectIds.qa.has(projectId)
-          ) rowViews.push("qa");
-
-          if (!rowViews.includes("pentest")) {
-            allowedActions = allowedActions.filter((action) => action !== "open-pentest-workspace");
-          }
-          if (projectType !== PROJECT_TYPES.SECURITY) {
-            allowedActions = allowedActions.filter((action) => action !== "assign-pentesters");
-          }
+          const rowViews = [...resolveResponsibilityViews(
+            myResponsibilities,
+            req.user!.permissions
+          )].filter((rowView): rowView is NonAdminProjectView =>
+            rowView !== "admin" &&
+            (NON_ADMIN_PROJECT_VIEWS as readonly string[]).includes(rowView)
+          );
           const allowedSourceFields = resolveProjectRowSourceFields(
             req.user!.permissions,
             rowViews,
             capabilities?.columnKeys || []
           );
           responseSource = pickProjectFields(project, allowedSourceFields);
+        } else {
+          responseSource = pickProjectFields(
+            project,
+            capabilities?.projectionFields || []
+          );
         }
-        return { ...normalizeLegacyProject(responseSource), allowedActions };
+        return {
+          ...normalizeLegacyProject(responseSource),
+          myResponsibilities,
+          allowedActions,
+        };
       })
     );
   } catch (error) {
@@ -702,20 +679,55 @@ export const getProject: RequestHandler = async (req, res, next) => {
       throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
     }
 
-    const assignment = await ProjectAssignmentModel.findOne({
-      $or: [
-        { projectId, userId: req.user!.id, assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
-        { project: projectId, pentester: req.user!.id },
-      ],
-    })
-      .select("securityScope")
-      .lean();
+    const [userAssignments, responsibilitySource] = isAdmin
+      ? [[], project]
+      : await Promise.all([
+          ProjectAssignmentModel.find({
+            $and: [
+              { $or: [
+                { userId: req.user!.id },
+                { pentester: req.user!.id },
+                { managerId: req.user!.id },
+                { manager: req.user!.id },
+              ] },
+              { $or: [{ projectId }, { project: projectId }] },
+              { status: { $ne: "removed" } },
+            ],
+          })
+            .select("projectId project userId pentester managerId manager assignmentRole securityScope")
+            .lean(),
+          ProjectModel.findById(projectId)
+            .select(PROJECT_RESPONSIBILITY_SOURCE_FIELDS.join(" "))
+            .lean(),
+        ]);
+    const assignmentRoles = groupUserAssignmentRoles(
+      userAssignments,
+      req.user!.id
+    ).get(projectId) || [];
+    const myResponsibilities = isAdmin
+      ? []
+      : resolveProjectResponsibilities({
+          project: responsibilitySource || project,
+          userId: req.user!.id,
+          assignmentRoles,
+        });
+    const pentestAssignment = userAssignments.find((assignment) =>
+      String(assignment.userId || assignment.pentester || "") === req.user!.id &&
+      (assignment.assignmentRole === PROJECT_ASSIGNMENT_ROLES.PENTESTER ||
+        (!assignment.assignmentRole && assignment.pentester))
+    );
 
     sendSuccess(res, {
       ...normalizeLegacyProject(project),
-      ...(!isAdmin ? { allowedActions: resolveProjectRowActions(req.user!.permissions) } : {}),
-      ...(assignment?.securityScope
-        ? { assignedSecurityScope: assignment.securityScope }
+      ...(!isAdmin ? {
+        myResponsibilities,
+        allowedActions: resolveProjectRowActions(
+          req.user!.permissions,
+          myResponsibilities
+        ),
+      } : {}),
+      ...(pentestAssignment?.securityScope
+        ? { assignedSecurityScope: pentestAssignment.securityScope }
         : {}),
     });
   } catch (error) {

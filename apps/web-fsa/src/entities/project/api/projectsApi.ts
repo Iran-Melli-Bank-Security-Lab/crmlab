@@ -114,6 +114,7 @@ function normalizeProject(project: ApiProjectResponse): Project {
     devopsInfo,
     lastActivity: project.updatedAt || project.createdAt || new Date().toISOString(),
     allowedActions: project.allowedActions,
+    myResponsibilities: project.myResponsibilities,
   };
 }
 

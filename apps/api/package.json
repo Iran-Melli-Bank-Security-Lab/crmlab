@@ -4,10 +4,11 @@
   "description": "Enterprise backend for multi-role dashboard with Express, MongoDB, Socket.IO, cookie auth, RBAC and notifications",
   "main": "dist/server.js",
   "scripts": {
-    "predev": "npm --workspace @role-dashboard/authz run build",
+    "predev": "npm --workspace @role-dashboard/authz run build && npm --workspace @role-dashboard/contracts run build",
     "dev": "tsx watch src/server.ts",
-    "prebuild": "npm --workspace @role-dashboard/authz run build",
+    "prebuild": "npm --workspace @role-dashboard/authz run build && npm --workspace @role-dashboard/contracts run build",
     "build": "tsc && tsc-alias -p tsconfig.json",
+    "postbuild": "node -e \"require('@role-dashboard/authz'); require('@role-dashboard/contracts')\"",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",

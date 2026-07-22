@@ -229,11 +229,10 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
     defaultLabel: "Created", faLabel: "ایجاد شده", dataType: "date", minWidth: "130px",
     sourceFields: ["createdAt", "created_date"], requiredPermissions: [PERMISSIONS.REPRESENTATIVE_PROJECTS_READ],
   }),
-  assignedUserIds: column({
+  pentesters: column({
     defaultLabel: "Pentesters", faLabel: "تست‌کنندگان نفوذ", dataType: "action",
-    minWidth: "150px", maxWidth: "190px", sortable: false, sourceFields: ["assignedUserIds"],
+    minWidth: "150px", maxWidth: "190px", sortable: false, sourceFields: [],
     requiredPermissions: [PERMISSIONS.SECURITY_PROJECTS_ASSIGN], isSensitive: true,
-    isConfigurable: false,
   }),
 };
 
@@ -278,7 +277,7 @@ export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   owner: ["representative"],
   testExpiresAt: ["representative"],
   createdAt: ["representative"],
-  assignedUserIds: ["security"],
+  pentesters: ["security"],
 };
 
 export const PROJECT_TABLE_CONTEXT_REGISTRY = {

@@ -258,6 +258,39 @@ test("Project is the first configurable mandatory column in every project table"
   assert.equal(userColumns[1]?.isDefaultVisible, true);
 });
 
+test("security project assigners can configure the Pentesters action column", () => {
+  const securityColumns = getProjectTableColumnDefinitions(
+    "user-projects",
+    [PERMISSIONS.SECURITY_PROJECTS_READ, PERMISSIONS.SECURITY_PROJECTS_ASSIGN]
+  );
+  const pentesters = securityColumns.find(
+    (column) => column.columnKey === "pentesters"
+  );
+
+  assert.equal(pentesters?.defaultLabel, "Pentesters");
+  assert.equal(pentesters?.faLabel, "تست‌کنندگان نفوذ");
+  assert.equal(pentesters?.isConfigurable, true);
+  assert.equal(pentesters?.isDefaultVisible, true);
+  assert.deepEqual(pentesters?.applicableViews, ["security"]);
+
+  const saved = validateProjectTableSettings("user-projects", {
+    visibleColumns: ["summary", "pentesters"],
+    columnOrder: ["summary", "pentesters"],
+    aliases: { pentesters: "Security Testers" },
+  }, [PERMISSIONS.SECURITY_PROJECTS_READ, PERMISSIONS.SECURITY_PROJECTS_ASSIGN]);
+  assert.ok(saved.visibleColumns.includes("pentesters"));
+  assert.equal(saved.aliases.pentesters, "Security Testers");
+
+  const readOnlyColumns = getProjectTableColumnDefinitions(
+    "user-projects",
+    [PERMISSIONS.SECURITY_PROJECTS_READ]
+  );
+  assert.equal(
+    readOnlyColumns.some((column) => column.columnKey === "pentesters"),
+    false
+  );
+});
+
 test("legacy project table settings insert a missing Project column first", () => {
   const sanitized = sanitizeStoredProjectTableSettings("user-projects", {
     visibleColumns: ["assignmentStatus"],

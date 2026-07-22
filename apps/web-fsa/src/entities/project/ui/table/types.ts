@@ -16,7 +16,7 @@ export type ProjectTableColumnKind =
 export type ProjectTableRow = Project & Partial<ProjectAssignment>;
 
 export type ProjectTableColumn = {
-  key: keyof ProjectTableRow | "summary";
+  key: keyof ProjectTableRow | "summary" | "pentesters";
   label: string;
   minW?: string;
   maxW?: string;

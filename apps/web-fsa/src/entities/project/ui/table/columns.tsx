@@ -498,10 +498,10 @@ export const projectTableColumns = {
     sortable: true,
     sortValue: (project) => new Date(project.lastActivity).getTime(),
   },
-  assignedUsersAction: {
-    key: "assignedUserIds",
+  pentestersAction: {
+    key: "pentesters",
     label: "Pentesters",
-    labelKey: "projectTable.pentesters",
+    labelKey: "projectTable.columns.pentesters",
     minW: "150px",
     maxW: "190px",
     align: "end",

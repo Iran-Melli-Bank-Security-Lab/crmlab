@@ -17,7 +17,6 @@ import {
   useGetAuditLogsQuery,
   type AuditLog,
   type AuditLogQuery,
-  type AuditLogSortField,
 } from "@/entities/audit/api/auditApi";
 import { useLanguage } from "@/features/language/model";
 import Button from "@/shared/ui/primitives/Button";
@@ -36,8 +35,6 @@ type AuditFilterDraft = Pick<
 const INITIAL_QUERY: AuditLogQuery = {
   page: 1,
   pageSize: 25,
-  sortBy: "createdAt",
-  sortOrder: "desc",
 };
 
 const EMPTY_FILTERS: AuditFilterDraft = {};
@@ -251,19 +248,6 @@ export default function AuditLogs() {
     setQuery(INITIAL_QUERY);
   };
 
-  const sortBy = (field: AuditLogSortField) => {
-    setQuery((current) => ({
-      ...current,
-      page: 1,
-      sortBy: field,
-      sortOrder:
-        current.sortBy === field && current.sortOrder === "desc" ? "asc" : "desc",
-    }));
-  };
-
-  const sortIndicator = (field: AuditLogSortField) =>
-    query.sortBy === field ? (query.sortOrder === "asc" ? " ↑" : " ↓") : "";
-
   return (
     <VStack align="stretch" gap={5} maxW="1700px" mx="auto">
       <PageHeader
@@ -388,13 +372,13 @@ export default function AuditLogs() {
               <Table.Root size="sm" variant="line" interactive stickyHeader>
                 <Table.Header>
                   <Table.Row bg="var(--apple-surface-subtle)">
-                    <Table.ColumnHeader cursor="pointer" onClick={() => sortBy("createdAt")}>{t("audit.columns.timestamp")}{sortIndicator("createdAt")}</Table.ColumnHeader>
+                    <Table.ColumnHeader>{t("audit.columns.timestamp")}</Table.ColumnHeader>
                     <Table.ColumnHeader>{t("audit.columns.actor")}</Table.ColumnHeader>
-                    <Table.ColumnHeader cursor="pointer" onClick={() => sortBy("action")}>{t("audit.columns.action")}{sortIndicator("action")}</Table.ColumnHeader>
-                    <Table.ColumnHeader cursor="pointer" onClick={() => sortBy("module")}>{t("audit.columns.module")}{sortIndicator("module")}</Table.ColumnHeader>
-                    <Table.ColumnHeader cursor="pointer" onClick={() => sortBy("entityType")}>{t("audit.columns.resource")}{sortIndicator("entityType")}</Table.ColumnHeader>
-                    <Table.ColumnHeader cursor="pointer" onClick={() => sortBy("ip")}>{t("audit.columns.ip")}{sortIndicator("ip")}</Table.ColumnHeader>
-                    <Table.ColumnHeader cursor="pointer" onClick={() => sortBy("status")}>{t("audit.columns.status")}{sortIndicator("status")}</Table.ColumnHeader>
+                    <Table.ColumnHeader>{t("audit.columns.action")}</Table.ColumnHeader>
+                    <Table.ColumnHeader>{t("audit.columns.module")}</Table.ColumnHeader>
+                    <Table.ColumnHeader>{t("audit.columns.resource")}</Table.ColumnHeader>
+                    <Table.ColumnHeader>{t("audit.columns.ip")}</Table.ColumnHeader>
+                    <Table.ColumnHeader>{t("audit.columns.status")}</Table.ColumnHeader>
                     <Table.ColumnHeader textAlign="end">{t("audit.columns.details")}</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>

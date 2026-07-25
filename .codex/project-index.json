@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "936c2a54f2249447",
+  "sourceFingerprint": "d6af06c26f103c97",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -5401,7 +5401,7 @@
             "apps/api/src/modules/audit/services/auditQuery.service.ts",
             "apps/api/src/modules/audit/validators/audit.validators.ts"
           ],
-          "contentHash": "1ccc78e0bb04"
+          "contentHash": "aa6c80706af6"
         },
         {
           "path": "apps/api/src/modules/audit/services/auditQuery.service.ts",
@@ -5417,6 +5417,7 @@
           ],
           "symbols": [
             "AuditLogQuery",
+            "AUDIT_LOG_SORT",
             "redactAuditValue",
             "buildAuditLogFilter",
             "listAuditLogs",
@@ -5429,7 +5430,7 @@
             "apps/api/src/modules/projects/models/project.model.ts",
             "apps/api/src/modules/users/models/user.model.ts"
           ],
-          "contentHash": "3592f97f5756"
+          "contentHash": "2e79d80d5351"
         },
         {
           "path": "apps/api/src/modules/audit/validators/audit.validators.ts",
@@ -5590,7 +5591,7 @@
             "apps/web-fsa/src/shared/api/baseApi.ts",
             "apps/web-fsa/src/shared/api/unwrapApiData.ts"
           ],
-          "contentHash": "da6192dc5c19"
+          "contentHash": "3bbc57af2965"
         },
         {
           "path": "apps/web-fsa/src/entities/task/api/tasksApi.ts",
@@ -5634,7 +5635,7 @@
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
             "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
           ],
-          "contentHash": "78ffd2c09d10"
+          "contentHash": "81cf803d3070"
         },
         {
           "path": "apps/web-fsa/src/pages/tasks/Tasks.tsx",

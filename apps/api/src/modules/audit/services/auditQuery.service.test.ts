@@ -5,6 +5,7 @@ import { hasRequiredRole } from "@/middlewares/permission.middleware";
 import { auditLogListSchema } from "../validators/audit.validators";
 import { auditModuleFromAction } from "./audit.service";
 import {
+  AUDIT_LOG_SORT,
   buildAuditLogFilter,
   redactAuditValue,
   type AuditLogQuery,
@@ -13,8 +14,6 @@ import {
 const baseQuery: AuditLogQuery = {
   page: 1,
   pageSize: 25,
-  sortBy: "createdAt",
-  sortOrder: "desc",
 };
 
 test("audit endpoints can require the actual admin role", () => {
@@ -48,6 +47,10 @@ test("audit response redaction recursively removes credential material", () => {
 test("audit module remains derived from the centralized action namespace", () => {
   assert.equal(auditModuleFromAction("project.assign_users"), "project");
   assert.equal(auditModuleFromAction("auth.login"), "auth");
+});
+
+test("audit pagination always uses a stable newest-first sort", () => {
+  assert.deepEqual(AUDIT_LOG_SORT, { createdAt: -1, _id: -1 });
 });
 
 test("audit query validation bounds pagination and sort fields", () => {

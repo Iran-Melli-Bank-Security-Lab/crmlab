@@ -38,8 +38,8 @@ export type AuditLogQuery = {
   status?: AuditLogStatus;
   from?: string;
   to?: string;
-  sortBy: AuditLogSortField;
-  sortOrder: "asc" | "desc";
+  sortBy?: AuditLogSortField;
+  sortOrder?: "asc" | "desc";
 };
 
 export type AuditLogPage = {

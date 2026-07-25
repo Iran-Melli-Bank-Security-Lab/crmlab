@@ -21,9 +21,14 @@ export type AuditLogQuery = {
   status?: "success" | "failure";
   from?: string;
   to?: string;
-  sortBy: "createdAt" | "action" | "module" | "entityType" | "ip" | "status";
-  sortOrder: "asc" | "desc";
+  sortBy?: "createdAt" | "action" | "module" | "entityType" | "ip" | "status";
+  sortOrder?: "asc" | "desc";
 };
+
+export const AUDIT_LOG_SORT = {
+  createdAt: -1,
+  _id: -1,
+} as const;
 
 type AuditRow = AuditLogDocument & {
   _id: mongoose.Types.ObjectId;
@@ -221,11 +226,11 @@ export async function listAuditLogs(query: AuditLogQuery) {
     );
   }
   const filter = await buildAuditLogFilter(query);
-  const direction = query.sortOrder === "asc" ? 1 : -1;
-  const sort = { [query.sortBy]: direction, _id: direction } as Record<string, 1 | -1>;
   const [rows, total] = await Promise.all([
     AuditLogModel.find(filter)
-      .sort(sort)
+      // Sort before skip/limit so every page is part of one stable,
+      // newest-first sequence. _id resolves ties at the same timestamp.
+      .sort(AUDIT_LOG_SORT)
       .skip((query.page - 1) * query.pageSize)
       .limit(query.pageSize),
     AuditLogModel.countDocuments(filter),

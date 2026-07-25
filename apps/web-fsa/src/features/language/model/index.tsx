@@ -1551,6 +1551,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
     document.documentElement.dir = dir;
     document.body.dir = dir;
+    document.title = translations[language]["app.name"];
     try {
       localStorage.setItem(storageKey, language);
     } catch {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "c69cebf4d703971d",
+  "sourceFingerprint": "987d2d4e3891732a",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -5878,7 +5878,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "bd4538119efc"
+          "contentHash": "7f243db9bbbe"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",

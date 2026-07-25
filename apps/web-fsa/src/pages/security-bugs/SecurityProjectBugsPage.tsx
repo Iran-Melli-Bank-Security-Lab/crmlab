@@ -12,19 +12,12 @@ import {
   useGetProjectBugsForReviewQuery,
   type Vulnerability,
 } from "@/entities/pentest/api/pentestApi";
+import { BUG_REVIEW_STATE_LABEL_KEYS } from "@/entities/pentest/model/bugReview";
 import { useLanguage } from "@/features/language/model";
 import Button from "@/shared/ui/primitives/Button";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
-import { isBugReviewState, BUG_REVIEW_STATES } from "@role-dashboard/contracts";
-
-const stateLabelKeys = {
-  [BUG_REVIEW_STATES.NEW]: "bugReview.state.new",
-  [BUG_REVIEW_STATES.VERIFY]: "bugReview.state.verify",
-  [BUG_REVIEW_STATES.DUPLICATE]: "bugReview.state.duplicate",
-  [BUG_REVIEW_STATES.NOT_APPLICABLE]: "bugReview.state.notApplicable",
-  [BUG_REVIEW_STATES.NEED_MORE_INFORMATION]: "bugReview.state.needMoreInformation",
-} as const;
+import { isBugReviewState } from "@role-dashboard/contracts";
 
 function bugId(bug: Vulnerability) {
   return bug.id || bug._id || "";
@@ -109,7 +102,7 @@ export default function SecurityProjectBugsPage() {
             <HStack mt={4} justify="space-between">
               <Badge variant="subtle">
                 {isBugReviewState(bug.state)
-                  ? t(stateLabelKeys[bug.state])
+                  ? t(BUG_REVIEW_STATE_LABEL_KEYS[bug.state])
                   : bug.state || t("bugReview.state.new")}
               </Badge>
               <Text color="var(--apple-blue)" fontSize="sm" fontWeight="700">

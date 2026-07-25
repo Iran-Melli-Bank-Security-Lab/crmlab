@@ -23,6 +23,9 @@ import {
 
 const shouldToast = (notification: AppNotification) => notification.priority === "high" || notification.priority === "critical";
 const shouldRefreshProjects = (notification: AppNotification) => notification.type === "project.assigned" || notification.type === "project.created";
+const shouldRefreshPentest = (notification: AppNotification) =>
+  notification.type === "vulnerability.updated" ||
+  notification.type === "vulnerability.created";
 
 export default function NotificationSync() {
   const dispatch = useDispatch<AppDispatch>();
@@ -65,6 +68,9 @@ export default function NotificationSync() {
           knownIds.current.add(notification.id);
           dispatch(notificationReceived(notification));
           if (shouldRefreshProjects(notification)) dispatch(api.util.invalidateTags(["Projects"]));
+          if (shouldRefreshPentest(notification)) {
+            dispatch(api.util.invalidateTags(["Pentest"]));
+          }
           // Recovered Socket.IO packets and reconnect snapshots must not create
           // duplicate toasts or OS notifications.
           if (isNew) {

@@ -29,14 +29,7 @@ import Button from "@/shared/ui/primitives/Button";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import BugEvidenceGallery from "./BugEvidenceGallery";
-
-const stateLabelKeys = {
-  [BUG_REVIEW_STATES.NEW]: "bugReview.state.new",
-  [BUG_REVIEW_STATES.VERIFY]: "bugReview.state.verify",
-  [BUG_REVIEW_STATES.DUPLICATE]: "bugReview.state.duplicate",
-  [BUG_REVIEW_STATES.NOT_APPLICABLE]: "bugReview.state.notApplicable",
-  [BUG_REVIEW_STATES.NEED_MORE_INFORMATION]: "bugReview.state.needMoreInformation",
-} as const;
+import { BUG_REVIEW_STATE_LABEL_KEYS } from "@/entities/pentest/model/bugReview";
 
 type DetailEntry = {
   key: string;
@@ -149,7 +142,7 @@ const DISPLAYED_KEYS = new Set([
   "wafSecuringPossibility", "pocs", "tools", "parameters", "other_information",
   "status", "state", "stateChangedBy", "stateChangedAt", "createdBy", "user",
   "pentester", "creator", "reporter", "created_at", "updated_at", "createdAt",
-  "updatedAt",
+  "updatedAt", "additionalInformation",
 ]);
 
 function labels(
@@ -312,7 +305,7 @@ export default function SecurityBugDetailsPage() {
               </Badge>
               <Badge variant="subtle">
                 {isBugReviewState(currentState)
-                  ? t(stateLabelKeys[currentState])
+                  ? t(BUG_REVIEW_STATE_LABEL_KEYS[currentState])
                   : currentState}
               </Badge>
               {bug.securityStandardKey && (
@@ -354,6 +347,18 @@ export default function SecurityBugDetailsPage() {
             title={t("bugReview.sections.classification")}
             entries={entriesFor(bug, fieldLabels.classification)}
           />
+          <DetailsSection
+            title={t("bugReview.sections.additionalInformation")}
+            description={t(
+              "bugReview.sections.additionalInformationDescription"
+            )}
+            entries={(bug.additionalInformation || []).map((entry, index) => ({
+              key: entry._id || `additional-information-${index}`,
+              label: new Date(entry.submittedAt).toLocaleString(),
+              value: entry.text,
+              wide: true,
+            }))}
+          />
         </VStack>
 
         <Box
@@ -379,7 +384,7 @@ export default function SecurityBugDetailsPage() {
             >
               {allowedStates.map((state) => (
                 <option key={state} value={state}>
-                  {t(stateLabelKeys[state])}
+                  {t(BUG_REVIEW_STATE_LABEL_KEYS[state])}
                 </option>
               ))}
             </NativeSelect.Field>

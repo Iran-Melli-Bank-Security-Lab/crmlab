@@ -67,6 +67,8 @@ export const ROUTES = {
     PROJECT_BUGS: "/projects/:projectId/bugs",
     PROJECT_BUG: "/projects/:projectId/bugs/:bugId",
     PROJECT_BUG_STATE: "/projects/:projectId/bugs/:bugId/state",
+    PROJECT_BUG_ADDITIONAL_INFORMATION:
+      "/projects/:projectId/bugs/:bugId/additional-information",
     POC: "/pocs/:fileId",
     WORK_SESSIONS: "/work-sessions",
   },
@@ -94,6 +96,8 @@ export const ROUTES = {
     SECURITY_PROJECT_BUGS: (projectId: string) => `/projects/${projectId}/bugs`,
     SECURITY_BUG_DETAILS: (projectId: string, bugId: string) =>
       `/projects/${projectId}/bugs/${bugId}`,
+    PENTEST_BUG_DETAILS: (projectId: string, bugId: string) =>
+      `/projects/pentest/${projectId}?bugId=${encodeURIComponent(bugId)}`,
     PENTESTER_DASHBOARD: "/pentester",
   },
 } as const;

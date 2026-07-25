@@ -37,7 +37,12 @@ export default function AppRoutes() {
               return (
                 <Route
                   key={route.path}
-                  element={<PermissionRoute permissions={route.permissions} />}
+                  element={
+                    <PermissionRoute
+                      permissions={route.permissions}
+                      roles={"roles" in route ? route.roles : []}
+                    />
+                  }
                 >
                   <Route
                     path={route.path}

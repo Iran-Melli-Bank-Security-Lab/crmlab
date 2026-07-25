@@ -1,8 +1,9 @@
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
-import type { Permission } from "@/shared/types";
+import type { Permission, Role } from "@/shared/types";
 
 export type AccessPolicy = {
   permissions?: Permission[];
+  roles?: Role[];
 };
 
 export type DashboardAccessPolicy = AccessPolicy & {
@@ -44,6 +45,11 @@ export const ROUTE_ACCESS_POLICIES = {
   adminUsers: {
     path: "/admin/users",
     permissions: [PERMISSIONS.ADMIN_SYSTEM_MANAGE, PERMISSIONS.ADMIN_USERS_READ],
+  },
+  adminAuditLogs: {
+    path: "/admin/audit-logs",
+    permissions: [PERMISSIONS.ADMIN_AUDIT_READ],
+    roles: ["admin"],
   },
   projects: {
     path: "/projects",

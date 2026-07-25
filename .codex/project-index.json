@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "1d34130d2c59a857",
+  "sourceFingerprint": "c69cebf4d703971d",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -59,10 +59,10 @@
     "vendored source"
   ],
   "stats": {
-    "indexedFiles": 336,
+    "indexedFiles": 341,
     "domains": 13,
-    "apiEndpoints": 64,
-    "frontendRoutes": 24
+    "apiEndpoints": 65,
+    "frontendRoutes": 25
   },
   "majorRelationships": [
     {
@@ -122,6 +122,14 @@
     {
       "method": "GET",
       "path": "/api/audit-logs",
+      "routeFile": "apps/api/src/modules/audit/routes/audit.routes.ts",
+      "permissions": [
+        "ADMIN_AUDIT_READ"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/audit-logs/:id",
       "routeFile": "apps/api/src/modules/audit/routes/audit.routes.ts",
       "permissions": [
         "ADMIN_AUDIT_READ"
@@ -623,6 +631,10 @@
     {
       "path": "/admin",
       "source": "apps/web-fsa/src/app/router/protectedRouteConfig.ts"
+    },
+    {
+      "path": "/admin/audit-logs",
+      "source": "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts"
     },
     {
       "path": "/admin/users",
@@ -3051,14 +3063,17 @@
           ],
           "symbols": [
             "requirePermission",
-            "requireAnyPermission"
+            "requireAnyPermission",
+            "hasRequiredRole",
+            "requireRole"
           ],
           "related": [
             "apps/api/src/constants/http.ts",
             "apps/api/src/constants/permissions.ts",
+            "apps/api/src/constants/roles.ts",
             "apps/api/src/utils/AppError.ts"
           ],
-          "contentHash": "74f6d6e34c79"
+          "contentHash": "9f79c1564eba"
         },
         {
           "path": "apps/api/src/modules/auth/controllers/auth.controller.ts",
@@ -3505,9 +3520,10 @@
           ],
           "related": [
             "apps/web-fsa/src/entities/permission/application/routeAccess.ts",
-            "apps/web-fsa/src/features/access-control/model/usePermission.ts"
+            "apps/web-fsa/src/features/access-control/model/usePermission.ts",
+            "apps/web-fsa/src/features/auth/model/useAuth.ts"
           ],
-          "contentHash": "d5c8d1a73f2c"
+          "contentHash": "8a72607b6ff9"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/application/dashboardAccess.ts",
@@ -3575,7 +3591,7 @@
             "apps/web-fsa/src/entities/permission/domain/accessRules.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "edcf49896df8"
+          "contentHash": "82ab983b39c9"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/application/sidebarAccess.ts",
@@ -3599,7 +3615,7 @@
             "apps/web-fsa/src/entities/permission/domain/accessRules.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "3427fcfdbf3b"
+          "contentHash": "69117e951e8d"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts",
@@ -3626,7 +3642,7 @@
             "apps/web-fsa/src/entities/permission/model/permissions.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "7e6658a42b81"
+          "contentHash": "2681d3c0cddc"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/domain/accessRules.ts",
@@ -3654,7 +3670,7 @@
             "apps/web-fsa/src/entities/permission/model/permissions.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "a7f154a18d0b"
+          "contentHash": "030aaab47171"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/model/permissionGrants.ts",
@@ -5295,13 +5311,14 @@
             "controller"
           ],
           "symbols": [
-            "getAuditLogs"
+            "getAuditLogs",
+            "getAuditLogDetails"
           ],
           "related": [
-            "apps/api/src/modules/audit/models/auditLog.model.ts",
+            "apps/api/src/modules/audit/services/auditQuery.service.ts",
             "apps/api/src/utils/response.ts"
           ],
-          "contentHash": "d78c711b1b85"
+          "contentHash": "ad0336578dfc"
         },
         {
           "path": "apps/api/src/modules/audit/models/auditLog.model.ts",
@@ -5319,7 +5336,7 @@
             "AuditLogDocument",
             "AuditLogModel"
           ],
-          "contentHash": "fff028bf1775"
+          "contentHash": "569af33863a5"
         },
         {
           "path": "apps/api/src/modules/audit/routes/audit.routes.ts",
@@ -5336,12 +5353,12 @@
           ],
           "related": [
             "apps/api/src/constants/permissions.ts",
+            "apps/api/src/constants/roles.ts",
             "apps/api/src/constants/routes.ts",
             "apps/api/src/middlewares/auth.middleware.ts",
-            "apps/api/src/middlewares/permission.middleware.ts",
-            "apps/api/src/modules/audit/controllers/audit.controller.ts"
+            "apps/api/src/middlewares/permission.middleware.ts"
           ],
-          "contentHash": "8254984ad33f"
+          "contentHash": "76beb6748467"
         },
         {
           "path": "apps/api/src/modules/audit/services/audit.service.ts",
@@ -5355,13 +5372,80 @@
             "service"
           ],
           "symbols": [
+            "auditModuleFromAction",
             "writeAuditLog"
           ],
           "related": [
             "apps/api/src/constants/audit.ts",
             "apps/api/src/modules/audit/models/auditLog.model.ts"
           ],
-          "contentHash": "ed9f56d6e842"
+          "contentHash": "7e93d01ceee3"
+        },
+        {
+          "path": "apps/api/src/modules/audit/services/auditQuery.service.test.ts",
+          "kind": "test",
+          "responsibility": "Regression tests for audit Query service test.",
+          "keywords": [
+            "api",
+            "modules",
+            "audit",
+            "services",
+            "query",
+            "service",
+            "test"
+          ],
+          "related": [
+            "apps/api/src/constants/roles.ts",
+            "apps/api/src/middlewares/permission.middleware.ts",
+            "apps/api/src/modules/audit/services/audit.service.ts",
+            "apps/api/src/modules/audit/services/auditQuery.service.ts",
+            "apps/api/src/modules/audit/validators/audit.validators.ts"
+          ],
+          "contentHash": "1ccc78e0bb04"
+        },
+        {
+          "path": "apps/api/src/modules/audit/services/auditQuery.service.ts",
+          "kind": "service",
+          "responsibility": "Business logic for audit Query service.",
+          "keywords": [
+            "api",
+            "modules",
+            "audit",
+            "services",
+            "query",
+            "service"
+          ],
+          "symbols": [
+            "AuditLogQuery",
+            "redactAuditValue",
+            "buildAuditLogFilter",
+            "listAuditLogs",
+            "getAuditLog"
+          ],
+          "related": [
+            "apps/api/src/constants/http.ts",
+            "apps/api/src/modules/audit/models/auditLog.model.ts",
+            "apps/api/src/modules/audit/services/audit.service.ts",
+            "apps/api/src/modules/projects/models/project.model.ts",
+            "apps/api/src/modules/users/models/user.model.ts"
+          ],
+          "contentHash": "3592f97f5756"
+        },
+        {
+          "path": "apps/api/src/modules/audit/validators/audit.validators.ts",
+          "kind": "validator",
+          "responsibility": "Request validation for audit validators.",
+          "keywords": [
+            "api",
+            "modules",
+            "audit",
+            "validators"
+          ],
+          "symbols": [
+            "auditLogListSchema",
+            "auditLogDetailSchema"
+          ],
+          "contentHash": "70c5bcc678bb"
         },
         {
           "path": "apps/api/src/modules/tasks/controllers/task.controller.ts",
@@ -5485,6 +5569,30 @@
           "contentHash": "c0ea946dd85e"
         },
         {
+          "path": "apps/web-fsa/src/entities/audit/api/auditApi.ts",
+          "kind": "api-client",
+          "responsibility": "Frontend API client for audit Api.",
+          "keywords": [
+            "web",
+            "entities",
+            "audit",
+            "api"
+          ],
+          "symbols": [
+            "AuditLogStatus",
+            "AuditLogSortField",
+            "AuditLog",
+            "AuditLogQuery",
+            "AuditLogPage",
+            "auditApi"
+          ],
+          "related": [
+            "apps/web-fsa/src/shared/api/baseApi.ts",
+            "apps/web-fsa/src/shared/api/unwrapApiData.ts"
+          ],
+          "contentHash": "da6192dc5c19"
+        },
+        {
           "path": "apps/web-fsa/src/entities/task/api/tasksApi.ts",
           "kind": "api-client",
           "responsibility": "Frontend API client for tasks Api.",
@@ -5504,6 +5612,29 @@
             "packages/contracts/src/index.ts"
           ],
           "contentHash": "b9ab52238678"
+        },
+        {
+          "path": "apps/web-fsa/src/pages/audit-logs/AuditLogs.tsx",
+          "kind": "page",
+          "responsibility": "React route page for Audit Logs.",
+          "keywords": [
+            "web",
+            "pages",
+            "audit",
+            "logs",
+            "tsx"
+          ],
+          "symbols": [
+            "default"
+          ],
+          "related": [
+            "apps/web-fsa/src/entities/audit/api/auditApi.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/EmptyState.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
+          ],
+          "contentHash": "78ffd2c09d10"
         },
         {
           "path": "apps/web-fsa/src/pages/tasks/Tasks.tsx",
@@ -5621,7 +5752,7 @@
             "apps/web-fsa/src/app/router/protectedRouteConfig.ts",
             "apps/web-fsa/src/shared/ui/feedback/ErrorBoundary.tsx"
           ],
-          "contentHash": "390372deb441"
+          "contentHash": "6ead86be4ce5"
         },
         {
           "path": "apps/web-fsa/src/app/router/guards/ProtectedRoute.tsx",
@@ -5686,7 +5817,7 @@
             "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts",
             "apps/web-fsa/src/entities/permission/model/permissions.ts"
           ],
-          "contentHash": "948ca7d7e20f"
+          "contentHash": "3ead7719a033"
         },
         {
           "path": "apps/web-fsa/src/app/store/store.ts",
@@ -5747,7 +5878,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "b5d2b7988d1c"
+          "contentHash": "bd4538119efc"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",
@@ -6016,7 +6147,7 @@
             "apps/web-fsa/src/features/auth/model/authSlice.ts",
             "apps/web-fsa/src/shared/config/backend.ts"
           ],
-          "contentHash": "a0b3a1cc4ad1"
+          "contentHash": "d9131671498a"
         },
         {
           "path": "apps/web-fsa/src/shared/api/unwrapApiData.ts",
@@ -6621,7 +6752,7 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "70f7b1c77cd1"
+          "contentHash": "0e6834de64d1"
         },
         {
           "path": "apps/web-fsa/src/widgets/sidebar/ui/Sidebar.tsx",
@@ -6642,10 +6773,10 @@
             "apps/web-fsa/src/app/store/store.ts",
             "apps/web-fsa/src/entities/permission/application/sidebarAccess.ts",
             "apps/web-fsa/src/features/access-control/model/usePermission.ts",
-            "apps/web-fsa/src/features/language/model/index.tsx",
-            "apps/web-fsa/src/features/ui-state/model/uiSlice.ts"
+            "apps/web-fsa/src/features/auth/model/useAuth.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "d33e94f38bad"
+          "contentHash": "f372f18537ab"
         }
       ]
     },
@@ -6751,7 +6882,7 @@
             "ROUTES",
             "API_ENDPOINTS"
           ],
-          "contentHash": "23236dc02b71"
+          "contentHash": "496e72503b08"
         },
         {
           "path": "apps/api/src/constants/security.ts",

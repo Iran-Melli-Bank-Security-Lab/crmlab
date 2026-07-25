@@ -1,5 +1,5 @@
 import { ROUTE_ACCESS_POLICIES } from "@/entities/permission/domain/accessPolicy";
-import type { Permission } from "@/shared/types";
+import type { Permission, Role } from "@/shared/types";
 import type { TranslationKey } from "@/features/language/model";
 
 export type SidebarItem = {
@@ -8,6 +8,7 @@ export type SidebarItem = {
   titleKey: TranslationKey;
   path: string;
   permissions: Permission[];
+  roles?: Role[];
   section: string;
   sectionKey: TranslationKey;
 };
@@ -19,6 +20,16 @@ export const sidebarItems: SidebarItem[] = [
     titleKey: "sidebar.userManagement",
     path: ROUTE_ACCESS_POLICIES.adminUsers.path,
     permissions: ROUTE_ACCESS_POLICIES.adminUsers.permissions,
+    section: "Admin",
+    sectionKey: "sidebar.admin",
+  },
+  {
+    icon: "audit",
+    title: "Audit Logs",
+    titleKey: "sidebar.auditLogs",
+    path: ROUTE_ACCESS_POLICIES.adminAuditLogs.path,
+    permissions: ROUTE_ACCESS_POLICIES.adminAuditLogs.permissions,
+    roles: ROUTE_ACCESS_POLICIES.adminAuditLogs.roles,
     section: "Admin",
     sectionKey: "sidebar.admin",
   },

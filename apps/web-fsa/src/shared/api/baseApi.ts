@@ -158,6 +158,7 @@ export const api = createApi({
     "Notifications",
     "Projects",
     "ProjectTableSettings",
+    "AuditLogs",
   ],
   endpoints: () => ({}),
 });

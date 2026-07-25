@@ -1,9 +1,10 @@
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
 import type { AccessPolicy } from "@/entities/permission/domain/accessPolicy";
-import type { Permission } from "@/shared/types";
+import type { Permission, Role } from "@/shared/types";
 
 export type AccessSubject = {
   permissions?: Permission[];
+  roles?: Role[];
 };
 
 export function hasPermissionGrant(
@@ -45,5 +46,12 @@ export function hasAllPermissionGrants(
 }
 
 export function canAccessPolicy(subject: AccessSubject, policy: AccessPolicy) {
-  return hasAnyPermissionGrant(subject.permissions || [], policy.permissions || []);
+  const hasPermission = hasAnyPermissionGrant(
+    subject.permissions || [],
+    policy.permissions || []
+  );
+  const hasRole =
+    !policy.roles?.length ||
+    policy.roles.some((role) => subject.roles?.includes(role));
+  return hasPermission && hasRole;
 }

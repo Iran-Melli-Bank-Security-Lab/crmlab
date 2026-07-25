@@ -5,6 +5,7 @@ import { ROUTE_ACCESS_POLICIES } from "@/entities/permission/domain/accessPolicy
 const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
 const DashboardRedirect = lazy(() => import("@/pages/dashboard/DashboardRedirect"));
 const AdminUsers = lazy(() => import("@/pages/admin-users/AdminUsers"));
+const AuditLogs = lazy(() => import("@/pages/audit-logs/AuditLogs"));
 const Profile = lazy(() => import("@/pages/profile/Profile"));
 const Settings = lazy(() => import("@/pages/settings/Settings"));
 const Projects = lazy(() => import("@/pages/projects/Projects"));
@@ -32,6 +33,12 @@ export const protectedRouteConfig = [
     path: ROUTE_ACCESS_POLICIES.adminUsers.path,
     element: AdminUsers,
     permissions: ROUTE_ACCESS_POLICIES.adminUsers.permissions,
+  },
+  {
+    path: ROUTE_ACCESS_POLICIES.adminAuditLogs.path,
+    element: AuditLogs,
+    permissions: ROUTE_ACCESS_POLICIES.adminAuditLogs.permissions,
+    roles: ROUTE_ACCESS_POLICIES.adminAuditLogs.roles,
   },
   {
     path: ROUTE_ACCESS_POLICIES.projects.path,

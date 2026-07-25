@@ -1,25 +1,25 @@
 import type { RequestHandler } from "express";
-import { AuditLogModel } from "../models/auditLog.model";
 import { sendSuccess } from "@/utils/response";
+import {
+  getAuditLog,
+  listAuditLogs,
+  type AuditLogQuery,
+} from "../services/auditQuery.service";
 
-export const getAuditLogs: RequestHandler = async (_req, res, next) => {
+export const getAuditLogs: RequestHandler = async (req, res, next) => {
   try {
-    const logs = await AuditLogModel.find().sort({ createdAt: -1 }).limit(200);
-
     sendSuccess(
       res,
-      logs.map((log) => ({
-        id: log._id.toString(),
-        actorId: log.actorId ? String(log.actorId) : undefined,
-        action: log.action,
-        entityType: log.entityType,
-        entityId: log.entityId,
-        ip: log.ip,
-        userAgent: log.userAgent,
-        metadata: log.metadata,
-        createdAt: log.createdAt,
-      }))
+      await listAuditLogs(req.query as unknown as AuditLogQuery)
     );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAuditLogDetails: RequestHandler = async (req, res, next) => {
+  try {
+    sendSuccess(res, await getAuditLog(String(req.params.id)));
   } catch (error) {
     next(error);
   }

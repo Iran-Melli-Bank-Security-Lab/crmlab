@@ -26,6 +26,7 @@ export const ROUTES = {
 
   AUDIT_LOGS: {
     BASE: "/api/audit-logs",
+    DETAIL: "/:id",
   },
 
   PROJECTS: {

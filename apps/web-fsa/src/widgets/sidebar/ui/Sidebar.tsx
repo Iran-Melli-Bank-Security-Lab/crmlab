@@ -17,6 +17,7 @@ import type { RootState } from "@/app/store/store";
 import { sidebarItems, type SidebarItem } from "@/widgets/sidebar/model/sidebarItems";
 import { closeDrawer, openDrawer } from "@/features/ui-state/model/uiSlice";
 import { usePermission } from "@/features/access-control/model/usePermission";
+import { useAuth } from "@/features/auth/model/useAuth";
 import { useLanguage } from "@/features/language/model";
 import { getDashboardPathByPermissions } from "@/shared/lib/dashboard";
 import { canShowNavigationItem } from "@/entities/permission/application/sidebarAccess";
@@ -66,6 +67,13 @@ const iconPaths: Record<string, string[]> = {
     "M17 10a3 3 0 1 0 0-6",
     "M3 22a7 7 0 0 1 12 0",
     "M15 18a6 6 0 0 1 6 4",
+  ],
+  audit: [
+    "M5 4h14v16H5V4Z",
+    "M8 8h8",
+    "M8 12h8",
+    "M8 16h5",
+    "M9 2h6",
   ],
 };
 
@@ -304,8 +312,9 @@ export default function Sidebar() {
   const dispatch = useDispatch();
   const { drawerOpen, sidebarOpen } = useSelector((state: RootState) => state.ui);
   const { permissions } = usePermission();
+  const { roles } = useAuth();
   const { language, t } = useLanguage();
-  const accessSubject = { permissions };
+  const accessSubject = { permissions, roles };
   const primaryDashboardPath = getDashboardPathByPermissions(permissions);
   const primaryDashboardItem: SidebarItem | null =
     primaryDashboardPath === "/profile"
@@ -324,6 +333,7 @@ export default function Sidebar() {
 
     return canShowNavigationItem(accessSubject, {
       permissions: item.permissions,
+      roles: item.roles,
     });
   });
   const sections = groupItems([

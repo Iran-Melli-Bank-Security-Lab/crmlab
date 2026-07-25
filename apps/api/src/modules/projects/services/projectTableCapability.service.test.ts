@@ -194,6 +194,52 @@ test("row actions are a permission union and protected assignment actions reject
   );
 });
 
+test("bug review row action requires the project-specific Security Manager responsibility", () => {
+  const permissions = [
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.SECURITY_VULNERABILITIES_READ,
+    PERMISSIONS.SECURITY_FINDINGS_REVIEW,
+  ];
+  const manager = resolveProjectResponsibilityContext({
+    user: { id: "manager-1", permissions },
+    project: { type: "security", projectManager: "manager-1" },
+    assignments: [{
+      userId: "manager-1",
+      assignmentRole: "security_manager",
+      status: "open",
+    }],
+  });
+  const globalPermissionOnly = resolveProjectResponsibilityContext({
+    user: { id: "user-1", permissions },
+    project: { type: "security", projectManager: "manager-1" },
+    assignments: [{
+      userId: "user-1",
+      assignmentRole: "pentester",
+      status: "open",
+    }],
+  });
+
+  assert.ok(resolveProjectRowActions(manager, "security").includes("review-security-bugs"));
+  assert.equal(
+    resolveProjectRowActions(globalPermissionOnly, "security").includes("review-security-bugs"),
+    false
+  );
+
+  const removedManager = resolveProjectResponsibilityContext({
+    user: { id: "manager-1", permissions },
+    project: { type: "security", projectManager: "manager-1" },
+    assignments: [{
+      userId: "manager-1",
+      assignmentRole: "security_manager",
+      status: "removed",
+    }],
+  });
+  assert.equal(
+    resolveProjectRowActions(removedManager, "security").includes("review-security-bugs"),
+    false
+  );
+});
+
 test("stored settings are re-sanitized after permission removal and restored safely", () => {
   const stored = {
     visibleColumns: ["summary", "environment", "repository", "obsolete"],
@@ -289,6 +335,30 @@ test("security project assigners can configure the Pentesters action column", ()
     readOnlyColumns.some((column) => column.columnKey === "pentesters"),
     false
   );
+});
+
+test("Security Managers can configure and rename the project bug review column", () => {
+  const permissions = [
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.SECURITY_VULNERABILITIES_READ,
+  ];
+  const securityBugs = getProjectTableColumnDefinitions(
+    "user-projects",
+    permissions
+  ).find((column) => column.columnKey === "securityBugs");
+
+  assert.equal(securityBugs?.dataType, "action");
+  assert.equal(securityBugs?.isConfigurable, true);
+  assert.deepEqual(securityBugs?.applicableViews, ["security"]);
+
+  const saved = validateProjectTableSettings("user-projects", {
+    visibleColumns: ["summary", "securityBugs"],
+    columnOrder: ["securityBugs", "summary"],
+    aliases: { securityBugs: "Submitted findings" },
+  }, permissions);
+  assert.ok(saved.visibleColumns.includes("securityBugs"));
+  assert.equal(saved.columnOrder[0], "securityBugs");
+  assert.equal(saved.aliases.securityBugs, "Submitted findings");
 });
 
 test("legacy project table settings insert a missing Project column first", () => {

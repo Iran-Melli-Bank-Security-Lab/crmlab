@@ -50,6 +50,18 @@ function hasModernAssignment(
   );
 }
 
+function hasRemovedModernAssignment(
+  definition: ProjectResponsibilityDefinition,
+  assignments: readonly ProjectResponsibilityAssignmentSource[],
+  userId: string
+) {
+  return assignments.some((assignment) =>
+    assignment.status === "removed" &&
+    String(assignment.userId || assignment.pentester || "") === userId &&
+    definition.assignmentRoles.includes(String(assignment.assignmentRole || ""))
+  );
+}
+
 function hasLegacyProjectUserAssignment(
   definition: ProjectResponsibilityDefinition,
   assignments: readonly ProjectResponsibilityAssignmentSource[],
@@ -116,7 +128,10 @@ export function resolveProjectResponsibilityContext({
     if (!appliesToProject(definition, projectType)) return false;
     if (hasModernAssignment(definition, assignments, user.id)) return true;
     if (hasLegacyProjectUserAssignment(definition, assignments, user.id)) return true;
-    if (hasExplicitProjectAssignment(definition, project, user.id)) return true;
+    if (
+      hasExplicitProjectAssignment(definition, project, user.id) &&
+      !hasRemovedModernAssignment(definition, assignments, user.id)
+    ) return true;
     return !hasAuthoritativeEvidence &&
       Boolean(definition.legacyFallbackProjectFields?.some((field) =>
         containsUser(project[field], user.id)

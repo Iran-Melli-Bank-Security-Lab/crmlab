@@ -5,6 +5,7 @@ export const PROJECT_CAPABILITY_KEYS = [
   "open-pentest-workspace",
   "assign-pentesters",
   "assign-project-members",
+  "review-security-bugs",
 ] as const;
 
 export type ProjectCapabilityKey = (typeof PROJECT_CAPABILITY_KEYS)[number];
@@ -122,6 +123,10 @@ const projectResponsibilityDefinitions = [
       ...viewAction([PERMISSIONS.SECURITY_PROJECTS_READ]),
       "assign-pentesters": [PERMISSIONS.SECURITY_PROJECTS_ASSIGN],
       "assign-project-members": [PERMISSIONS.SECURITY_PROJECTS_ASSIGN],
+      "review-security-bugs": [
+        PERMISSIONS.SECURITY_VULNERABILITIES_READ,
+        PERMISSIONS.SECURITY_FINDINGS_REVIEW,
+      ],
     },
   },
   {

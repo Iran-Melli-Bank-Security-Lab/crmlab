@@ -57,6 +57,14 @@ export const ROUTE_ACCESS_POLICIES = {
     path: "/projects/pentest/:projectId",
     permissions: [PERMISSIONS.PENTEST_PROJECTS_READ],
   },
+  securityProjectBugs: {
+    path: "/projects/:projectId/bugs",
+    permissions: [PERMISSIONS.SECURITY_VULNERABILITIES_READ],
+  },
+  securityBugDetails: {
+    path: "/projects/:projectId/bugs/:bugId",
+    permissions: [PERMISSIONS.SECURITY_VULNERABILITIES_READ],
+  },
   createProject: {
     path: "/projects/create",
     permissions: [PERMISSIONS.ADMIN_PROJECTS_CREATE],

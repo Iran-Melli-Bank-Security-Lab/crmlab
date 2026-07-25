@@ -3,7 +3,8 @@ import type { Permission } from "@role-dashboard/authz";
 export type ProjectRowActionContract =
   | "view-project"
   | "open-pentest-workspace"
-  | "assign-pentesters";
+  | "assign-pentesters"
+  | "review-security-bugs";
 
 export type ProjectTableColumnContract = {
   columnKey: string;

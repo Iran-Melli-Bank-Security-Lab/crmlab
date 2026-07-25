@@ -15,6 +15,8 @@ export const NOTIFICATION_TYPES = {
   VULNERABILITY_REJECTED: "vulnerability.rejected",
   DEPLOYMENT_STARTED: "deployment.started",
   DEPLOYMENT_FAILED: "deployment.failed",
+  DEVOPS_ACCESS_CREATED: "devops.access_created",
+  DEVOPS_ACCESS_UPDATED: "devops.access_updated",
   TICKET_CREATED: "ticket.created",
   TICKET_UPDATED: "ticket.updated",
   QA_TESTCASE_CREATED: "qa.testcase.created",

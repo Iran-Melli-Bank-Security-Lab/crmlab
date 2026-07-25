@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "4bc387ddaf9584e5",
+  "sourceFingerprint": "df3c2a8001dbadbd",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -59,10 +59,10 @@
     "vendored source"
   ],
   "stats": {
-    "indexedFiles": 327,
+    "indexedFiles": 335,
     "domains": 13,
-    "apiEndpoints": 60,
-    "frontendRoutes": 22
+    "apiEndpoints": 63,
+    "frontendRoutes": 24
   },
   "majorRelationships": [
     {
@@ -249,6 +249,31 @@
       ],
       "capabilities": [
         "open-pentest-workspace"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pentest/projects/:projectId/bugs",
+      "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
+      "permissions": [
+        "SECURITY_VULNERABILITIES_READ"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pentest/projects/:projectId/bugs/:bugId",
+      "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
+      "permissions": [
+        "SECURITY_VULNERABILITIES_READ"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/pentest/projects/:projectId/bugs/:bugId/state",
+      "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
+      "permissions": [
+        "SECURITY_FINDINGS_REVIEW",
+        "SECURITY_VULNERABILITIES_READ"
       ]
     },
     {
@@ -626,6 +651,14 @@
     },
     {
       "path": "/projects/:projectId",
+      "source": "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts"
+    },
+    {
+      "path": "/projects/:projectId/bugs",
+      "source": "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts"
+    },
+    {
+      "path": "/projects/:projectId/bugs/:bugId",
       "source": "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts"
     },
     {
@@ -1036,7 +1069,7 @@
             "apps/api/src/utils/AppError.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "c2ab38dc6cf0"
+          "contentHash": "05d08d45db30"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectSecurityScope.service.ts",
@@ -1089,7 +1122,7 @@
             "apps/api/src/modules/projects/services/projectResponsibility.service.ts",
             "apps/api/src/modules/projects/services/projectTableCapability.service.ts"
           ],
-          "contentHash": "f842d98fdd3b"
+          "contentHash": "c07db38ac3e7"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectTableCapability.service.ts",
@@ -1121,7 +1154,7 @@
             "apps/api/src/modules/settings/models/projectTableColumnRegistry.model.ts",
             "apps/api/src/utils/AppError.ts"
           ],
-          "contentHash": "d84d5599e6d5"
+          "contentHash": "6bd539b12ab3"
         },
         {
           "path": "apps/api/src/modules/projects/validators/project.validators.ts",
@@ -1205,7 +1238,7 @@
           "related": [
             "apps/api/src/constants/permissions.ts"
           ],
-          "contentHash": "8bb10726967d"
+          "contentHash": "2208355a20a1"
         },
         {
           "path": "apps/api/src/modules/settings/models/projectTableSetting.model.ts",
@@ -1393,7 +1426,7 @@
             "apps/web-fsa/src/entities/project/ui/table/types.ts",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "0b20717c5322"
+          "contentHash": "cbe0f96ac64b"
         },
         {
           "path": "apps/web-fsa/src/entities/project/ui/table/formatters.ts",
@@ -1532,7 +1565,7 @@
             "apps/web-fsa/src/shared/types/api/projects.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "2503c9fd43c4"
+          "contentHash": "db72c1a7826c"
         },
         {
           "path": "apps/web-fsa/src/entities/project/ui/table/views/AdminProjectsTable.tsx",
@@ -1704,6 +1737,31 @@
           "contentHash": "4c2e4bec027b"
         },
         {
+          "path": "apps/web-fsa/src/pages/security-bugs/SecurityProjectBugsPage.tsx",
+          "kind": "page",
+          "responsibility": "React route page for Security Project Bugs Page.",
+          "keywords": [
+            "web",
+            "pages",
+            "security",
+            "bugs",
+            "project",
+            "page",
+            "tsx"
+          ],
+          "symbols": [
+            "default"
+          ],
+          "related": [
+            "apps/web-fsa/src/entities/pentest/api/pentestApi.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx",
+            "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
+          ],
+          "contentHash": "fa73212e3d9c"
+        },
+        {
           "path": "apps/web-fsa/src/pages/settings/Settings.tsx",
           "kind": "page",
           "responsibility": "React route page for Settings.",
@@ -1822,18 +1880,19 @@
             "updateMyItemAssessment",
             "getMyAssignedSecurityStandards",
             "getVulnerabilities",
-            "createVulnerability",
-            "updateVulnerability",
-            "createWorkSession"
+            "getProjectBugsForReview",
+            "getProjectBugForReview",
+            "updateBugReviewState",
+            "createVulnerability"
           ],
           "related": [
             "apps/api/src/config/uploadStorage.ts",
             "apps/api/src/constants/audit.ts",
             "apps/api/src/constants/http.ts",
-            "apps/api/src/constants/notifications.ts",
-            "apps/api/src/constants/routes.ts"
+            "apps/api/src/constants/uploads.ts",
+            "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "b532e3df0e4a"
+          "contentHash": "a5f15ba898b2"
         },
         {
           "path": "apps/api/src/modules/pentest/middlewares/pocUpload.middleware.ts",
@@ -1924,7 +1983,7 @@
             "apps/api/src/constants/vulnerabilities.ts",
             "apps/api/src/modules/pentest/services/cvssV4.constants.ts"
           ],
-          "contentHash": "f86a51c78fbb"
+          "contentHash": "444cbcf86641"
         },
         {
           "path": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
@@ -1948,7 +2007,7 @@
             "apps/api/src/middlewares/permission.middleware.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "26b6b950215d"
+          "contentHash": "bce8bad82720"
         },
         {
           "path": "apps/api/src/modules/pentest/services/assignedSecurityStandard.service.test.ts",
@@ -1994,6 +2053,57 @@
             "apps/api/src/modules/projects/models/projectAssignment.model.ts"
           ],
           "contentHash": "c97de02e66e8"
+        },
+        {
+          "path": "apps/api/src/modules/pentest/services/bugReview.service.test.ts",
+          "kind": "test",
+          "responsibility": "Regression tests for bug Review service test.",
+          "keywords": [
+            "api",
+            "modules",
+            "pentest",
+            "services",
+            "bug",
+            "review",
+            "service"
+          ],
+          "related": [
+            "apps/api/src/modules/pentest/services/bugReview.service.ts",
+            "packages/contracts/src/index.ts"
+          ],
+          "contentHash": "b7df8e588bae"
+        },
+        {
+          "path": "apps/api/src/modules/pentest/services/bugReview.service.ts",
+          "kind": "service",
+          "responsibility": "Business logic for bug Review service.",
+          "keywords": [
+            "api",
+            "modules",
+            "pentest",
+            "services",
+            "bug",
+            "review",
+            "service"
+          ],
+          "symbols": [
+            "assertBugStateTransition",
+            "resolveSecurityManagerId",
+            "resolveAssignedSecurityManager",
+            "requireAssignedSecurityManager",
+            "listProjectBugsForManager",
+            "getProjectBugForManager",
+            "notifySecurityManagerOfBug",
+            "buildBugSubmittedNotification"
+          ],
+          "related": [
+            "apps/api/src/constants/http.ts",
+            "apps/api/src/constants/notifications.ts",
+            "apps/api/src/constants/projects.ts",
+            "apps/api/src/constants/routes.ts",
+            "apps/api/src/modules/notifications/services/notification.service.ts"
+          ],
+          "contentHash": "2010a07e761c"
         },
         {
           "path": "apps/api/src/modules/pentest/services/cvssV4.constants.ts",
@@ -2118,8 +2228,10 @@
             "updateVulnerabilitySchema",
             "assignedSecurityStandardsSchema",
             "saveItemAssessmentSchema",
-            "createWorkSessionSchema",
-            "projectStatusByWorkSessionStatus"
+            "projectBugSchema",
+            "projectBugsSchema",
+            "updateBugReviewStateSchema",
+            "createWorkSessionSchema"
           ],
           "related": [
             "apps/api/src/constants/projects.ts",
@@ -2128,7 +2240,7 @@
             "apps/api/src/modules/pentest/models/pentestWorkSession.model.ts",
             "apps/api/src/modules/pentest/services/cvssV4.constants.ts"
           ],
-          "contentHash": "18cf03441c19"
+          "contentHash": "0b54813f74c3"
         },
         {
           "path": "apps/api/src/modules/security-standards/controllers/securityStandard.controller.ts",
@@ -2303,7 +2415,7 @@
             "apps/web-fsa/src/shared/api/unwrapApiData.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "aa024cdd6e12"
+          "contentHash": "3dfc2657ce9e"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
@@ -3481,7 +3593,7 @@
             "apps/web-fsa/src/entities/permission/model/permissions.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "fc97996d65ed"
+          "contentHash": "7e6658a42b81"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/domain/accessRules.ts",
@@ -3955,7 +4067,7 @@
             "packages/authz/src/permissions.ts",
             "packages/authz/src/roles.ts"
           ],
-          "contentHash": "a3d05bdebe0b"
+          "contentHash": "2e0ee3377916"
         },
         {
           "path": "packages/authz/src/roles.ts",
@@ -4006,7 +4118,7 @@
           "related": [
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "6292d975cc33"
+          "contentHash": "ebc1635408b4"
         },
         {
           "path": "apps/api/src/constants/socket.ts",
@@ -4828,7 +4940,7 @@
             "apps/api/src/modules/devops/services/credentialCipher.service.ts",
             "apps/api/src/modules/devops/services/devopsInfo.service.ts"
           ],
-          "contentHash": "18ec45a0fd22"
+          "contentHash": "d4e4bed7f100"
         },
         {
           "path": "apps/api/src/modules/devops/services/devopsInfo.service.ts",
@@ -4844,6 +4956,9 @@
             "DevOps"
           ],
           "symbols": [
+            "selectCurrentPentesterAssignments",
+            "assertPersonalDevopsTargetsAreCurrentAssignments",
+            "detectDevopsNotificationChange",
             "buildProjectDevopsAccessView",
             "getProjectDevopsWorkspace",
             "saveProjectDevopsInfo"
@@ -4853,9 +4968,58 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/devops/models/projectDevopsInfo.model.ts",
             "apps/api/src/modules/devops/services/credentialCipher.service.ts",
-            "apps/api/src/modules/devops/validators/devops.validators.ts"
+            "apps/api/src/modules/devops/services/devopsNotification.service.ts"
           ],
-          "contentHash": "1e37c8d563fb"
+          "contentHash": "47b894513b9d"
+        },
+        {
+          "path": "apps/api/src/modules/devops/services/devopsNotification.service.test.ts",
+          "kind": "test",
+          "responsibility": "Regression tests for devops Notification service test.",
+          "keywords": [
+            "api",
+            "modules",
+            "devops",
+            "services",
+            "notification",
+            "service",
+            "test"
+          ],
+          "related": [
+            "apps/api/src/modules/devops/services/devopsNotification.service.ts"
+          ],
+          "contentHash": "e30a96c2ae27"
+        },
+        {
+          "path": "apps/api/src/modules/devops/services/devopsNotification.service.ts",
+          "kind": "service",
+          "responsibility": "Business logic for devops Notification service.",
+          "keywords": [
+            "api",
+            "modules",
+            "devops",
+            "services",
+            "notification",
+            "service",
+            "DevOps"
+          ],
+          "symbols": [
+            "DevopsNotificationAction",
+            "DevopsNotificationMode",
+            "DevopsNotificationRequest",
+            "resolveDevopsNotificationRecipientIds",
+            "buildDevopsNotificationInputs",
+            "notifyDevopsRecipients",
+            "saveDevopsInfoAndNotify"
+          ],
+          "related": [
+            "apps/api/src/constants/notifications.ts",
+            "apps/api/src/constants/projects.ts",
+            "apps/api/src/constants/routes.ts",
+            "apps/api/src/modules/notifications/services/notification.service.ts",
+            "apps/api/src/modules/projects/models/projectAssignment.model.ts"
+          ],
+          "contentHash": "ea9eca1093c1"
         },
         {
           "path": "apps/api/src/modules/devops/validators/devops.validators.test.ts",
@@ -4966,7 +5130,7 @@
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
             "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
           ],
-          "contentHash": "86266e122c12"
+          "contentHash": "762587c51b99"
         }
       ]
     },
@@ -5489,7 +5653,7 @@
             "apps/web-fsa/src/entities/permission/domain/accessPolicy.ts",
             "apps/web-fsa/src/entities/permission/model/permissions.ts"
           ],
-          "contentHash": "bc690bc9bde5"
+          "contentHash": "948ca7d7e20f"
         },
         {
           "path": "apps/web-fsa/src/app/store/store.ts",
@@ -5550,7 +5714,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "310ab54e8204"
+          "contentHash": "cd84ad8f9aab"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",
@@ -5727,6 +5891,54 @@
             "apps/web-fsa/src/shared/ui/primitives/Card.tsx"
           ],
           "contentHash": "f16100f724f9"
+        },
+        {
+          "path": "apps/web-fsa/src/pages/security-bugs/BugEvidenceGallery.tsx",
+          "kind": "page",
+          "responsibility": "React route page for Bug Evidence Gallery.",
+          "keywords": [
+            "web",
+            "pages",
+            "security",
+            "bugs",
+            "bug",
+            "evidence",
+            "gallery"
+          ],
+          "symbols": [
+            "default"
+          ],
+          "related": [
+            "apps/web-fsa/src/entities/pentest/model/attachments.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx",
+            "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
+          ],
+          "contentHash": "e5ec353bce65"
+        },
+        {
+          "path": "apps/web-fsa/src/pages/security-bugs/SecurityBugDetailsPage.tsx",
+          "kind": "page",
+          "responsibility": "React route page for Security Bug Details Page.",
+          "keywords": [
+            "web",
+            "pages",
+            "security",
+            "bugs",
+            "bug",
+            "details",
+            "page"
+          ],
+          "symbols": [
+            "default"
+          ],
+          "related": [
+            "apps/web-fsa/src/entities/pentest/api/pentestApi.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx",
+            "apps/web-fsa/src/pages/security-bugs/BugEvidenceGallery.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
+            "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
+          ],
+          "contentHash": "656e2e89bdcd"
         },
         {
           "path": "apps/web-fsa/src/pages/signup/Signup.tsx",
@@ -6400,7 +6612,7 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/features/ui-state/model/uiSlice.ts"
           ],
-          "contentHash": "44c5ea83e6bc"
+          "contentHash": "d33e94f38bad"
         }
       ]
     },
@@ -6506,7 +6718,7 @@
             "ROUTES",
             "API_ENDPOINTS"
           ],
-          "contentHash": "672a2326dd4d"
+          "contentHash": "eb0ff5062917"
         },
         {
           "path": "apps/api/src/constants/security.ts",
@@ -6842,6 +7054,28 @@
           "contentHash": "9fe2ec1f5515"
         },
         {
+          "path": "packages/contracts/src/bugReview.ts",
+          "kind": "type-contract",
+          "responsibility": "Shared types/contracts for bug Review.",
+          "keywords": [
+            "packages",
+            "contracts",
+            "bug",
+            "review"
+          ],
+          "symbols": [
+            "BUG_REVIEW_STATES",
+            "BUG_REVIEW_STATE_VALUES",
+            "BugReviewState",
+            "BUG_REVIEW_TRANSITIONS",
+            "isBugReviewState",
+            "canTransitionBugReviewState",
+            "normalizeBugReviewState",
+            "legacyVulnerabilityStatusForReviewState"
+          ],
+          "contentHash": "0455912e7bab"
+        },
+        {
           "path": "packages/contracts/src/index.ts",
           "kind": "type-contract",
           "responsibility": "Shared types/contracts for index.",
@@ -6852,11 +7086,11 @@
           "related": [
             "packages/contracts/src/api.ts",
             "packages/contracts/src/auth.ts",
+            "packages/contracts/src/bugReview.ts",
             "packages/contracts/src/notification.ts",
-            "packages/contracts/src/projectResponsibility.ts",
-            "packages/contracts/src/projectTable.ts"
+            "packages/contracts/src/projectResponsibility.ts"
           ],
-          "contentHash": "f8cb64a835cd"
+          "contentHash": "87df78991a3b"
         },
         {
           "path": "packages/contracts/src/notification.ts",
@@ -6875,7 +7109,7 @@
             "NotificationContract",
             "NotificationPageContract"
           ],
-          "contentHash": "6ec4f9e4ed2f"
+          "contentHash": "ccddfab034a0"
         },
         {
           "path": "packages/contracts/src/projectResponsibility.ts",
@@ -6900,7 +7134,7 @@
           "related": [
             "packages/authz/src/index.ts"
           ],
-          "contentHash": "2e48adf9a34b"
+          "contentHash": "8959fe1214f1"
         },
         {
           "path": "packages/contracts/src/projectTable.ts",
@@ -6919,7 +7153,7 @@
           "related": [
             "packages/authz/src/index.ts"
           ],
-          "contentHash": "fc5af000f908"
+          "contentHash": "fb0259fe5a98"
         },
         {
           "path": "packages/contracts/src/rbac.ts",
@@ -7162,7 +7396,7 @@
           "related": [
             "apps/api/src/modules/pentest/services/vulnerabilityCompatibility.service.ts"
           ],
-          "contentHash": "c3781a7ecf2c"
+          "contentHash": "6017395397a2"
         },
         {
           "path": "apps/api/src/modules/pentest/services/vulnerabilityCompatibility.service.ts",
@@ -7181,9 +7415,10 @@
             "normalizeLegacyVulnerability"
           ],
           "related": [
-            "apps/api/src/constants/vulnerabilities.ts"
+            "apps/api/src/constants/vulnerabilities.ts",
+            "packages/contracts/src/index.ts"
           ],
-          "contentHash": "9e9d06c877ba"
+          "contentHash": "3da5bc546dbf"
         },
         {
           "path": "docs/LEGACY_DATABASE_COMPATIBILITY_REPORT.md",

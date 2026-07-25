@@ -18,7 +18,11 @@ export const NON_ADMIN_PROJECT_VIEWS = [
 ] as const;
 export type NonAdminProjectView = typeof NON_ADMIN_PROJECT_VIEWS[number];
 export type ProjectListMode = "admin" | "unified" | NonAdminProjectView;
-export type ProjectRowAction = "view-project" | "open-pentest-workspace" | "assign-pentesters";
+export type ProjectRowAction =
+  | "view-project"
+  | "open-pentest-workspace"
+  | "assign-pentesters"
+  | "review-security-bugs";
 
 export const PROJECT_VIEW_PERMISSIONS = Object.fromEntries(
   NON_ADMIN_PROJECT_VIEWS.map((view) => [
@@ -68,12 +72,14 @@ export function resolveProjectRowActions(
     .filter((action): action is ProjectRowAction =>
       (action === "view-project" ||
         action === "open-pentest-workspace" ||
-        action === "assign-pentesters") &&
+        action === "assign-pentesters" ||
+        action === "review-security-bugs") &&
       context.capabilities[action] &&
       (!view ||
       action === "view-project" ||
       (action === "open-pentest-workspace" && view === "pentest") ||
-      (action === "assign-pentesters" && view === "security"))
+      (action === "assign-pentesters" && view === "security") ||
+      (action === "review-security-bugs" && view === "security"))
     );
 }
 

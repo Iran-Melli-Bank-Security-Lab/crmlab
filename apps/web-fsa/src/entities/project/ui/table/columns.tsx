@@ -1,4 +1,5 @@
 import { Badge, Box, HStack, Text } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 import type {
   ProjectAssignmentStatus,
   ProjectDiscipline,
@@ -443,6 +444,37 @@ export const projectTableColumns = {
     align: "end",
     kind: "number",
     sortable: true,
+  },
+  securityBugs: {
+    key: "securityBugs",
+    label: "Bug review",
+    labelKey: "projectTable.columns.securityBugs",
+    minW: "140px",
+    maxW: "180px",
+    align: "end",
+    render: (project, t) => project.allowedActions?.includes("review-security-bugs") ? (
+      <Box
+        asChild
+        display="inline-flex"
+        borderRadius="md"
+        borderWidth="1px"
+        borderColor="var(--apple-blue-border)"
+        bg="var(--apple-blue-soft)"
+        color="var(--apple-blue)"
+        fontSize="sm"
+        fontWeight="700"
+        px={3}
+        py={1.5}
+        _hover={{ textDecoration: "none", filter: "brightness(0.97)" }}
+      >
+        <Link
+          to={`/projects/${project.id}/bugs`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {t("projectTable.reviewBugs")}
+        </Link>
+      </Box>
+    ) : <Text color="var(--apple-muted)">—</Text>,
   },
   testCoverage: {
     key: "testCoverage",

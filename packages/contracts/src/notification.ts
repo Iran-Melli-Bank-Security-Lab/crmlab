@@ -10,6 +10,8 @@ export type NotificationTypeContract =
   | "vulnerability.rejected"
   | "deployment.started"
   | "deployment.failed"
+  | "devops.access_created"
+  | "devops.access_updated"
   | "ticket.created"
   | "ticket.updated"
   | "qa.testcase.created"

@@ -57,3 +57,13 @@ export type {
   NotificationReadFilterContract,
   NotificationTypeContract,
 } from "./notification.js";
+export {
+  BUG_REVIEW_STATES,
+  BUG_REVIEW_STATE_VALUES,
+  BUG_REVIEW_TRANSITIONS,
+  canTransitionBugReviewState,
+  isBugReviewState,
+  legacyVulnerabilityStatusForReviewState,
+  normalizeBugReviewState,
+  type BugReviewState,
+} from "./bugReview.js";

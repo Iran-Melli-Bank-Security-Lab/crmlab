@@ -5,6 +5,7 @@ import {
   Drawer,
   Flex,
   HStack,
+  Image,
   Link as ChakraLink,
   Portal,
   Separator,
@@ -19,6 +20,7 @@ import { usePermission } from "@/features/access-control/model/usePermission";
 import { useLanguage } from "@/features/language/model";
 import { getDashboardPathByPermissions } from "@/shared/lib/dashboard";
 import { canShowNavigationItem } from "@/entities/permission/application/sidebarAccess";
+import bankLogo from "@/app/logoـbank.png";
 
 type IconName = SidebarItem["icon"];
 
@@ -104,11 +106,13 @@ function groupItems(items: SidebarItem[]) {
 function NavigationPanel({
   onNavigate,
   sections,
+  showBrand = true,
 }: {
   onNavigate?: () => void;
   sections: Array<[string, SidebarItem[]]>;
+  showBrand?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const location = useLocation();
   const activePath = `${location.pathname}${location.search}`;
   const isItemActive = (itemPath: string) =>
@@ -116,22 +120,40 @@ function NavigationPanel({
 
   return (
     <Flex direction="column" h="full" minH={0} className="enterprise-nav">
-      <Box px={5} py={5}>
+      {showBrand && <Box px={5} py={4}>
         <HStack gap={3}>
           <Flex
-            boxSize="9"
+            width={{ md: "50px", xl: "58px" }}
+            height={{ md: "68px", xl: "78px" }}
             borderRadius="md"
             align="center"
             justify="center"
-            bg="var(--apple-text)"
-            color="var(--apple-bg)"
-            fontSize="sm"
-            fontWeight="800"
+            bg="white"
+            border="1px solid"
+            borderColor="var(--apple-border-soft)"
+            overflow="hidden"
+            flexShrink={0}
           >
-            SP
+            <Image
+              src={bankLogo}
+              alt={t("app.name")}
+              width="full"
+              height="full"
+              objectFit="contain"
+              p="2px"
+            />
           </Flex>
           <Box minW={0}>
-            <Text fontSize="md" fontWeight="800" lineClamp={1}>
+            <Text
+              fontSize={
+                language === "fa"
+                  ? { md: "xs", xl: "sm" }
+                  : { md: "md", xl: "lg" }
+              }
+              fontWeight="800"
+              lineClamp={language === "fa" ? 2 : 1}
+              lineHeight={language === "fa" ? "1.65" : "normal"}
+            >
               {t("app.name")}
             </Text>
             <Text color="var(--apple-muted)" fontSize="xs" fontWeight="600">
@@ -139,9 +161,9 @@ function NavigationPanel({
             </Text>
           </Box>
         </HStack>
-      </Box>
+      </Box>}
 
-      <Separator />
+      {showBrand && <Separator />}
 
       <VStack as="nav" align="stretch" gap={5} px={3} py={4} overflowY="auto">
         {sections.map(([section, items]) => (
@@ -282,7 +304,7 @@ export default function Sidebar() {
   const dispatch = useDispatch();
   const { drawerOpen, sidebarOpen } = useSelector((state: RootState) => state.ui);
   const { permissions } = usePermission();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const accessSubject = { permissions };
   const primaryDashboardPath = getDashboardPathByPermissions(permissions);
   const primaryDashboardItem: SidebarItem | null =
@@ -315,7 +337,7 @@ export default function Sidebar() {
         <Box
           as="aside"
           display={{ base: "none", md: "block" }}
-          w="292px"
+          w={language === "fa" ? "370px" : "292px"}
           bg="var(--apple-surface-glass)"
           borderInlineEnd="1px solid"
           borderColor="var(--apple-border-soft)"
@@ -335,18 +357,61 @@ export default function Sidebar() {
           else dispatch(closeDrawer());
         }}
         placement="start"
-        size="xs"
+        size={language === "fa" ? "sm" : "xs"}
       >
         <Portal>
           <Drawer.Backdrop bg="blackAlpha.500" backdropFilter="blur(4px)" />
           <Drawer.Positioner>
-            <Drawer.Content maxW="320px" bg="var(--apple-surface-raised)">
+            <Drawer.Content
+              width={language === "fa" ? { base: "100vw", sm: "370px" } : undefined}
+              maxW={language === "fa" ? "370px" : "320px"}
+              bg="var(--apple-surface-raised)"
+            >
               <Drawer.Header borderBottom="1px solid" borderColor="var(--apple-border-soft)" py={4}>
-                <Drawer.Title fontSize="md">{t("app.name")}</Drawer.Title>
+                <HStack gap={3} pe={10}>
+                  <Flex
+                    width={{ base: "42px", sm: "48px" }}
+                    height={{ base: "56px", sm: "64px" }}
+                    borderRadius="md"
+                    align="center"
+                    justify="center"
+                    bg="white"
+                    border="1px solid"
+                    borderColor="var(--apple-border-soft)"
+                    overflow="hidden"
+                    flexShrink={0}
+                  >
+                    <Image
+                      src={bankLogo}
+                      alt=""
+                      width="full"
+                      height="full"
+                      objectFit="contain"
+                      p="2px"
+                    />
+                  </Flex>
+                  <Box minW={0}>
+                    <Drawer.Title
+                      fontSize={
+                        language === "fa"
+                          ? { base: "xs", sm: "sm" }
+                          : { base: "md", sm: "lg" }
+                      }
+                      fontWeight="800"
+                      lineHeight={language === "fa" ? "1.65" : "normal"}
+                    >
+                      {t("app.name")}
+                    </Drawer.Title>
+                    <Text color="var(--apple-muted)" fontSize="xs" fontWeight="600">
+                      {t("nav.console")}
+                    </Text>
+                  </Box>
+                </HStack>
               </Drawer.Header>
               <Drawer.Body p={0}>
                 <NavigationPanel
                   sections={sections}
+                  showBrand={false}
                   onNavigate={() => dispatch(closeDrawer())}
                 />
               </Drawer.Body>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Box, Button, Flex, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
 import type { AppNotification, NotificationReadFilter } from "@/entities/notification/model/notification";
 import { useNotifications } from "@/features/notifications/model/useNotifications";
 import { useLanguage } from "@/features/language/model";
@@ -49,9 +49,6 @@ function NotificationRow({
         <HStack gap={2} mb={2} flexWrap="wrap">
           {!notification.isRead && <Box aria-label="Unread" bg="var(--apple-blue)" borderRadius="full" h="8px" w="8px" />}
           <Text color="var(--apple-text)" fontWeight="800">{notification.title}</Text>
-          <Badge colorPalette={notification.priority === "critical" ? "red" : notification.priority === "high" ? "orange" : "blue"} textTransform="capitalize">
-            {notification.priority}
-          </Badge>
         </HStack>
         <Text color="var(--apple-secondary)" lineHeight="1.65">{notification.message}</Text>
         <Text color="var(--apple-muted)" fontSize="xs" fontWeight="650" mt={2}>{formatDate(notification.createdAt, language)}</Text>

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "987d2d4e3891732a",
+  "sourceFingerprint": "936c2a54f2249447",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -4764,7 +4764,7 @@
             "apps/web-fsa/src/features/notifications/model/useNotifications.ts",
             "apps/web-fsa/src/shared/ui/layout/PageHeader.tsx"
           ],
-          "contentHash": "5a3873d09aa0"
+          "contentHash": "d841390cd73d"
         },
         {
           "path": "apps/web-fsa/src/shared/realtime/socket.client.ts",
@@ -4869,7 +4869,7 @@
             "apps/web-fsa/src/features/notifications/browser/browserNotification.ts",
             "apps/web-fsa/src/features/notifications/model/useNotifications.ts"
           ],
-          "contentHash": "67c9e7c298bd"
+          "contentHash": "48b476eb2b5c"
         }
       ]
     },

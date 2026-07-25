@@ -18,44 +18,12 @@ import { useLanguage } from "@/features/language/model";
 import type {
   AppNotification,
   NotificationConnectionStatus,
-  NotificationPriority,
 } from "@/entities/notification/model/notification";
-import { normalizeNotificationPriority } from "@/entities/notification/model/notification";
 import {
   getBrowserNotificationPermission,
   requestBrowserNotificationPermission,
   type BrowserNotificationPermission,
 } from "@/features/notifications/browser/browserNotification";
-
-const priorityStyles: Record<
-  NotificationPriority,
-  {
-    color: string;
-    bg: string;
-    border: string;
-  }
-> = {
-  low: {
-    color: "var(--apple-secondary)",
-    bg: "var(--apple-surface-hover)",
-    border: "var(--apple-border-soft)",
-  },
-  medium: {
-    color: "var(--apple-blue)",
-    bg: "var(--apple-blue-soft)",
-    border: "var(--apple-blue-border)",
-  },
-  high: {
-    color: "var(--apple-warning-text)",
-    bg: "var(--apple-warning-bg)",
-    border: "var(--apple-warning-border)",
-  },
-  critical: {
-    color: "var(--apple-danger-text)",
-    bg: "var(--apple-danger-bg)",
-    border: "var(--apple-danger-border)",
-  },
-};
 
 const connectionColors: Record<NotificationConnectionStatus, string> = {
   idle: "#86868b",
@@ -197,8 +165,6 @@ function NotificationItem({
 }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const priority = normalizeNotificationPriority(notification.priority);
-  const style = priorityStyles[priority] || priorityStyles.medium;
   const isClickable = Boolean(notification.actionUrl);
 
   const markReadIfNeeded = async () => {
@@ -219,7 +185,7 @@ function NotificationItem({
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     handleActivate();
@@ -266,11 +232,11 @@ function NotificationItem({
       <Flex align="flex-start" gap={3} ps={notification.isRead ? 0 : 2}>
         <Flex
           align="center"
-          bg={style.bg}
-          borderColor={style.border}
+          bg="var(--apple-blue-soft)"
+          borderColor="var(--apple-blue-border)"
           borderRadius="md"
           borderWidth="1px"
-          color={style.color}
+          color="var(--apple-blue)"
           flexShrink={0}
           h="40px"
           justify="center"
@@ -297,18 +263,6 @@ function NotificationItem({
                 </Text>
               )}
             </Box>
-            <Badge
-              bg={style.bg}
-              border="1px solid"
-              borderColor={style.border}
-              color={style.color}
-              flexShrink={0}
-              size="sm"
-              textTransform="capitalize"
-              variant="subtle"
-            >
-              {priority}
-            </Badge>
           </Flex>
 
           <Text color="var(--apple-secondary)" fontSize="sm" lineClamp={2} lineHeight="1.55" mt={1.5}>

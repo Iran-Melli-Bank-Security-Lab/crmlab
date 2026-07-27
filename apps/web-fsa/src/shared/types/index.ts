@@ -91,6 +91,34 @@ export type Project = {
   allowedActions?: ProjectRowActionContract[];
   myResponsibilities?: ProjectResponsibilityKey[];
   responsibilityContext?: ProjectResponsibilityContextContract;
+  provisioningStatus?:
+    | "AWAITING_DEVOPS_SETUP"
+    | "DEVOPS_IN_PROGRESS"
+    | "DEVOPS_READY"
+    | "DEVOPS_BLOCKED";
+  provisioningAttemptNumber?: number;
+  provisioningHistory?: Array<{
+    previousStatus: string;
+    newStatus: string;
+    actingUserId: string;
+    actingUserRole: string;
+    timestamp: string;
+    notes?: string;
+    failureReason?: string;
+    technicalDescription?: string;
+    recommendedAction?: string;
+    evidence?: string[];
+    attemptNumber: number;
+  }>;
+  devopsConfirmedBy?: string;
+  devopsConfirmedAt?: string;
+  devopsNotes?: string;
+  devopsFailureReason?: string;
+  devopsFailureDescription?: string;
+  devopsRecommendedAction?: string;
+  devopsFailureEvidence?: string[];
+  devopsFailureAt?: string;
+  provisioningBlockedDurationMs?: number;
 };
 
 export type ProjectAssignment = Project & {

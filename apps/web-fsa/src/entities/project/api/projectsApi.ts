@@ -117,6 +117,18 @@ function normalizeProject(project: ApiProjectResponse): Project {
     responsibilityContext: project.responsibilityContext,
     myResponsibilities:
       project.responsibilityContext?.responsibilityKeys || project.myResponsibilities,
+    provisioningStatus: project.provisioningStatus || "DEVOPS_READY",
+    provisioningAttemptNumber: project.provisioningAttemptNumber || 1,
+    provisioningHistory: project.provisioningHistory,
+    devopsConfirmedBy: project.devopsConfirmedBy,
+    devopsConfirmedAt: project.devopsConfirmedAt,
+    devopsNotes: project.devopsNotes,
+    devopsFailureReason: project.devopsFailureReason,
+    devopsFailureDescription: project.devopsFailureDescription,
+    devopsRecommendedAction: project.devopsRecommendedAction,
+    devopsFailureEvidence: project.devopsFailureEvidence,
+    devopsFailureAt: project.devopsFailureAt,
+    provisioningBlockedDurationMs: project.provisioningBlockedDurationMs,
   };
 }
 
@@ -156,7 +168,7 @@ export const projectsApi = api.injectEndpoints({
         { type: "Projects", id: projectId },
       ],
     }),
-    getProjectAssignees: builder.query<User[], { projectId: string; role: "pentester" }>({
+    getProjectAssignees: builder.query<User[], { projectId: string; role: "pentester" | "qa" }>({
       query: ({ projectId, role }) => ({
         url: `/projects/${projectId}/eligible-assignees`,
         params: { role },
@@ -197,7 +209,7 @@ export const projectsApi = api.injectEndpoints({
       {
         projectId: string;
         userIds: string[];
-        role?: "pentester";
+        role?: "pentester" | "qa";
         pentesterScopes?: PentesterScopeAssignmentContract[];
       }
     >({

@@ -314,6 +314,68 @@ export const projectTableColumns = {
       </Badge>
     ),
   },
+  provisioningStatus: {
+    key: "provisioningStatus",
+    label: "DevOps status",
+    minW: "190px",
+    sortable: true,
+    render: (project) => (
+      <Badge
+        colorPalette={
+          project.provisioningStatus === "DEVOPS_READY"
+            ? "green"
+            : project.provisioningStatus === "DEVOPS_BLOCKED"
+              ? "red"
+              : "orange"
+        }
+        borderRadius="full"
+        px={2.5}
+        py={0.5}
+        textTransform="none"
+      >
+        {(project.provisioningStatus || "DEVOPS_READY").replace(/_/g, " ")}
+      </Badge>
+    ),
+    sortValue: (project) => project.provisioningStatus || "DEVOPS_READY",
+  },
+  projectManager: {
+    key: "projectManager",
+    label: "Project Manager",
+    minW: "190px",
+    render: (project) =>
+      project.securityManagerId || project.qualityManagerId || "—",
+  },
+  labRepresentative: {
+    key: "labRepresentative",
+    label: "Lab Representative",
+    minW: "190px",
+    render: (project) => project.representativeId || "—",
+  },
+  devopsResponsible: {
+    key: "devopsResponsible",
+    label: "DevOps Responsible",
+    minW: "190px",
+    render: (project) => project.devopsAssigneeId || "—",
+  },
+  devopsFailureReason: {
+    key: "devopsFailureReason",
+    label: "Setup failure",
+    minW: "220px",
+    maxW: "360px",
+    wrap: true,
+    render: (project) => (
+      <Text lineClamp={2} title={project.devopsFailureReason}>
+        {project.devopsFailureReason || "—"}
+      </Text>
+    ),
+  },
+  devopsFailureAt: {
+    key: "devopsFailureAt",
+    label: "Failure date",
+    minW: "140px",
+    kind: "date",
+    sortable: true,
+  },
   priority: {
     key: "priority",
     label: "Priority",

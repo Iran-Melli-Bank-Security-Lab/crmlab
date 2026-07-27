@@ -157,7 +157,7 @@ function DevOpsDeliveryWidget() {
       </Text>
       <HStack gap={3} flexWrap="wrap">
         <Button asChild variant="secondary">
-          <Link to="/projects">{t("dashboard.widgets.devops.open")}</Link>
+          <Link to="/devops">{t("dashboard.widgets.devops.open")}</Link>
         </Button>
         <PermissionGate permissions={[PERMISSIONS.DEVOPS_DEPLOYMENTS_CREATE]}>
           <Button>{t("dashboard.widgets.devops.start")}</Button>

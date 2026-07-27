@@ -22,6 +22,7 @@ const SecurityProjectBugsPage = lazy(
 const SecurityBugDetailsPage = lazy(
   () => import("@/pages/security-bugs/SecurityBugDetailsPage")
 );
+const DevopsProjects = lazy(() => import("@/pages/devops-projects/DevopsProjects"));
 
 export const protectedRouteConfig = [
   {
@@ -106,9 +107,10 @@ export const protectedRouteConfig = [
     permissions: [PERMISSIONS.PENTEST_DASHBOARD_READ],
   },
   {
-    path: "/devops",
-    element: DashboardRedirect,
-    permissions: [PERMISSIONS.DEVOPS_DASHBOARD_READ],
+    path: ROUTE_ACCESS_POLICIES.devopsProjects.path,
+    element: DevopsProjects,
+    permissions: ROUTE_ACCESS_POLICIES.devopsProjects.permissions,
+    roles: ROUTE_ACCESS_POLICIES.devopsProjects.roles,
   },
   {
     path: "/representative",

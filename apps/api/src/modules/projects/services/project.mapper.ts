@@ -42,9 +42,9 @@ export function mapCreateProjectRequest(input: CreateProjectRequest) {
     certificateAuthorities: input.certificateRequired
       ? Array.from(new Set(input.certificateAuthorities))
       : [],
-    projectManager: input.projectManagerId,
-    qualityManager:
-      input.qualityManagerId || (input.type === "quality" ? input.projectManagerId : undefined),
+    projectManager:
+      input.type === "security" ? input.projectManagerId : input.qualityManagerId,
+    qualityManager: input.type === "quality" ? input.qualityManagerId : undefined,
     devops: input.devopsManagerId,
     representative: input.representativeId,
     expireDay: new Date(input.testEndDate),

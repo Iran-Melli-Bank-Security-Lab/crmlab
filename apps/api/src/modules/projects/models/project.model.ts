@@ -1,5 +1,10 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
-import { PROJECT_STATUS, PROJECT_TYPE_VALUES, type ProjectType } from "@/constants/projects";
+import {
+  PROJECT_PROVISIONING_STATUS_VALUES,
+  PROJECT_STATUS,
+  PROJECT_TYPE_VALUES,
+  type ProjectType,
+} from "@/constants/projects";
 import { LEGACY_COLLECTIONS } from "@/constants/legacyCollections";
 
 export const PROJECT_IDENTITY_INDEX = {
@@ -50,6 +55,31 @@ const projectDevopsInfoSchema = new Schema(
   { _id: false }
 );
 
+const provisioningHistorySchema = new Schema(
+  {
+    previousStatus: {
+      type: String,
+      enum: PROJECT_PROVISIONING_STATUS_VALUES,
+      required: true,
+    },
+    newStatus: {
+      type: String,
+      enum: PROJECT_PROVISIONING_STATUS_VALUES,
+      required: true,
+    },
+    actingUserId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    actingUserRole: { type: String, required: true },
+    timestamp: { type: Date, required: true, default: Date.now },
+    notes: { type: String, trim: true },
+    failureReason: { type: String, trim: true },
+    technicalDescription: { type: String, trim: true },
+    recommendedAction: { type: String, trim: true },
+    evidence: { type: [String], default: undefined },
+    attemptNumber: { type: Number, required: true, min: 1 },
+  },
+  { _id: true }
+);
+
 const projectSchema = new Schema(
   {
     projectName: { type: String, required: true, trim: true },
@@ -82,6 +112,26 @@ const projectSchema = new Schema(
     qualityManager: { type: Schema.Types.ObjectId, ref: "User" },
     devops: { type: Schema.Types.ObjectId, ref: "User" },
     representative: { type: Schema.Types.ObjectId, ref: "User" },
+
+    // Missing on legacy projects means ready. New project creation always sets
+    // this explicitly to AWAITING_DEVOPS_SETUP.
+    provisioningStatus: {
+      type: String,
+      enum: PROJECT_PROVISIONING_STATUS_VALUES,
+      default: undefined,
+    },
+    provisioningAttemptNumber: { type: Number, min: 1, default: undefined },
+    provisioningHistory: { type: [provisioningHistorySchema], default: [] },
+    devopsConfirmedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    devopsConfirmedAt: { type: Date },
+    devopsNotes: { type: String, trim: true },
+    devopsFailureReason: { type: String, trim: true },
+    devopsFailureDescription: { type: String, trim: true },
+    devopsRecommendedAction: { type: String, trim: true },
+    devopsFailureEvidence: { type: [String], default: undefined },
+    devopsFailureAt: { type: Date },
+    provisioningBlockedAt: { type: Date },
+    provisioningBlockedDurationMs: { type: Number, min: 0, default: 0 },
 
     // Temporary compatibility fields. ProjectAssignment should become the source of truth.
     assignedUserIds: [{ type: Schema.Types.ObjectId, ref: "User" }],
@@ -142,6 +192,8 @@ projectSchema.index({ projectManager: 1, status: 1 });
 projectSchema.index({ qualityManager: 1, status: 1 });
 projectSchema.index({ devops: 1, status: 1 });
 projectSchema.index({ representative: 1, status: 1 });
+projectSchema.index({ devops: 1, provisioningStatus: 1, testExpiresAt: 1 });
+projectSchema.index({ representative: 1, provisioningStatus: 1, testExpiresAt: 1 });
 projectSchema.index({ assignedUserIds: 1, status: 1 });
 projectSchema.index({ userProject: 1 });
 projectSchema.index({ letterNumber: 1 });

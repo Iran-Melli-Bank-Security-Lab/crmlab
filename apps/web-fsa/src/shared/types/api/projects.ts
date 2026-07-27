@@ -19,7 +19,7 @@ export type CreateProjectRequest = {
   platform: ProjectPlatform;
   certificateRequired: boolean;
   certificateAuthorities: CertificateAuthority[];
-  projectManagerId: string;
+  projectManagerId?: string;
   qualityManagerId?: string;
   devopsManagerId: string;
   representativeId?: string;
@@ -74,6 +74,34 @@ export type ApiProjectResponse = {
   testExpiresAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  provisioningStatus?:
+    | "AWAITING_DEVOPS_SETUP"
+    | "DEVOPS_IN_PROGRESS"
+    | "DEVOPS_READY"
+    | "DEVOPS_BLOCKED";
+  provisioningAttemptNumber?: number;
+  provisioningHistory?: Array<{
+    previousStatus: string;
+    newStatus: string;
+    actingUserId: string;
+    actingUserRole: string;
+    timestamp: string;
+    notes?: string;
+    failureReason?: string;
+    technicalDescription?: string;
+    recommendedAction?: string;
+    evidence?: string[];
+    attemptNumber: number;
+  }>;
+  devopsConfirmedBy?: string;
+  devopsConfirmedAt?: string;
+  devopsNotes?: string;
+  devopsFailureReason?: string;
+  devopsFailureDescription?: string;
+  devopsRecommendedAction?: string;
+  devopsFailureEvidence?: string[];
+  devopsFailureAt?: string;
+  provisioningBlockedDurationMs?: number;
   allowedActions?: ProjectRowActionContract[];
   myResponsibilities?: ProjectResponsibilityKey[];
   responsibilityContext?: ProjectResponsibilityContextContract;

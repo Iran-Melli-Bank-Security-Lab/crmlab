@@ -32,6 +32,7 @@ import type {
   User,
 } from "@/shared/types";
 import type { CreateProjectRequest } from "@/shared/types/api/projects";
+import { managerRequestFields } from "@/entities/project/model/provisioning";
 
 type FormState = {
   name: string;
@@ -43,6 +44,7 @@ type FormState = {
   authorities: CertificateAuthority[];
   projectManagerId: string;
   devopsManagerId: string;
+  representativeId: string;
   testEndDate: string;
 };
 
@@ -58,6 +60,7 @@ const initialForm: FormState = {
   authorities: ["bank"],
   projectManagerId: "",
   devopsManagerId: "",
+  representativeId: "",
   testEndDate: "",
 };
 
@@ -167,9 +170,11 @@ const copy = {
     securityManager: "Security manager",
     qualityManager: "Quality manager",
     devopsManager: "DevOps manager",
+    representative: "Lab Representative",
     securityManagerHint: "Pentesters and security project managers",
     qualityManagerHint: "QA members and quality project managers",
     devopsManagerHint: "Users assigned to the DevOps role",
+    representativeHint: "Representative responsible for customer follow-up",
     search: "Search by name or username...",
     active: "Active",
     inactive: "Inactive",
@@ -291,9 +296,11 @@ const copy = {
     securityManager: "مدیر امنیت",
     qualityManager: "مدیر کیفیت",
     devopsManager: "مدیر دواپس",
+    representative: "نماینده آزمایشگاه",
     securityManagerHint: "کاربران تست نفوذ و مدیران پروژه امنیت",
     qualityManagerHint: "کاربران تضمین کیفیت و مدیران پروژه کیفیت",
     devopsManagerHint: "کاربران دارای نقش دواپس",
+    representativeHint: "نماینده مسئول پیگیری با مشتری",
     search: "جستجو با نام یا نام کاربری...",
     active: "فعال",
     inactive: "غیرفعال",
@@ -968,15 +975,19 @@ function isAssignableNonAdminUser(user: User) {
 }
 
 function isSecurityManagerCandidate(user: User) {
-  return isAssignableNonAdminUser(user) && userHasRole(user, "pentester");
+  return isAssignableNonAdminUser(user) && userHasRole(user, "project_manager_security");
 }
 
 function isQualityManagerCandidate(user: User) {
-  return isAssignableNonAdminUser(user) && userHasRole(user, "qa");
+  return isAssignableNonAdminUser(user) && userHasRole(user, "project_manager_qa");
 }
 
 function isDevOpsManagerCandidate(user: User) {
   return isAssignableNonAdminUser(user) && userHasRole(user, "devops");
+}
+
+function isRepresentativeCandidate(user: User) {
+  return isAssignableNonAdminUser(user) && userHasRole(user, "representative");
 }
 
 export default function CreateProject() {
@@ -1000,6 +1011,10 @@ export default function CreateProject() {
   }, [form.type, users]);
 
   const devopsUsers = useMemo(() => users.filter(isDevOpsManagerCandidate), [users]);
+  const representativeUsers = useMemo(
+    () => users.filter(isRepresentativeCandidate),
+    [users]
+  );
 
   const update = <Key extends keyof FormState>(key: Key, value: FormState[Key]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -1021,6 +1036,7 @@ export default function CreateProject() {
       !form.letterNumber.trim() ||
       !form.projectManagerId ||
       !form.devopsManagerId ||
+      !form.representativeId ||
       !form.testEndDate ||
       (form.certificateRequired && form.authorities.length === 0)
     ) {
@@ -1039,8 +1055,9 @@ export default function CreateProject() {
         platform: form.platform,
         certificateRequired: form.certificateRequired,
         certificateAuthorities: form.certificateRequired ? form.authorities : [],
-        projectManagerId: form.projectManagerId,
+        ...managerRequestFields(form.type, form.projectManagerId),
         devopsManagerId: form.devopsManagerId,
+        representativeId: form.representativeId,
         testEndDate: form.testEndDate,
       };
 
@@ -1054,7 +1071,9 @@ export default function CreateProject() {
 
   const minDate = new Date().toISOString().slice(0, 10);
   const managerCount =
-    Number(Boolean(form.projectManagerId)) + Number(Boolean(form.devopsManagerId));
+    Number(Boolean(form.projectManagerId)) +
+    Number(Boolean(form.devopsManagerId)) +
+    Number(Boolean(form.representativeId));
 
   if (!workType) {
     return (
@@ -1249,7 +1268,7 @@ export default function CreateProject() {
             </Section>
 
             <Section number="03" title={labels.step3} hint={labels.step3Hint}>
-              <SimpleGrid columns={{ base: 1, lg: 2 }} gap={5}>
+              <SimpleGrid columns={{ base: 1, lg: 3 }} gap={5}>
                 <UserPicker
                   title={
                     form.type === "security"
@@ -1264,6 +1283,15 @@ export default function CreateProject() {
                   users={disciplineUsers}
                   value={form.projectManagerId}
                   onChange={(id) => update("projectManagerId", id)}
+                  loading={usersLoading}
+                  labels={labels}
+                />
+                <UserPicker
+                  title={labels.representative}
+                  hint={labels.representativeHint}
+                  users={representativeUsers}
+                  value={form.representativeId}
+                  onChange={(id) => update("representativeId", id)}
                   loading={usersLoading}
                   labels={labels}
                 />
@@ -1331,7 +1359,7 @@ export default function CreateProject() {
                 <Box h="1px" bg="whiteAlpha.200" />
                 <Flex justify="space-between" gap={4}>
                   <Text color="#a1a1a6">{labels.summaryManagers}</Text>
-                  <Text fontWeight="800">{managerCount}/2</Text>
+                  <Text fontWeight="800">{managerCount}/3</Text>
                 </Flex>
                 <Box h="1px" bg="whiteAlpha.200" />
                 <Flex justify="space-between" gap={4}>

@@ -24,10 +24,10 @@ export const createProjectRequestSchema = z
     platform: nonEmptyString,
     certificateRequired: z.boolean(),
     certificateAuthorities: z.array(nonEmptyString),
-    projectManagerId: objectId,
+    projectManagerId: objectId.optional(),
     qualityManagerId: objectId.optional(),
     devopsManagerId: objectId,
-    representativeId: objectId.optional(),
+    representativeId: objectId,
     testEndDate: dateString,
   })
   .superRefine((input, context) => {
@@ -36,6 +36,34 @@ export const createProjectRequestSchema = z
         code: "custom",
         path: ["certificateAuthorities"],
         message: "At least one certificate authority is required",
+      });
+    }
+    if (input.type === "security" && !input.projectManagerId) {
+      context.addIssue({
+        code: "custom",
+        path: ["projectManagerId"],
+        message: "A Security Project Manager is required for a security project",
+      });
+    }
+    if (input.type === "quality" && !input.qualityManagerId) {
+      context.addIssue({
+        code: "custom",
+        path: ["qualityManagerId"],
+        message: "A Quality Project Manager is required for a quality project",
+      });
+    }
+    if (input.type === "security" && input.qualityManagerId) {
+      context.addIssue({
+        code: "custom",
+        path: ["qualityManagerId"],
+        message: "A Quality Project Manager cannot manage a security project",
+      });
+    }
+    if (input.type === "quality" && input.projectManagerId) {
+      context.addIssue({
+        code: "custom",
+        path: ["projectManagerId"],
+        message: "A Security Project Manager cannot manage a quality project",
       });
     }
   });
@@ -109,3 +137,32 @@ export const assignUsersSchema = z.object({
 });
 
 export type AssignUsersRequest = z.infer<typeof assignUsersRequestSchema>;
+
+const provisioningNotes = z.string().trim().max(5000).optional();
+
+export const provisioningStartSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ notes: provisioningNotes }).strict(),
+});
+
+export const provisioningReadySchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ notes: provisioningNotes }).strict(),
+});
+
+export const provisioningBlockedSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z
+    .object({
+      failureReason: z.string().trim().min(1, "Failure reason is required").max(500),
+      technicalDescription: z.string().trim().min(1).max(10000),
+      recommendedAction: z.string().trim().max(5000).optional(),
+      evidence: z.array(z.string().trim().min(1).max(1000)).max(20).optional(),
+    })
+    .strict(),
+});
+
+export const provisioningRetrySchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ notes: provisioningNotes }).strict(),
+});

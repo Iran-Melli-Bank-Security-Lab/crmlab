@@ -134,9 +134,10 @@ test("projection fields contain only fields required by authorized columns", () 
     { columns: "summary,status" },
     [PERMISSIONS.DEVOPS_PROJECTS_READ]
   );
-  assert.deepEqual(result.columnKeys, ["summary", "status"]);
+  assert.deepEqual(result.columnKeys, ["summary", "status", "provisioningStatus"]);
   assert.ok(result.projectionFields.includes("projectName"));
   assert.ok(result.projectionFields.includes("status"));
+  assert.ok(result.projectionFields.includes("provisioningStatus"));
   assert.ok(!result.projectionFields.includes("devopsInfo.repository"));
 });
 

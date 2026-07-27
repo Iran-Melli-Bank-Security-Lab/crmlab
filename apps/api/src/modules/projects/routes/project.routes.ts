@@ -15,6 +15,10 @@ import {
   assignUsersSchema,
   createProjectSchema,
   projectSecurityScopeSchema,
+  provisioningBlockedSchema,
+  provisioningReadySchema,
+  provisioningRetrySchema,
+  provisioningStartSchema,
 } from "../validators/project.validators";
 import {
   assignUsersToProject,
@@ -27,6 +31,12 @@ import {
   getProjects,
   putProjectSecurityScope,
 } from "../controllers/project.controller";
+import {
+  confirmProvisioningReady,
+  reportProvisioningBlocked,
+  requestProvisioningRetry,
+  startProvisioning,
+} from "../controllers/projectProvisioning.controller";
 
 const router = Router();
 
@@ -48,6 +58,26 @@ router.post(
   requirePermission(PERMISSIONS.ADMIN_PROJECTS_CREATE),
   validate(createProjectSchema),
   createProject
+);
+router.post(
+  "/:id/provisioning/start",
+  validate(provisioningStartSchema),
+  startProvisioning
+);
+router.post(
+  "/:id/provisioning/ready",
+  validate(provisioningReadySchema),
+  confirmProvisioningReady
+);
+router.post(
+  "/:id/provisioning/blocked",
+  validate(provisioningBlockedSchema),
+  reportProvisioningBlocked
+);
+router.post(
+  "/:id/provisioning/retry",
+  validate(provisioningRetrySchema),
+  requestProvisioningRetry
 );
 router.get(
   "/:id/security-standards",

@@ -5,6 +5,7 @@ import { HTTP_STATUS } from "@/constants/http";
 import { PERMISSIONS } from "@/constants/permissions";
 import {
   PROJECT_ASSIGNMENT_ROLES,
+  PROJECT_PROVISIONING_STATUS,
   PROJECT_TYPES,
   type ProjectAssignmentRole,
   type ProjectType,
@@ -47,6 +48,10 @@ import {
 } from "../services/projectSecurityScope.service";
 import { notifyProjectAssignments } from "../services/projectAssignmentNotification.service";
 import {
+  getEffectiveProvisioningStatus,
+  notifyInitialDevopsAssignment,
+} from "../services/projectProvisioning.service";
+import {
   getResponsibilityProjectIdsByView,
   groupDirectAssignmentRolesForVisibility,
   resolveProjectResponsibilityContext,
@@ -67,11 +72,11 @@ const recipientRules: Record<
 > = {
   projectManager: {
     label: "project manager",
-    // Project manager is a project-level responsibility, not a global RBAC role.
+    roles: [ROLES.PROJECT_MANAGER_SECURITY],
   },
   qualityManager: {
     label: "quality manager",
-    // Quality manager is a project-level responsibility, not a global RBAC role.
+    roles: [ROLES.PROJECT_MANAGER_QA],
   },
   devops: { label: "DevOps", roles: [ROLES.DEVOPS] },
   representative: { label: "representative", roles: [ROLES.REPRESENTATIVE] },
@@ -98,6 +103,10 @@ const assignableRoleRules: Record<
   [PROJECT_ASSIGNMENT_ROLES.DEVOPS_MANAGER]: {
     label: "DevOps manager",
     roles: [ROLES.DEVOPS],
+  },
+  [PROJECT_ASSIGNMENT_ROLES.REPRESENTATIVE]: {
+    label: "Lab Representative",
+    roles: [ROLES.REPRESENTATIVE],
   },
 };
 
@@ -164,6 +173,7 @@ function buildInitialProjectAssignments({
   projectManagerId,
   qualityManagerId,
   devopsManagerId,
+  representativeId,
   projectType,
   version,
 }: {
@@ -172,6 +182,7 @@ function buildInitialProjectAssignments({
   projectManagerId?: string;
   qualityManagerId?: string;
   devopsManagerId?: string;
+  representativeId?: string;
   projectType?: string | null;
   version?: string | null;
 }) {
@@ -198,6 +209,12 @@ function buildInitialProjectAssignments({
     assignmentPairs.push({
       userId: devopsManagerId,
       assignmentRole: PROJECT_ASSIGNMENT_ROLES.DEVOPS_MANAGER,
+    });
+  }
+  if (representativeId) {
+    assignmentPairs.push({
+      userId: representativeId,
+      assignmentRole: PROJECT_ASSIGNMENT_ROLES.REPRESENTATIVE,
     });
   }
 
@@ -352,6 +369,7 @@ function normalizeLegacyProject<T extends Record<string, unknown>>(project: T) {
     ...project,
     type,
     status,
+    provisioningStatus: getEffectiveProvisioningStatus(project),
     createdAt: project.createdAt || project.created_date,
     id: String(project._id),
   };
@@ -373,6 +391,18 @@ const PROJECT_DETAIL_CORE_FIELDS = [
   "createdAt",
   "created_date",
   "updatedAt",
+  "provisioningStatus",
+  "provisioningAttemptNumber",
+  "provisioningHistory",
+  "devopsConfirmedBy",
+  "devopsConfirmedAt",
+  "devopsNotes",
+  "devopsFailureReason",
+  "devopsFailureDescription",
+  "devopsRecommendedAction",
+  "devopsFailureEvidence",
+  "devopsFailureAt",
+  "provisioningBlockedDurationMs",
 ] as const;
 
 const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
@@ -383,7 +413,35 @@ const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
   "qualityManager",
   "devops",
   "representative",
+  "provisioningStatus",
+  "provisioningAttemptNumber",
+  "devopsFailureReason",
+  "devopsFailureAt",
 ] as const;
+
+function provisioningAwareRowActions(
+  project: Record<string, unknown>,
+  actions: ReturnType<typeof resolveProjectRowActions>
+) {
+  return getEffectiveProvisioningStatus(project) ===
+    PROJECT_PROVISIONING_STATUS.DEVOPS_READY
+    ? actions
+    : actions.filter((action) => action !== "assign-pentesters");
+}
+
+function assertProjectReadyForTeamAssignment(project: {
+  provisioningStatus?: string | null;
+}) {
+  if (
+    getEffectiveProvisioningStatus(project) !==
+    PROJECT_PROVISIONING_STATUS.DEVOPS_READY
+  ) {
+    throw new AppError(
+      "The project environment has not been confirmed by DevOps yet.",
+      HTTP_STATUS.CONFLICT
+    );
+  }
+}
 
 function pickProjectFields(
   project: Record<string, unknown>,
@@ -627,9 +685,12 @@ export const getProjects: RequestHandler = async (req, res, next) => {
           user: req.user!,
           assignments: access.assignmentRecordsByProject.get(projectId) || [],
         });
-        const allowedActions = resolveProjectRowActions(
-          responsibilityContext,
-          view === "unified" ? undefined : view
+        const allowedActions = provisioningAwareRowActions(
+          project,
+          resolveProjectRowActions(
+            responsibilityContext,
+            view === "unified" ? undefined : view
+          )
         );
         let responseSource: Record<string, unknown> = project;
         if (view === "unified") {
@@ -649,11 +710,24 @@ export const getProjects: RequestHandler = async (req, res, next) => {
         } else {
           responseSource = pickProjectFields(
             project,
-            capabilities?.projectionFields || []
+            [
+              ...(capabilities?.projectionFields || []),
+              "provisioningStatus",
+              "provisioningAttemptNumber",
+              "devopsFailureReason",
+              "devopsFailureAt",
+              // Required by the DevOps drawer to identify the assigned actor.
+              // The API still enforces assignment again on every transition.
+              "devops",
+            ]
           );
         }
         return {
           ...normalizeLegacyProject(responseSource),
+          provisioningStatus: getEffectiveProvisioningStatus(project),
+          provisioningAttemptNumber: project.provisioningAttemptNumber || 1,
+          devopsFailureReason: project.devopsFailureReason,
+          devopsFailureAt: project.devopsFailureAt,
           responsibilityContext,
           myResponsibilities: responsibilityContext.responsibilityKeys,
           allowedActions,
@@ -726,8 +800,9 @@ export const getProject: RequestHandler = async (req, res, next) => {
       ...(responsibilityContext ? {
         responsibilityContext,
         myResponsibilities: responsibilityContext.responsibilityKeys,
-        allowedActions: resolveProjectRowActions(
-          responsibilityContext
+        allowedActions: provisioningAwareRowActions(
+          responsibilitySource || project,
+          resolveProjectRowActions(responsibilityContext)
         ),
       } : {}),
       ...(pentestAssignment?.securityScope
@@ -834,7 +909,10 @@ export const createProject: RequestHandler = async (req, res, next) => {
     }
 
     const recipients = {
-      projectManager: projectData.projectManager,
+      projectManager:
+        request.type === PROJECT_TYPES.SECURITY
+          ? projectData.projectManager
+          : undefined,
       qualityManager: projectData.qualityManager,
       devops: projectData.devops,
       representative: projectData.representative,
@@ -855,6 +933,8 @@ export const createProject: RequestHandler = async (req, res, next) => {
     const project = await insertProject({
       ...projectData,
       ownerId: req.user!.id,
+      provisioningStatus: PROJECT_PROVISIONING_STATUS.AWAITING_DEVOPS_SETUP,
+      provisioningAttemptNumber: 1,
     });
     const projectId = project._id.toString();
     try {
@@ -864,6 +944,7 @@ export const createProject: RequestHandler = async (req, res, next) => {
         projectManagerId: projectData.projectManager,
         qualityManagerId: projectData.qualityManager,
         devopsManagerId: projectData.devops,
+        representativeId: projectData.representative,
         projectType: project.type,
         version: project.version,
       });
@@ -895,24 +976,13 @@ export const createProject: RequestHandler = async (req, res, next) => {
       throw error;
     }
 
-    await runProjectPostCommitEffect("assignment notification delivery", async () => {
-      const assignments = await ProjectAssignmentModel.find({ projectId })
-        .select("_id userId pentester assignmentRole")
-        .lean();
-      await notifyProjectAssignments({
+    await runProjectPostCommitEffect("DevOps assignment notification delivery", () =>
+      notifyInitialDevopsAssignment({
         projectId,
         projectName: project.projectName,
-        assignedById: req.user!.id,
-        assignments: assignments.flatMap((assignment) => {
-          const userId = assignment.userId || assignment.pentester;
-          return userId ? [{
-            assignmentId: String(assignment._id),
-            userId: String(userId),
-            assignmentRole: assignment.assignmentRole,
-          }] : [];
-        }),
-      });
-    });
+        devopsUserId: String(projectData.devops),
+      })
+    );
     await runProjectPostCommitEffect("realtime room synchronization", () =>
       addConnectedUsersToProject(projectMemberIds, projectId)
     );
@@ -951,6 +1021,7 @@ export const getEligibleProjectAssignees: RequestHandler = async (req, res, next
     if (!roleRule) {
       throw new AppError("Unsupported assignee role", HTTP_STATUS.BAD_REQUEST);
     }
+    if (req.project) assertProjectReadyForTeamAssignment(req.project);
     assertProjectAssignmentActionAllowed(
       req.user!.permissions,
       role,
@@ -993,6 +1064,7 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
     if (!existingProject) {
       throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
     }
+    assertProjectReadyForTeamAssignment(existingProject);
     const effectiveProjectType = getEffectiveProjectType(
       existingProject.toObject()
     );

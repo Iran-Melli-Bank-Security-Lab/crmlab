@@ -14,7 +14,6 @@ export const PROJECT_ACCESS_PERMISSIONS: Permission[] = [
   PERMISSIONS.SECURITY_PROJECTS_READ,
   PERMISSIONS.QUALITY_PROJECTS_READ,
   PERMISSIONS.PENTEST_PROJECTS_READ,
-  PERMISSIONS.DEVOPS_PROJECTS_READ,
   PERMISSIONS.QA_PROJECTS_READ,
   PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
 ];
@@ -54,6 +53,14 @@ export const ROUTE_ACCESS_POLICIES = {
   projects: {
     path: "/projects",
     permissions: PROJECT_ACCESS_PERMISSIONS,
+  },
+  devopsProjects: {
+    path: "/devops",
+    permissions: [
+      PERMISSIONS.DEVOPS_DASHBOARD_READ,
+      PERMISSIONS.DEVOPS_PROJECTS_READ,
+    ],
+    roles: ["devops"],
   },
   projectDetails: {
     path: "/projects/:projectId",

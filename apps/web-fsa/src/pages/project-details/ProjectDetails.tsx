@@ -9,7 +9,8 @@ import Button from "@/shared/ui/primitives/Button";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project, ProjectDiscipline, ProjectStatus } from "@/shared/types";
-import DevopsWorkspace from "@/entities/devops/ui/DevopsWorkspace";
+import ProjectProvisioningPanel from "@/entities/devops/ui/ProjectProvisioningPanel";
+import QaAssignmentPanel from "@/entities/project/ui/assignment/QaAssignmentPanel";
 
 const statusStyles: Record<ProjectStatus, { bg: string; color: string; border: string }> = {
   planning: {
@@ -269,7 +270,12 @@ export default function ProjectDetails() {
           </Box>
         )}
       </DetailPanel>
-      {hasPermission(PERMISSIONS.DEVOPS_DEPLOYMENTS_READ) && <DevopsWorkspace projectId={project.id} />}
+      <ProjectProvisioningPanel project={project} readOnly />
+      {project.discipline === "quality" &&
+        project.provisioningStatus === "DEVOPS_READY" &&
+        project.responsibilityContext?.capabilities["assign-project-members"] && (
+          <QaAssignmentPanel project={project} />
+        )}
     </VStack>
   );
 }

@@ -10,6 +10,7 @@ import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project } from "@/shared/types";
 import PentesterAssignmentDock from "@/entities/project/ui/assignment/PentesterAssignmentDock";
 import PageHeader from "@/shared/ui/layout/PageHeader";
+import { hasNonDevopsResponsibility } from "@/entities/project/model/provisioning";
 
 const AdminProjectsTable = lazy(
   () => import("@/entities/project/ui/table/views/AdminProjectsTable")
@@ -37,6 +38,19 @@ export default function Projects() {
   const assignmentProject = useMemo(
     () => projects.find((project) => project.id === assignmentProjectId),
     [assignmentProjectId, projects]
+  );
+  const visibleProjects = useMemo(
+    () =>
+      isAdmin
+        ? projects
+        : projects.filter((project) => {
+            const responsibilities =
+              project.responsibilityContext?.responsibilityKeys ||
+              project.myResponsibilities ||
+              [];
+            return hasNonDevopsResponsibility(responsibilities);
+          }),
+    [isAdmin, projects]
   );
 
   const createFromProject = useCallback(
@@ -114,13 +128,13 @@ export default function Projects() {
             <AdminProjectsTable
               view="admin"
               title={t("projectViews.admin.tableTitle")}
-              projects={projects}
+              projects={visibleProjects}
               onCreateFromProject={createFromProject}
             />
           ) : (
             <UserProjectsTable
               title={t("projects.tableTitle")}
-              projects={projects}
+              projects={visibleProjects}
               onAssignPentesters={openAssignmentDock}
             />
           )}

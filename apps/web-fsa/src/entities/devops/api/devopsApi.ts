@@ -25,6 +25,10 @@ export type DevopsAccess =
   | { mode: "personal"; assignmentState: "available"; serverIpAddress?: string; serverPort?: number; vmIpAddress: string; vmPort: number; username: string; password: string; endpoints: DevopsAccessEndpoint[]; updatedAt?: string };
 export type DevopsWorkspace = { projectId: string; assignedUsers: AssignedUser[]; info: DevopsInfo | null; access: DevopsAccess | null };
 export type DevopsWorkspaceQuery = { projectId: string; userId: string };
+export type ProvisioningTransitionResponse = {
+  id: string;
+  provisioningStatus: "AWAITING_DEVOPS_SETUP" | "DEVOPS_IN_PROGRESS" | "DEVOPS_READY" | "DEVOPS_BLOCKED";
+};
 
 export const devopsApi = api.injectEndpoints({ endpoints: (builder) => ({
   getDevopsWorkspace: builder.query<DevopsWorkspace, DevopsWorkspaceQuery>({
@@ -42,5 +46,65 @@ export const devopsApi = api.injectEndpoints({ endpoints: (builder) => ({
     transformResponse: (response) => unwrapApiData<DevopsWorkspace>(response),
     invalidatesTags: (_r, _e, { projectId }) => [{ type: "DevOps", id: projectId }],
   }),
+  startProvisioning: builder.mutation<
+    ProvisioningTransitionResponse,
+    { projectId: string; notes?: string }
+  >({
+    query: ({ projectId, notes }) => ({
+      url: `/projects/${projectId}/provisioning/start`,
+      method: "POST",
+      body: { notes },
+    }),
+    transformResponse: (response) => unwrapApiData<ProvisioningTransitionResponse>(response),
+    invalidatesTags: ["Projects", "Notifications"],
+  }),
+  confirmProvisioningReady: builder.mutation<
+    ProvisioningTransitionResponse,
+    { projectId: string; notes?: string }
+  >({
+    query: ({ projectId, notes }) => ({
+      url: `/projects/${projectId}/provisioning/ready`,
+      method: "POST",
+      body: { notes },
+    }),
+    transformResponse: (response) => unwrapApiData<ProvisioningTransitionResponse>(response),
+    invalidatesTags: ["Projects", "Notifications"],
+  }),
+  reportProvisioningBlocked: builder.mutation<
+    ProvisioningTransitionResponse,
+    {
+      projectId: string;
+      failureReason: string;
+      technicalDescription: string;
+      recommendedAction?: string;
+    }
+  >({
+    query: ({ projectId, ...body }) => ({
+      url: `/projects/${projectId}/provisioning/blocked`,
+      method: "POST",
+      body,
+    }),
+    transformResponse: (response) => unwrapApiData<ProvisioningTransitionResponse>(response),
+    invalidatesTags: ["Projects", "Notifications"],
+  }),
+  requestProvisioningRetry: builder.mutation<
+    ProvisioningTransitionResponse,
+    { projectId: string; notes?: string }
+  >({
+    query: ({ projectId, notes }) => ({
+      url: `/projects/${projectId}/provisioning/retry`,
+      method: "POST",
+      body: { notes },
+    }),
+    transformResponse: (response) => unwrapApiData<ProvisioningTransitionResponse>(response),
+    invalidatesTags: ["Projects", "Notifications"],
+  }),
 }) });
-export const { useGetDevopsWorkspaceQuery, useSaveDevopsWorkspaceMutation } = devopsApi;
+export const {
+  useConfirmProvisioningReadyMutation,
+  useGetDevopsWorkspaceQuery,
+  useReportProvisioningBlockedMutation,
+  useRequestProvisioningRetryMutation,
+  useSaveDevopsWorkspaceMutation,
+  useStartProvisioningMutation,
+} = devopsApi;

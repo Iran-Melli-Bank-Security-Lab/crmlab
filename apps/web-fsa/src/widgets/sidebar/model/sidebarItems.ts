@@ -34,6 +34,16 @@ export const sidebarItems: SidebarItem[] = [
     sectionKey: "sidebar.admin",
   },
   {
+    icon: "server",
+    title: "DevOps Projects",
+    titleKey: "sidebar.devopsProjects",
+    path: ROUTE_ACCESS_POLICIES.devopsProjects.path,
+    permissions: ROUTE_ACCESS_POLICIES.devopsProjects.permissions,
+    roles: ROUTE_ACCESS_POLICIES.devopsProjects.roles,
+    section: "DevOps",
+    sectionKey: "sidebar.roleDevops",
+  },
+  {
     icon: "folder",
     title: "Projects",
     titleKey: "sidebar.projects",

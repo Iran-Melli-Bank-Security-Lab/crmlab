@@ -78,7 +78,8 @@ export type ApiProjectResponse = {
     | "AWAITING_DEVOPS_SETUP"
     | "DEVOPS_IN_PROGRESS"
     | "DEVOPS_READY"
-    | "DEVOPS_BLOCKED";
+    | "DEVOPS_BLOCKED"
+    | "READY_FOR_DEVOPS_RETRY";
   provisioningAttemptNumber?: number;
   provisioningHistory?: Array<{
     previousStatus: string;
@@ -90,6 +91,7 @@ export type ApiProjectResponse = {
     failureReason?: string;
     technicalDescription?: string;
     recommendedAction?: string;
+    resolutionMessage?: string;
     evidence?: string[];
     attemptNumber: number;
   }>;
@@ -102,6 +104,9 @@ export type ApiProjectResponse = {
   devopsFailureEvidence?: string[];
   devopsFailureAt?: string;
   provisioningBlockedDurationMs?: number;
+  devopsResolutionMessage?: string;
+  devopsResolutionSubmittedAt?: string;
+  devopsResolutionSubmittedBy?: string;
   allowedActions?: ProjectRowActionContract[];
   myResponsibilities?: ProjectResponsibilityKey[];
   responsibilityContext?: ProjectResponsibilityContextContract;

@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   createProjectRequestSchema,
   provisioningBlockedSchema,
+  provisioningResolutionSchema,
 } from "./project.validators";
 
 const id = {
@@ -32,6 +33,27 @@ test("accepts a security project with its required responsibilities and deadline
       projectManagerId: id.securityManager,
     }).projectManagerId,
     id.securityManager
+  );
+});
+
+test("representative resolution requires a non-empty explanation", () => {
+  const params = { id: "6873701345c1e884213c070b" };
+  assert.equal(
+    provisioningResolutionSchema.safeParse({
+      params,
+      body: { resolutionMessage: " " },
+    }).success,
+    false
+  );
+  assert.equal(
+    provisioningResolutionSchema.safeParse({
+      params,
+      body: {
+        resolutionMessage:
+          "The client supplied corrected credentials and the VPN connection was verified.",
+      },
+    }).success,
+    true
   );
 });
 

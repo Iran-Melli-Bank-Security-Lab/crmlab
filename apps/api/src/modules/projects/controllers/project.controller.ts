@@ -391,6 +391,7 @@ const PROJECT_DETAIL_CORE_FIELDS = [
   "createdAt",
   "created_date",
   "updatedAt",
+  "representative",
   "provisioningStatus",
   "provisioningAttemptNumber",
   "provisioningHistory",
@@ -403,6 +404,9 @@ const PROJECT_DETAIL_CORE_FIELDS = [
   "devopsFailureEvidence",
   "devopsFailureAt",
   "provisioningBlockedDurationMs",
+  "devopsResolutionMessage",
+  "devopsResolutionSubmittedAt",
+  "devopsResolutionSubmittedBy",
 ] as const;
 
 const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
@@ -417,6 +421,9 @@ const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
   "provisioningAttemptNumber",
   "devopsFailureReason",
   "devopsFailureAt",
+  "devopsResolutionMessage",
+  "devopsResolutionSubmittedAt",
+  "devopsResolutionSubmittedBy",
 ] as const;
 
 function provisioningAwareRowActions(
@@ -716,6 +723,9 @@ export const getProjects: RequestHandler = async (req, res, next) => {
               "provisioningAttemptNumber",
               "devopsFailureReason",
               "devopsFailureAt",
+              "devopsResolutionMessage",
+              "devopsResolutionSubmittedAt",
+              "devopsResolutionSubmittedBy",
               // Required by the DevOps drawer to identify the assigned actor.
               // The API still enforces assignment again on every transition.
               "devops",
@@ -728,6 +738,9 @@ export const getProjects: RequestHandler = async (req, res, next) => {
           provisioningAttemptNumber: project.provisioningAttemptNumber || 1,
           devopsFailureReason: project.devopsFailureReason,
           devopsFailureAt: project.devopsFailureAt,
+          devopsResolutionMessage: project.devopsResolutionMessage,
+          devopsResolutionSubmittedAt: project.devopsResolutionSubmittedAt,
+          devopsResolutionSubmittedBy: project.devopsResolutionSubmittedBy,
           responsibilityContext,
           myResponsibilities: responsibilityContext.responsibilityKeys,
           allowedActions,

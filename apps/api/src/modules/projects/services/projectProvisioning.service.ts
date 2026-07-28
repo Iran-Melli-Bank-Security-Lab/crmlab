@@ -2,6 +2,8 @@ import { HTTP_STATUS } from "@/constants/http";
 import { NOTIFICATION_PRIORITIES, NOTIFICATION_TYPES } from "@/constants/notifications";
 import { PERMISSIONS } from "@/constants/permissions";
 import {
+  PROJECT_ASSIGNMENT_ROLES,
+  PROJECT_ASSIGNMENT_STATUS,
   PROJECT_PROVISIONING_STATUS,
   type ProjectProvisioningStatus,
 } from "@/constants/projects";
@@ -14,6 +16,7 @@ import {
 import { UserModel } from "@/modules/users/models/user.model";
 import { AppError } from "@/utils/AppError";
 import { ProjectModel } from "../models/project.model";
+import { ProjectAssignmentModel } from "../models/projectAssignment.model";
 
 export const LEGACY_PROJECT_PROVISIONING_STATUS =
   PROJECT_PROVISIONING_STATUS.DEVOPS_READY;
@@ -58,13 +61,13 @@ function assertAssignedDevops(
   }
 }
 
-function assertRepresentative(
+export function assertAssignedRepresentative(
   project: { representative?: unknown },
   actor: Express.UserContext
 ) {
-  if (!isAdmin(actor) && String(project.representative || "") !== actor.id) {
+  if (String(project.representative || "") !== actor.id) {
     throw new AppError(
-      "Only the assigned Lab Representative or an authorized Admin can request a retry",
+      "Only the Lab Representative assigned to this project can submit a resolution",
       HTTP_STATUS.FORBIDDEN
     );
   }
@@ -93,6 +96,7 @@ type TransitionInput = {
   technicalDescription?: string;
   recommendedAction?: string;
   evidence?: string[];
+  resolutionMessage?: string;
 };
 
 async function transition(input: TransitionInput) {
@@ -127,8 +131,13 @@ async function transition(input: TransitionInput) {
     failureReason: input.failureReason,
     technicalDescription: input.technicalDescription,
     recommendedAction: input.recommendedAction,
+    resolutionMessage: input.resolutionMessage,
     evidence: input.evidence,
-    attemptNumber,
+    attemptNumber:
+      input.expectedStatus === PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY &&
+      input.newStatus === PROJECT_PROVISIONING_STATUS.DEVOPS_IN_PROGRESS
+        ? attemptNumber + 1
+        : attemptNumber,
   };
   const set: Record<string, unknown> = {
     provisioningStatus: input.newStatus,
@@ -153,15 +162,26 @@ async function transition(input: TransitionInput) {
     set.devopsFailureEvidence = input.evidence;
     set.devopsFailureAt = now;
     set.provisioningBlockedAt = now;
+    unset.devopsResolutionMessage = 1;
+    unset.devopsResolutionSubmittedAt = 1;
+    unset.devopsResolutionSubmittedBy = 1;
   }
   if (
     input.expectedStatus === PROJECT_PROVISIONING_STATUS.DEVOPS_BLOCKED &&
-    input.newStatus === PROJECT_PROVISIONING_STATUS.AWAITING_DEVOPS_SETUP
+    input.newStatus === PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY
   ) {
-    set.provisioningAttemptNumber = attemptNumber + 1;
+    set.devopsResolutionMessage = input.resolutionMessage;
+    set.devopsResolutionSubmittedAt = now;
+    set.devopsResolutionSubmittedBy = input.actor.id;
     set.provisioningBlockedDurationMs =
       (project.provisioningBlockedDurationMs || 0) + blockedDuration;
     unset.provisioningBlockedAt = 1;
+  }
+  if (
+    input.expectedStatus === PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY &&
+    input.newStatus === PROJECT_PROVISIONING_STATUS.DEVOPS_IN_PROGRESS
+  ) {
+    set.provisioningAttemptNumber = attemptNumber + 1;
   }
 
   const updated = await ProjectModel.findOneAndUpdate(
@@ -353,33 +373,94 @@ export async function retryProjectProvisioning(
   notes?: string
 ) {
   const accessProject = await ProjectModel.findById(projectId)
+    .select("devops")
+    .lean();
+  if (!accessProject) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+  assertAssignedDevops(accessProject, actor);
+  return transition({
+    projectId,
+    actor,
+    expectedStatus: PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY,
+    newStatus: PROJECT_PROVISIONING_STATUS.DEVOPS_IN_PROGRESS,
+    notes,
+  });
+}
+
+async function getDevopsResolutionRecipientIds(
+  projectId: string,
+  primaryDevopsId?: unknown
+) {
+  const assignments = await ProjectAssignmentModel.find({
+    $or: [{ projectId }, { project: projectId }],
+    assignmentRole: {
+      $in: [
+        PROJECT_ASSIGNMENT_ROLES.DEVOPS,
+        PROJECT_ASSIGNMENT_ROLES.DEVOPS_MANAGER,
+      ],
+    },
+    status: {
+      $nin: [
+        PROJECT_ASSIGNMENT_STATUS.REMOVED,
+        PROJECT_ASSIGNMENT_STATUS.FINISHED,
+      ],
+    },
+  })
+    .select("userId pentester")
+    .lean();
+  return Array.from(new Set([
+    ...(primaryDevopsId ? [String(primaryDevopsId)] : []),
+    ...assignments.flatMap((assignment) => {
+      const userId = assignment.userId || assignment.pentester;
+      return userId ? [String(userId)] : [];
+    }),
+  ]));
+}
+
+export async function submitProjectProvisioningResolution(
+  projectId: string,
+  actor: Express.UserContext,
+  resolutionMessage: string
+) {
+  const accessProject = await ProjectModel.findById(projectId)
     .select("representative")
     .lean();
   if (!accessProject) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
-  assertRepresentative(accessProject, actor);
+  assertAssignedRepresentative(accessProject, actor);
   const result = await transition({
     projectId,
     actor,
     expectedStatus: PROJECT_PROVISIONING_STATUS.DEVOPS_BLOCKED,
-    newStatus: PROJECT_PROVISIONING_STATUS.AWAITING_DEVOPS_SETUP,
-    notes,
+    newStatus: PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY,
+    resolutionMessage,
   });
-  if (result.project.devops) {
-    await deliverTransitionNotifications(projectId, [{
-      userId: String(result.project.devops),
+  const recipientIds = await getDevopsResolutionRecipientIds(
+    projectId,
+    result.project.devops
+  );
+  await deliverTransitionNotifications(
+    projectId,
+    recipientIds.map((userId) => ({
+      userId,
       projectId,
-      type: NOTIFICATION_TYPES.PROJECT_DEVOPS_RETRY_REQUESTED,
-      title: "DevOps setup retry requested",
+      type: NOTIFICATION_TYPES.PROJECT_DEVOPS_RESOLUTION_SUBMITTED,
+      title: "DevOps setup issue resolved",
       message:
-        `The reported environment issue for project "${result.project.projectName}" has been followed up. ` +
-        "Please retry the DevOps setup.",
+        `The Lab Representative reported that the setup issue for project ` +
+        `"${result.project.projectName}" has been resolved.\n\n` +
+        `Resolution:\n${resolutionMessage}\n\n` +
+        "Please review the resolution and retry the DevOps setup.",
       priority: NOTIFICATION_PRIORITIES.HIGH,
-      actionUrl: projectActionUrl(projectId),
+      actionUrl: "/devops",
       entityId: projectId,
       dedupeKey:
-        `${NOTIFICATION_TYPES.PROJECT_DEVOPS_RETRY_REQUESTED}:${projectId}:` +
-        `${result.project.provisioningAttemptNumber || 1}`,
-    }]);
-  }
+        `${NOTIFICATION_TYPES.PROJECT_DEVOPS_RESOLUTION_SUBMITTED}:` +
+        `${projectId}:${result.project.provisioningAttemptNumber || 1}`,
+      data: {
+        resolutionMessage,
+        representativeUserId: actor.id,
+        attemptNumber: result.project.provisioningAttemptNumber || 1,
+      },
+    }))
+  );
   return result;
 }

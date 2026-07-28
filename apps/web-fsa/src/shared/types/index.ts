@@ -95,7 +95,8 @@ export type Project = {
     | "AWAITING_DEVOPS_SETUP"
     | "DEVOPS_IN_PROGRESS"
     | "DEVOPS_READY"
-    | "DEVOPS_BLOCKED";
+    | "DEVOPS_BLOCKED"
+    | "READY_FOR_DEVOPS_RETRY";
   provisioningAttemptNumber?: number;
   provisioningHistory?: Array<{
     previousStatus: string;
@@ -107,6 +108,7 @@ export type Project = {
     failureReason?: string;
     technicalDescription?: string;
     recommendedAction?: string;
+    resolutionMessage?: string;
     evidence?: string[];
     attemptNumber: number;
   }>;
@@ -119,6 +121,9 @@ export type Project = {
   devopsFailureEvidence?: string[];
   devopsFailureAt?: string;
   provisioningBlockedDurationMs?: number;
+  devopsResolutionMessage?: string;
+  devopsResolutionSubmittedAt?: string;
+  devopsResolutionSubmittedBy?: string;
 };
 
 export type ProjectAssignment = Project & {

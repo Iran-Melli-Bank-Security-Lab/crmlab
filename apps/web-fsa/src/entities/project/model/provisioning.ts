@@ -4,7 +4,8 @@ export type ProvisioningStatus =
   | "AWAITING_DEVOPS_SETUP"
   | "DEVOPS_IN_PROGRESS"
   | "DEVOPS_READY"
-  | "DEVOPS_BLOCKED";
+  | "DEVOPS_BLOCKED"
+  | "READY_FOR_DEVOPS_RETRY";
 
 export function managerRequestFields(type: ProjectType, managerId: string) {
   return type === "security"
@@ -20,7 +21,6 @@ export function getProvisioningUiState(input: {
 }) {
   const status = input.status || "DEVOPS_READY";
   const canRunDevopsActions = input.isAdmin || input.isAssignedDevops;
-  const canRetry = input.isAdmin || input.isAssignedRepresentative;
   return {
     status,
     assignmentDisabled: status !== "DEVOPS_READY",
@@ -30,7 +30,10 @@ export function getProvisioningUiState(input: {
       canRunDevopsActions && status === "DEVOPS_IN_PROGRESS",
     canReportBlocked:
       canRunDevopsActions && status === "DEVOPS_IN_PROGRESS",
-    canRetry: canRetry && status === "DEVOPS_BLOCKED",
+    canSubmitResolution:
+      input.isAssignedRepresentative && status === "DEVOPS_BLOCKED",
+    canRetry:
+      canRunDevopsActions && status === "READY_FOR_DEVOPS_RETRY",
   };
 }
 
@@ -56,6 +59,8 @@ export function getDevopsTableActionLabel(status?: ProvisioningStatus) {
       return "Continue setup";
     case "DEVOPS_BLOCKED":
       return "Review failed setup";
+    case "READY_FOR_DEVOPS_RETRY":
+      return "Review resolution / retry setup";
     case "DEVOPS_READY":
       return "View validated setup";
   }

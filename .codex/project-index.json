@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "f7230d7b69c2e271",
+  "sourceFingerprint": "614e5f36e26e45e4",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -61,7 +61,7 @@
   "stats": {
     "indexedFiles": 350,
     "domains": 13,
-    "apiEndpoints": 69,
+    "apiEndpoints": 70,
     "frontendRoutes": 25
   },
   "majorRelationships": [
@@ -414,6 +414,11 @@
     {
       "method": "POST",
       "path": "/api/projects/:id/provisioning/ready",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/projects/:id/provisioning/resolution",
       "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts"
     },
     {
@@ -777,7 +782,7 @@
             "PROJECT_ASSIGNMENT_STATUS",
             "PROJECT_ASSIGNMENT_STATUS_VALUES"
           ],
-          "contentHash": "bff83197da81"
+          "contentHash": "d28fcb0558e7"
         },
         {
           "path": "apps/api/src/middlewares/projectAccess.middleware.ts",
@@ -860,7 +865,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/constants/roles.ts"
           ],
-          "contentHash": "f9b163d3995f"
+          "contentHash": "b3d20432bff4"
         },
         {
           "path": "apps/api/src/modules/projects/controllers/projectProvisioning.controller.ts",
@@ -879,7 +884,8 @@
             "startProvisioning",
             "confirmProvisioningReady",
             "reportProvisioningBlocked",
-            "requestProvisioningRetry"
+            "requestProvisioningRetry",
+            "submitProvisioningResolution"
           ],
           "related": [
             "apps/api/src/constants/audit.ts",
@@ -888,7 +894,7 @@
             "apps/api/src/modules/projects/services/projectProvisioning.service.ts",
             "apps/api/src/utils/AppError.ts"
           ],
-          "contentHash": "bbeabe5bf8f0"
+          "contentHash": "ea05e7d58f69"
         },
         {
           "path": "apps/api/src/modules/projects/models/project.model.ts",
@@ -912,7 +918,7 @@
             "apps/api/src/constants/legacyCollections.ts",
             "apps/api/src/constants/projects.ts"
           ],
-          "contentHash": "7912cd2a7f0b"
+          "contentHash": "8a7d9514bafe"
         },
         {
           "path": "apps/api/src/modules/projects/models/projectAssignment.model.ts",
@@ -985,7 +991,7 @@
             "apps/api/src/middlewares/permission.middleware.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "f47d0d499a28"
+          "contentHash": "dd710b163885"
         },
         {
           "path": "apps/api/src/modules/projects/services/project.mapper.test.ts",
@@ -1110,7 +1116,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/projects/services/projectProvisioning.service.ts"
           ],
-          "contentHash": "4d6abdf76b9d"
+          "contentHash": "046aa65e7959"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectProvisioning.service.ts",
@@ -1129,11 +1135,11 @@
             "LEGACY_PROJECT_PROVISIONING_STATUS",
             "getEffectiveProvisioningStatus",
             "assertProvisioningTransitionAllowed",
+            "assertAssignedRepresentative",
             "notifyInitialDevopsAssignment",
             "buildInitialDevopsAssignmentNotification",
             "startProjectProvisioning",
-            "confirmProjectProvisioning",
-            "blockProjectProvisioning"
+            "confirmProjectProvisioning"
           ],
           "related": [
             "apps/api/src/constants/http.ts",
@@ -1142,7 +1148,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/constants/roles.ts"
           ],
-          "contentHash": "5a776f5d9068"
+          "contentHash": "f668640cbe02"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectResponsibility.service.test.ts",
@@ -1294,7 +1300,7 @@
           "related": [
             "apps/api/src/modules/projects/validators/project.validators.ts"
           ],
-          "contentHash": "7cf2e44931d0"
+          "contentHash": "3b6ecfa529db"
         },
         {
           "path": "apps/api/src/modules/projects/validators/project.validators.ts",
@@ -1323,7 +1329,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/projects/constants/securityScope.ts"
           ],
-          "contentHash": "904d48764a6c"
+          "contentHash": "a089a88a0565"
         },
         {
           "path": "apps/api/src/modules/settings/controllers/projectTableSetting.controller.ts",
@@ -1472,7 +1478,7 @@
             "apps/web-fsa/src/shared/types/index.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "74fedf0ea7d6"
+          "contentHash": "2ece73e2f3ea"
         },
         {
           "path": "apps/web-fsa/src/entities/project/model/provisioning.test.ts",
@@ -1490,7 +1496,7 @@
           "related": [
             "apps/web-fsa/src/entities/project/model/provisioning.ts"
           ],
-          "contentHash": "f730304084a0"
+          "contentHash": "d413da7706f1"
         },
         {
           "path": "apps/web-fsa/src/entities/project/model/provisioning.ts",
@@ -1516,7 +1522,7 @@
           "related": [
             "apps/web-fsa/src/shared/types/api/projects.ts"
           ],
-          "contentHash": "ce7b7a3c3a1a"
+          "contentHash": "894a865696c1"
         },
         {
           "path": "apps/web-fsa/src/entities/project/ui/assignment/PentesterAssignmentDock.tsx",
@@ -1943,7 +1949,7 @@
             "apps/web-fsa/src/entities/project/ui/assignment/QaAssignmentPanel.tsx",
             "apps/web-fsa/src/entities/project/ui/table/formatters.ts"
           ],
-          "contentHash": "d32e2c36542b"
+          "contentHash": "857e415f75e3"
         },
         {
           "path": "apps/web-fsa/src/pages/projects/Projects.tsx",
@@ -2065,7 +2071,7 @@
           "related": [
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "b868bba1057b"
+          "contentHash": "f4ceccbfd0f3"
         },
         {
           "path": "docs/PROJECT_EXPLAINED_FROM_ZERO.md",
@@ -4377,7 +4383,7 @@
           "related": [
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "6862ad06e287"
+          "contentHash": "39c344fd972f"
         },
         {
           "path": "apps/api/src/constants/socket.ts",
@@ -5341,7 +5347,7 @@
             "apps/web-fsa/src/shared/api/baseApi.ts",
             "apps/web-fsa/src/shared/api/unwrapApiData.ts"
           ],
-          "contentHash": "884aec08c140"
+          "contentHash": "f67c2c50215b"
         },
         {
           "path": "apps/web-fsa/src/entities/devops/ui/DevopsAccessCard.tsx",
@@ -5414,7 +5420,7 @@
             "apps/web-fsa/src/shared/lib/getApiErrorMessage.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "c0e3bde324ac"
+          "contentHash": "16237a1ddfa4"
         }
       ]
     },
@@ -6631,7 +6637,7 @@
             "packages/authz/src/index.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "e4b5c3cc797d"
+          "contentHash": "ebe516e81a71"
         },
         {
           "path": "apps/web-fsa/src/shared/ui/feedback/EmptyState.tsx",
@@ -7509,7 +7515,7 @@
             "NotificationContract",
             "NotificationPageContract"
           ],
-          "contentHash": "b5950aff5574"
+          "contentHash": "2cf40478d11e"
         },
         {
           "path": "packages/contracts/src/projectResponsibility.ts",

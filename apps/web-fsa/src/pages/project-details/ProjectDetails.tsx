@@ -270,7 +270,11 @@ export default function ProjectDetails() {
           </Box>
         )}
       </DetailPanel>
-      <ProjectProvisioningPanel project={project} readOnly />
+      <ProjectProvisioningPanel
+        project={project}
+        readOnly
+        allowRepresentativeResolution
+      />
       {project.discipline === "quality" &&
         project.provisioningStatus === "DEVOPS_READY" &&
         project.responsibilityContext?.capabilities["assign-project-members"] && (

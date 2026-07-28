@@ -12,6 +12,7 @@ export const NOTIFICATION_TYPES = {
   PROJECT_DEVOPS_READY: "project.devops_ready",
   PROJECT_DEVOPS_BLOCKED: "project.devops_blocked",
   PROJECT_DEVOPS_RETRY_REQUESTED: "project.devops_retry_requested",
+  PROJECT_DEVOPS_RESOLUTION_SUBMITTED: "project.devops_resolution_submitted",
   PROJECT_MANAGER_ACTIVATED: "project.manager_activated",
   TASK_ASSIGNED: "task.assigned",
   VULNERABILITY_CREATED: "vulnerability.created",

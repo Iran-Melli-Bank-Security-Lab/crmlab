@@ -7,6 +7,7 @@ export type NotificationTypeContract =
   | "project.devops_ready"
   | "project.devops_blocked"
   | "project.devops_retry_requested"
+  | "project.devops_resolution_submitted"
   | "project.manager_activated"
   | "task.assigned"
   | "vulnerability.created"

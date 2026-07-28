@@ -17,6 +17,7 @@ import {
   projectSecurityScopeSchema,
   provisioningBlockedSchema,
   provisioningReadySchema,
+  provisioningResolutionSchema,
   provisioningRetrySchema,
   provisioningStartSchema,
 } from "../validators/project.validators";
@@ -36,6 +37,7 @@ import {
   reportProvisioningBlocked,
   requestProvisioningRetry,
   startProvisioning,
+  submitProvisioningResolution,
 } from "../controllers/projectProvisioning.controller";
 
 const router = Router();
@@ -73,6 +75,11 @@ router.post(
   "/:id/provisioning/blocked",
   validate(provisioningBlockedSchema),
   reportProvisioningBlocked
+);
+router.post(
+  "/:id/provisioning/resolution",
+  validate(provisioningResolutionSchema),
+  submitProvisioningResolution
 );
 router.post(
   "/:id/provisioning/retry",

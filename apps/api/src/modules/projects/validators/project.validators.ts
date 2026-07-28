@@ -166,3 +166,16 @@ export const provisioningRetrySchema = z.object({
   params: z.object({ id: objectId }),
   body: z.object({ notes: provisioningNotes }).strict(),
 });
+
+export const provisioningResolutionSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z
+    .object({
+      resolutionMessage: z
+        .string()
+        .trim()
+        .min(1, "Resolution explanation is required")
+        .max(10000),
+    })
+    .strict(),
+});

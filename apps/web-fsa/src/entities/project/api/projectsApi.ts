@@ -129,6 +129,9 @@ function normalizeProject(project: ApiProjectResponse): Project {
     devopsFailureEvidence: project.devopsFailureEvidence,
     devopsFailureAt: project.devopsFailureAt,
     provisioningBlockedDurationMs: project.provisioningBlockedDurationMs,
+    devopsResolutionMessage: project.devopsResolutionMessage,
+    devopsResolutionSubmittedAt: project.devopsResolutionSubmittedAt,
+    devopsResolutionSubmittedBy: project.devopsResolutionSubmittedBy,
   };
 }
 

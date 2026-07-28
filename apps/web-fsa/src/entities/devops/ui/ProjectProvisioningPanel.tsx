@@ -25,6 +25,7 @@ import {
   useReportProvisioningBlockedMutation,
   useRequestProvisioningRetryMutation,
   useStartProvisioningMutation,
+  useSubmitProvisioningResolutionMutation,
 } from "../api/devopsApi";
 
 const statusLabels = {
@@ -32,24 +33,30 @@ const statusLabels = {
   DEVOPS_IN_PROGRESS: "DevOps setup in progress",
   DEVOPS_READY: "DevOps ready",
   DEVOPS_BLOCKED: "DevOps blocked",
+  READY_FOR_DEVOPS_RETRY: "Ready for DevOps retry",
 } as const;
 
 export default function ProjectProvisioningPanel({
   project,
   readOnly = false,
+  allowRepresentativeResolution = false,
 }: {
   project: Project;
   readOnly?: boolean;
+  allowRepresentativeResolution?: boolean;
 }) {
   const { user, roles } = useAuth();
   const [notes, setNotes] = useState("");
   const [failureReason, setFailureReason] = useState("");
   const [technicalDescription, setTechnicalDescription] = useState("");
   const [recommendedAction, setRecommendedAction] = useState("");
+  const [resolutionMessage, setResolutionMessage] = useState("");
   const [start, startState] = useStartProvisioningMutation();
   const [confirmReady, readyState] = useConfirmProvisioningReadyMutation();
   const [reportBlocked, blockedState] = useReportProvisioningBlockedMutation();
   const [requestRetry, retryState] = useRequestProvisioningRetryMutation();
+  const [submitResolution, resolutionState] =
+    useSubmitProvisioningResolutionMutation();
   const isAdmin = roles.includes("admin");
   const isAssignedDevops = user?.id === project.devopsAssigneeId;
   const isAssignedRepresentative = user?.id === project.representativeId;
@@ -57,14 +64,16 @@ export default function ProjectProvisioningPanel({
     status: project.provisioningStatus,
     isAdmin: readOnly ? false : isAdmin,
     isAssignedDevops: readOnly ? false : isAssignedDevops,
-    isAssignedRepresentative: readOnly ? false : isAssignedRepresentative,
+    isAssignedRepresentative:
+      allowRepresentativeResolution && isAssignedRepresentative,
   });
   const provisioningStatus = ui.status;
   const pending =
     startState.isLoading ||
     readyState.isLoading ||
     blockedState.isLoading ||
-    retryState.isLoading;
+    retryState.isLoading ||
+    resolutionState.isLoading;
   const blockedDurationMs =
     (project.provisioningBlockedDurationMs || 0) +
     (provisioningStatus === "DEVOPS_BLOCKED" && project.devopsFailureAt
@@ -109,6 +118,21 @@ export default function ProjectProvisioningPanel({
     );
   };
 
+  const submitRepresentativeResolution = () => {
+    if (!resolutionMessage.trim()) {
+      toast.error("A resolution explanation is required");
+      return;
+    }
+    void run(
+      () =>
+        submitResolution({
+          projectId: project.id,
+          resolutionMessage: resolutionMessage.trim(),
+        }).unwrap(),
+      "Resolution submitted to DevOps"
+    );
+  };
+
   return (
     <Box
       border="1px solid"
@@ -129,6 +153,8 @@ export default function ProjectProvisioningPanel({
               ? "green"
               : provisioningStatus === "DEVOPS_BLOCKED"
                 ? "red"
+                : provisioningStatus === "READY_FOR_DEVOPS_RETRY"
+                  ? "blue"
                 : "orange"
           }
           px={3}
@@ -156,7 +182,8 @@ export default function ProjectProvisioningPanel({
         </Box>
       </SimpleGrid>
 
-      {provisioningStatus === "DEVOPS_BLOCKED" && (
+      {(provisioningStatus === "DEVOPS_BLOCKED" ||
+        provisioningStatus === "READY_FOR_DEVOPS_RETRY") && (
         <Box mt={5} p={4} bg="var(--apple-danger-bg)" borderRadius="md">
           <Text fontWeight="850">Failure reason</Text>
           <Text mt={1} whiteSpace="pre-wrap">{project.devopsFailureReason}</Text>
@@ -166,6 +193,61 @@ export default function ProjectProvisioningPanel({
           {project.devopsRecommendedAction && (
             <Text mt={3}><strong>Recommended action:</strong> {project.devopsRecommendedAction}</Text>
           )}
+        </Box>
+      )}
+
+      {project.devopsResolutionMessage &&
+        provisioningStatus === "READY_FOR_DEVOPS_RETRY" && (
+          <Box
+            mt={5}
+            p={4}
+            bg="var(--apple-blue-soft)"
+            border="1px solid"
+            borderColor="var(--apple-blue-border)"
+            borderRadius="md"
+          >
+            <Text fontWeight="850">Lab Representative resolution</Text>
+            <Text mt={2} whiteSpace="pre-wrap">
+              {project.devopsResolutionMessage}
+            </Text>
+            <Text color="var(--apple-muted)" fontSize="sm" mt={3}>
+              Submitted{" "}
+              {project.devopsResolutionSubmittedAt
+                ? new Date(project.devopsResolutionSubmittedAt).toLocaleString()
+                : ""}
+            </Text>
+          </Box>
+        )}
+
+      {ui.canSubmitResolution && (
+        <Box
+          mt={5}
+          p={4}
+          border="1px solid"
+          borderColor="var(--apple-border)"
+          borderRadius="md"
+        >
+          <Text fontWeight="850">Report that the rejection issue is resolved</Text>
+          <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
+            Explain what changed, information received from the client, and why
+            DevOps can now attempt setup again.
+          </Text>
+          <Field.Root mt={4} required>
+            <Field.Label>Resolution explanation</Field.Label>
+            <Textarea
+              value={resolutionMessage}
+              onChange={(event) => setResolutionMessage(event.target.value)}
+              minH="150px"
+              placeholder="Describe what was fixed or changed and why the environment is ready for another DevOps attempt."
+            />
+          </Field.Root>
+          <Button
+            mt={4}
+            disabled={pending || !resolutionMessage.trim()}
+            onClick={submitRepresentativeResolution}
+          >
+            Submit resolution to DevOps
+          </Button>
         </Box>
       )}
 
@@ -255,18 +337,35 @@ export default function ProjectProvisioningPanel({
         )}
 
       {ui.canRetry && (
-        <Button
+        <Box
           mt={5}
-          disabled={pending}
-          onClick={() =>
-            void run(
-              () => requestRetry({ projectId: project.id, notes: notes.trim() || undefined }).unwrap(),
-              "DevOps retry requested"
-            )
-          }
+          p={4}
+          border="1px solid"
+          borderColor="var(--apple-blue-border)"
+          borderRadius="md"
         >
-          Send back to DevOps
-        </Button>
+          <Text fontWeight="850">Resolution ready for review</Text>
+          <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
+            Review the representative’s explanation above, then begin the next
+            DevOps setup attempt.
+          </Text>
+          <Button
+            mt={4}
+            disabled={pending}
+            onClick={() =>
+              void run(
+                () =>
+                  requestRetry({
+                    projectId: project.id,
+                    notes: "Resolution reviewed; starting another DevOps setup attempt.",
+                  }).unwrap(),
+                "New DevOps setup attempt started"
+              )
+            }
+          >
+            Review complete — retry setup
+          </Button>
+        </Box>
       )}
 
       {!readOnly && provisioningStatus !== "DEVOPS_READY" &&
@@ -290,6 +389,14 @@ export default function ProjectProvisioningPanel({
                 <Text color="var(--apple-muted)" fontSize="sm">
                   Attempt {entry.attemptNumber} · {new Date(entry.timestamp).toLocaleString()}
                 </Text>
+                {entry.failureReason && (
+                  <Text mt={1} fontSize="sm">Failure: {entry.failureReason}</Text>
+                )}
+                {entry.resolutionMessage && (
+                  <Text mt={1} fontSize="sm" whiteSpace="pre-wrap">
+                    Resolution: {entry.resolutionMessage}
+                  </Text>
+                )}
               </Box>
             ))}
           </VStack>

@@ -74,6 +74,7 @@ const provisioningHistorySchema = new Schema(
     failureReason: { type: String, trim: true },
     technicalDescription: { type: String, trim: true },
     recommendedAction: { type: String, trim: true },
+    resolutionMessage: { type: String, trim: true },
     evidence: { type: [String], default: undefined },
     attemptNumber: { type: Number, required: true, min: 1 },
   },
@@ -132,6 +133,9 @@ const projectSchema = new Schema(
     devopsFailureAt: { type: Date },
     provisioningBlockedAt: { type: Date },
     provisioningBlockedDurationMs: { type: Number, min: 0, default: 0 },
+    devopsResolutionMessage: { type: String, trim: true },
+    devopsResolutionSubmittedAt: { type: Date },
+    devopsResolutionSubmittedBy: { type: Schema.Types.ObjectId, ref: "User" },
 
     // Temporary compatibility fields. ProjectAssignment should become the source of truth.
     assignedUserIds: [{ type: Schema.Types.ObjectId, ref: "User" }],

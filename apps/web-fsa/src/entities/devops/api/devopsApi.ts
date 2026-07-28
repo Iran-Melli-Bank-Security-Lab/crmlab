@@ -27,7 +27,12 @@ export type DevopsWorkspace = { projectId: string; assignedUsers: AssignedUser[]
 export type DevopsWorkspaceQuery = { projectId: string; userId: string };
 export type ProvisioningTransitionResponse = {
   id: string;
-  provisioningStatus: "AWAITING_DEVOPS_SETUP" | "DEVOPS_IN_PROGRESS" | "DEVOPS_READY" | "DEVOPS_BLOCKED";
+  provisioningStatus:
+    | "AWAITING_DEVOPS_SETUP"
+    | "DEVOPS_IN_PROGRESS"
+    | "DEVOPS_READY"
+    | "DEVOPS_BLOCKED"
+    | "READY_FOR_DEVOPS_RETRY";
 };
 
 export const devopsApi = api.injectEndpoints({ endpoints: (builder) => ({
@@ -99,6 +104,18 @@ export const devopsApi = api.injectEndpoints({ endpoints: (builder) => ({
     transformResponse: (response) => unwrapApiData<ProvisioningTransitionResponse>(response),
     invalidatesTags: ["Projects", "Notifications"],
   }),
+  submitProvisioningResolution: builder.mutation<
+    ProvisioningTransitionResponse,
+    { projectId: string; resolutionMessage: string }
+  >({
+    query: ({ projectId, resolutionMessage }) => ({
+      url: `/projects/${projectId}/provisioning/resolution`,
+      method: "POST",
+      body: { resolutionMessage },
+    }),
+    transformResponse: (response) => unwrapApiData<ProvisioningTransitionResponse>(response),
+    invalidatesTags: ["Projects", "Notifications"],
+  }),
 }) });
 export const {
   useConfirmProvisioningReadyMutation,
@@ -107,4 +124,5 @@ export const {
   useRequestProvisioningRetryMutation,
   useSaveDevopsWorkspaceMutation,
   useStartProvisioningMutation,
+  useSubmitProvisioningResolutionMutation,
 } = devopsApi;

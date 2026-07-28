@@ -30,6 +30,10 @@ test("DevOps table actions describe setup, validation, and failure states", () =
   assert.equal(getDevopsTableActionLabel("DEVOPS_IN_PROGRESS"), "Continue setup");
   assert.equal(getDevopsTableActionLabel("DEVOPS_READY"), "View validated setup");
   assert.equal(getDevopsTableActionLabel("DEVOPS_BLOCKED"), "Review failed setup");
+  assert.equal(
+    getDevopsTableActionLabel("READY_FOR_DEVOPS_RETRY"),
+    "Review resolution / retry setup"
+  );
 });
 
 test("team assignment stays disabled before DevOps readiness", () => {
@@ -69,13 +73,33 @@ test("failure reporting requires a reason and technical description", () => {
   assert.equal(hasRequiredFailureDetails("VM startup failure", "Hypervisor error"), true);
 });
 
-test("assigned representative gets the retry action for a blocked project", () => {
+test("assigned representative can resolve only a currently blocked attempt", () => {
+  const blocked = getProvisioningUiState({
+    status: "DEVOPS_BLOCKED",
+    isAdmin: false,
+    isAssignedDevops: false,
+    isAssignedRepresentative: true,
+  });
+  assert.equal(blocked.canSubmitResolution, true);
+  assert.equal(blocked.canRetry, false);
   assert.equal(
     getProvisioningUiState({
-      status: "DEVOPS_BLOCKED",
+      status: "READY_FOR_DEVOPS_RETRY",
       isAdmin: false,
       isAssignedDevops: false,
       isAssignedRepresentative: true,
+    }).canSubmitResolution,
+    false
+  );
+});
+
+test("assigned DevOps can retry only after a representative resolution", () => {
+  assert.equal(
+    getProvisioningUiState({
+      status: "READY_FOR_DEVOPS_RETRY",
+      isAdmin: false,
+      isAssignedDevops: true,
+      isAssignedRepresentative: false,
     }).canRetry,
     true
   );

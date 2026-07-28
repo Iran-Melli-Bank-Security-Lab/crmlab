@@ -9,6 +9,7 @@ import {
   confirmProjectProvisioning,
   retryProjectProvisioning,
   startProjectProvisioning,
+  submitProjectProvisioningResolution,
 } from "../services/projectProvisioning.service";
 
 async function runTransition(
@@ -34,6 +35,7 @@ async function runTransition(
       attemptNumber: result.project.toObject().provisioningAttemptNumber || 1,
       notes: req.body.notes,
       failureReason: req.body.failureReason,
+      resolutionMessage: req.body.resolutionMessage,
     },
   });
   return {
@@ -87,6 +89,27 @@ export const requestProvisioningRetry: RequestHandler = async (req, res, next) =
       res,
       await runTransition(req, () =>
         retryProjectProvisioning(String(req.params.id), req.user!, req.body.notes)
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitProvisioningResolution: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    sendSuccess(
+      res,
+      await runTransition(req, () =>
+        submitProjectProvisioningResolution(
+          String(req.params.id),
+          req.user!,
+          req.body.resolutionMessage
+        )
       )
     );
   } catch (error) {

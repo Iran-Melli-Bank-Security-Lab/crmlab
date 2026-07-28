@@ -3,9 +3,22 @@ import test from "node:test";
 import { PROJECT_PROVISIONING_STATUS } from "@/constants/projects";
 import {
   assertProvisioningTransitionAllowed,
+  assertAssignedRepresentative,
   buildInitialDevopsAssignmentNotification,
   getEffectiveProvisioningStatus,
 } from "./projectProvisioning.service";
+
+function actor(id: string, roles: Express.UserContext["roles"] = ["representative"]) {
+  return {
+    id,
+    firstName: "Lab",
+    lastName: "User",
+    username: "lab.user",
+    roles,
+    permissions: [],
+    sessionVersion: 1,
+  } as Express.UserContext;
+}
 
 test("legacy projects without a provisioning status remain ready", () => {
   assert.equal(
@@ -54,5 +67,46 @@ test("duplicate or stale provisioning submissions are rejected", () => {
         PROJECT_PROVISIONING_STATUS.DEVOPS_READY
       ),
     /Invalid provisioning transition/
+  );
+});
+
+test("only the assigned representative can submit a resolution, including over an admin", () => {
+  assert.doesNotThrow(() =>
+    assertAssignedRepresentative(
+      { representative: "6728b49f0674310b28b82803" },
+      actor("6728b49f0674310b28b82803")
+    )
+  );
+  assert.throws(
+    () =>
+      assertAssignedRepresentative(
+        { representative: "6728b49f0674310b28b82803" },
+        actor("6728b0f79e86ad91f925f61d", ["admin"])
+      ),
+    /Only the Lab Representative assigned/
+  );
+});
+
+test("resolution and DevOps retry use distinct guarded transitions", () => {
+  assert.doesNotThrow(() =>
+    assertProvisioningTransitionAllowed(
+      PROJECT_PROVISIONING_STATUS.DEVOPS_BLOCKED,
+      PROJECT_PROVISIONING_STATUS.DEVOPS_BLOCKED,
+      PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY
+    )
+  );
+  assert.doesNotThrow(() =>
+    assertProvisioningTransitionAllowed(
+      PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY,
+      PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY,
+      PROJECT_PROVISIONING_STATUS.DEVOPS_IN_PROGRESS
+    )
+  );
+  assert.throws(() =>
+    assertProvisioningTransitionAllowed(
+      PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY,
+      PROJECT_PROVISIONING_STATUS.DEVOPS_BLOCKED,
+      PROJECT_PROVISIONING_STATUS.READY_FOR_DEVOPS_RETRY
+    )
   );
 });

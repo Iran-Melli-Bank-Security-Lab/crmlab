@@ -11,6 +11,7 @@ export const AUDIT_ACTIONS = {
   PENTEST_WORK_SESSION_CREATE: "pentest.work_session_create",
   VULNERABILITY_CREATE: "vulnerability.create",
   VULNERABILITY_UPDATE: "vulnerability.update",
+  VULNERABILITY_DELETE: "vulnerability.delete",
   NOTIFICATION_MARK_READ: "notification.mark_read",
   NOTIFICATION_MARK_ALL_READ: "notification.mark_all_read",
   NOTIFICATION_DELETE: "notification.delete",
@@ -32,4 +33,5 @@ export const AUDIT_ENTITY_TYPES = {
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
-export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[keyof typeof AUDIT_ENTITY_TYPES];
+export type AuditEntityType =
+  (typeof AUDIT_ENTITY_TYPES)[keyof typeof AUDIT_ENTITY_TYPES];

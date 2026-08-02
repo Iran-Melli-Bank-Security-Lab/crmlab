@@ -110,7 +110,8 @@ const en = {
   "notifications.emptyTitle": "No notifications",
   "notifications.markAllRead": "Mark all read",
   "notifications.viewAll": "View all",
-  "notifications.pageDescription": "Review your complete notification history and open the work that needs your attention.",
+  "notifications.pageDescription":
+    "Review your complete notification history and open the work that needs your attention.",
   "notifications.filterAll": "All",
   "notifications.filterUnread": "Unread",
   "notifications.filterRead": "Read",
@@ -139,7 +140,8 @@ const en = {
   "sidebar.userManagement": "User Management",
   "sidebar.auditLogs": "Audit Logs",
   "audit.title": "Audit Logs",
-  "audit.description": "Review security-sensitive activity across users, projects, and platform modules.",
+  "audit.description":
+    "Review security-sensitive activity across users, projects, and platform modules.",
   "audit.loading": "Loading audit logs...",
   "audit.loadError": "Could not load audit logs",
   "audit.retry": "Retry",
@@ -157,7 +159,8 @@ const en = {
   "audit.status.success": "Success",
   "audit.status.failure": "Failure",
   "audit.filters.search": "Search",
-  "audit.filters.searchPlaceholder": "Action, resource, actor, project, IP, or user agent",
+  "audit.filters.searchPlaceholder":
+    "Action, resource, actor, project, IP, or user agent",
   "audit.filters.user": "User",
   "audit.filters.action": "Action",
   "audit.filters.module": "Module",
@@ -184,9 +187,11 @@ const en = {
   "audit.columns.newValue": "New value",
   "audit.columns.metadata": "Additional metadata",
   "audit.details.title": "Audit event details",
-  "audit.details.description": "Complete read-only record of the selected platform event.",
+  "audit.details.description":
+    "Complete read-only record of the selected platform event.",
   "audit.details.loading": "Loading audit event...",
-  "audit.policy.readOnly": "Audit records are read-only. No deletion permission or automated retention period is currently configured.",
+  "audit.policy.readOnly":
+    "Audit records are read-only. No deletion permission or automated retention period is currently configured.",
   "sidebar.workspace": "Workspace",
   "tasks.badge": "Personal work queue",
   "tasks.title": "Tasks",
@@ -356,16 +361,21 @@ const en = {
   "bugReview.state.duplicate": "Duplicated",
   "bugReview.state.notApplicable": "Not Applicable",
   "bugReview.state.needMoreInformation": "Need more information",
-  "bugReview.detailsDescription": "Complete submitted finding, evidence, classification, and review record.",
-  "bugReview.reviewHelp": "Choose the manager review outcome. Legacy findings can always return to New.",
+  "bugReview.detailsDescription":
+    "Complete submitted finding, evidence, classification, and review record.",
+  "bugReview.reviewHelp":
+    "Choose the manager review outcome. Legacy findings can always return to New.",
   "bugReview.sections.submission": "Submitted finding",
-  "bugReview.sections.submissionDescription": "All narrative and business-impact information submitted by the pentester.",
+  "bugReview.sections.submissionDescription":
+    "All narrative and business-impact information submitted by the pentester.",
   "bugReview.sections.technical": "Technical details",
   "bugReview.sections.classification": "Security classification",
   "bugReview.sections.record": "Record and audit metadata",
-  "bugReview.sections.recordDescription": "Project linkage, reporter identity, review ownership, and timestamps.",
+  "bugReview.sections.recordDescription":
+    "Project linkage, reporter identity, review ownership, and timestamps.",
   "bugReview.sections.additional": "Additional stored data",
-  "bugReview.sections.additionalDescription": "Legacy or extension fields stored with this bug record.",
+  "bugReview.sections.additionalDescription":
+    "Legacy or extension fields stored with this bug record.",
   "bugReview.attachments.title": "Proof-of-concept evidence",
   "bugReview.attachments.count": "{count} attachments",
   "bugReview.attachments.empty": "No proof-of-concept attachments were submitted.",
@@ -378,15 +388,21 @@ const en = {
   "bugReview.attachments.next": "Next",
   "bugReview.attachments.closePreview": "Close full-screen preview",
   "pentestWorkspace.additionalInformation.title": "Additional information requested",
-  "pentestWorkspace.additionalInformation.description": "Add the requested clarification and, when useful, supporting images, videos, or files.",
-  "pentestWorkspace.additionalInformation.placeholder": "Provide the requested technical details, reproduction notes, or clarification...",
+  "pentestWorkspace.additionalInformation.description":
+    "Add the requested clarification and, when useful, supporting images, videos, or files.",
+  "pentestWorkspace.additionalInformation.placeholder":
+    "Provide the requested technical details, reproduction notes, or clarification...",
   "pentestWorkspace.additionalInformation.submit": "Send additional information",
-  "pentestWorkspace.additionalInformation.success": "Additional information was sent to the Security Manager.",
-  "pentestWorkspace.additionalInformation.error": "Could not send the additional information.",
-  "pentestWorkspace.additionalInformation.textRequired": "Additional information text is required.",
+  "pentestWorkspace.additionalInformation.success":
+    "Additional information was sent to the Security Manager.",
+  "pentestWorkspace.additionalInformation.error":
+    "Could not send the additional information.",
+  "pentestWorkspace.additionalInformation.textRequired":
+    "Additional information text is required.",
   "pentestWorkspace.additionalInformation.history": "Additional information",
   "bugReview.sections.additionalInformation": "Reporter follow-up",
-  "bugReview.sections.additionalInformationDescription": "Clarifications submitted after a request for more information.",
+  "bugReview.sections.additionalInformationDescription":
+    "Clarifications submitted after a request for more information.",
   "bugReview.stored.bugTitle": "Stored bug title",
   "bugReview.stored.label": "Stored label",
   "bugReview.stored.persianLabel": "Persian label",
@@ -534,10 +550,29 @@ const en = {
     "Could not save the assessment. The previous value was restored.",
   "pentestWorkspace.assessment.failedWithoutFinding":
     "Failed — no vulnerability has been submitted yet.",
+  "pentestWorkspace.assessment.findingsRegistered":
+    "{count} findings registered for this test.",
+  "pentestWorkspace.assessment.findingActionHint":
+    "Assessment remains Failed when you register additional findings.",
+  "pentestWorkspace.assessment.addFinding": "Register finding",
+  "pentestWorkspace.assessment.addAnotherFinding": "Add another finding",
   "pentestWorkspace.findings.new": "New finding",
   "pentestWorkspace.findings.view": "View",
   "pentestWorkspace.findings.details": "Finding details",
   "pentestWorkspace.findings.edit": "Edit finding",
+  "pentestWorkspace.findings.delete": "Delete",
+  "pentestWorkspace.findings.deleteTitle": "Delete this finding?",
+  "pentestWorkspace.findings.deleteDescription":
+    '"{title}" will be permanently deleted. This action cannot be undone.',
+  "pentestWorkspace.findings.deletePocsWarning":
+    "All {count} attached proof-of-concept files will also be permanently deleted.",
+  "pentestWorkspace.findings.cancelDelete": "Keep finding",
+  "pentestWorkspace.findings.confirmDelete": "Delete finding",
+  "pentestWorkspace.findings.deleteSuccess": "Finding and POC files deleted.",
+  "pentestWorkspace.findings.deleteLastSuccess":
+    "Finding and POC files deleted. The related testing item is now Pass.",
+  "pentestWorkspace.findings.deleteError":
+    "Could not delete the finding. Only findings still in New status can be deleted.",
   "pentestWorkspace.findings.close": "Close",
   "pentestWorkspace.findings.preview": "Preview",
   "pentestWorkspace.findings.noPocs": "No POCs attached.",
@@ -547,6 +582,19 @@ const en = {
   "pentestWorkspace.findings.projectTitle": "All project findings",
   "pentestWorkspace.findings.projectDescription":
     "Review every registered finding. Select a checklist item when creating a new finding.",
+  "pentestWorkspace.findings.selectedTest": "Selected testing item",
+  "pentestWorkspace.findings.selectTestHint":
+    "Select a testing item from the assigned standards to create a finding.",
+  "pentestWorkspace.findings.summary.total": "All findings",
+  "pentestWorkspace.findings.summary.priority": "Critical / High",
+  "pentestWorkspace.findings.summary.action": "Needs action",
+  "pentestWorkspace.findings.search": "Search title, path, or test code",
+  "pentestWorkspace.findings.results": "{count} findings shown",
+  "pentestWorkspace.findings.noResults": "No findings match these filters.",
+  "pentestWorkspace.findings.clearFilters": "Clear filters",
+  "pentestWorkspace.findings.noLocation": "No affected path recorded",
+  "pentestWorkspace.findings.evidenceCount": "{count} evidence",
+  "pentestWorkspace.findings.emptyTitle": "No findings registered",
   "pentestWorkspace.findings.loading": "Loading project findings...",
   "pentestWorkspace.findings.loadError": "Could not load project findings",
   "pentestWorkspace.findings.modalTitle": "Submit finding",
@@ -568,7 +616,8 @@ const en = {
   "pentestWorkspace.findings.evidencePlaceholder":
     "Request/response, screenshot note, proof payload",
   "pentestWorkspace.findings.exploitDetails": "Exploit Details",
-  "pentestWorkspace.findings.exploitDetailsPlaceholder": "Requests, payloads, prerequisites, and reproduction details",
+  "pentestWorkspace.findings.exploitDetailsPlaceholder":
+    "Requests, payloads, prerequisites, and reproduction details",
   "pentestWorkspace.findings.steps": "Reproduction steps",
   "pentestWorkspace.findings.stepsPlaceholder": "1. Login as... 2. Send...",
   "pentestWorkspace.findings.impact": "Impact",
@@ -578,14 +627,18 @@ const en = {
   "pentestWorkspace.findings.recommendationPlaceholder":
     "Server-side authorization, allowlist, rotation...",
   "pentestWorkspace.findings.solution": "Solution",
-  "pentestWorkspace.findings.solutionPlaceholder": "Configuration or code changes required to remediate the issue",
+  "pentestWorkspace.findings.solutionPlaceholder":
+    "Configuration or code changes required to remediate the issue",
   "pentestWorkspace.findings.toolsUsed": "Tools Used",
-  "pentestWorkspace.findings.toolsUsedPlaceholder": "Burp Suite, curl, browser developer tools...",
+  "pentestWorkspace.findings.toolsUsedPlaceholder":
+    "Burp Suite, curl, browser developer tools...",
   "pentestWorkspace.findings.references": "References",
   "pentestWorkspace.findings.referencesPlaceholder": "One URL or reference per line",
   "pentestWorkspace.findings.securingMethods": "Securing Methods",
-  "pentestWorkspace.findings.securing.web_server_settings": "Securing by Web Server Settings",
-  "pentestWorkspace.findings.securing.program_code_modification": "Securing by Modification in the Program Code",
+  "pentestWorkspace.findings.securing.web_server_settings":
+    "Securing by Web Server Settings",
+  "pentestWorkspace.findings.securing.program_code_modification":
+    "Securing by Modification in the Program Code",
   "pentestWorkspace.findings.wafPossibility": "Possibility of Securing by WAF",
   "pentestWorkspace.findings.waf.yes": "Yes",
   "pentestWorkspace.findings.waf.somewhat": "Somewhat",
@@ -622,12 +675,10 @@ const en = {
     "Video exceeds the temporary video-size limit.",
   "pentestWorkspace.attachments.error.documentTooLarge":
     "Document exceeds the document-size limit.",
-  "pentestWorkspace.attachments.error.tooManyFiles":
-    "Maximum attachment count exceeded.",
+  "pentestWorkspace.attachments.error.tooManyFiles": "Maximum attachment count exceeded.",
   "pentestWorkspace.attachments.error.totalSizeExceeded":
     "Combined attachment-size limit exceeded.",
-  "pentestWorkspace.attachments.error.duplicateFile":
-    "This file is already selected.",
+  "pentestWorkspace.attachments.error.duplicateFile": "This file is already selected.",
   "pentestWorkspace.cvss.formTitle": "CVSS v4.0",
   "pentestWorkspace.cvss.formDescription":
     "Calculate and apply a standards-compliant CVSS v4.0 result.",
@@ -743,7 +794,8 @@ const en = {
   "devopsAccess.available": "Available",
   "devopsAccess.unassigned": "Not assigned",
   "devopsAccess.noConfig": "No DevOps information has been registered for this project.",
-  "devopsAccess.personalMissing": "A personal environment has not yet been assigned to you.",
+  "devopsAccess.personalMissing":
+    "A personal environment has not yet been assigned to you.",
   "devopsAccess.error": "DevOps access information could not be loaded.",
   "devopsAccess.retry": "Retry",
   "devopsAccess.expand": "Show connection details",
@@ -873,7 +925,8 @@ const fa: Record<TranslationKey, string> = {
   "notifications.emptyTitle": "اعلانی وجود ندارد",
   "notifications.markAllRead": "همه خوانده شد",
   "notifications.viewAll": "مشاهده همه",
-  "notifications.pageDescription": "تاریخچه کامل اعلان‌های خود را بررسی کنید و کار مرتبط را باز کنید.",
+  "notifications.pageDescription":
+    "تاریخچه کامل اعلان‌های خود را بررسی کنید و کار مرتبط را باز کنید.",
   "notifications.filterAll": "همه",
   "notifications.filterUnread": "خوانده‌نشده",
   "notifications.filterRead": "خوانده‌شده",
@@ -902,7 +955,8 @@ const fa: Record<TranslationKey, string> = {
   "sidebar.userManagement": "مدیریت کاربران",
   "sidebar.auditLogs": "گزارش‌های ممیزی",
   "audit.title": "گزارش‌های ممیزی",
-  "audit.description": "فعالیت‌های حساس امنیتی کاربران، پروژه‌ها و ماژول‌های سامانه را بررسی کنید.",
+  "audit.description":
+    "فعالیت‌های حساس امنیتی کاربران، پروژه‌ها و ماژول‌های سامانه را بررسی کنید.",
   "audit.loading": "در حال بارگذاری گزارش‌های ممیزی...",
   "audit.loadError": "بارگذاری گزارش‌های ممیزی ممکن نشد",
   "audit.retry": "تلاش مجدد",
@@ -949,7 +1003,8 @@ const fa: Record<TranslationKey, string> = {
   "audit.details.title": "جزئیات رویداد ممیزی",
   "audit.details.description": "رکورد کامل و فقط‌خواندنی رویداد انتخاب‌شده سامانه.",
   "audit.details.loading": "در حال بارگذاری رویداد ممیزی...",
-  "audit.policy.readOnly": "رکوردهای ممیزی فقط‌خواندنی هستند. در حال حاضر مجوز حذف یا دوره نگهداری خودکار تعریف نشده است.",
+  "audit.policy.readOnly":
+    "رکوردهای ممیزی فقط‌خواندنی هستند. در حال حاضر مجوز حذف یا دوره نگهداری خودکار تعریف نشده است.",
   "sidebar.workspace": "فضای کاری",
   "tasks.badge": "صف کار شخصی",
   "tasks.title": "وظایف",
@@ -1119,15 +1174,19 @@ const fa: Record<TranslationKey, string> = {
   "bugReview.state.notApplicable": "غیرقابل اعمال",
   "bugReview.state.needMoreInformation": "نیاز به اطلاعات بیشتر",
   "bugReview.detailsDescription": "اطلاعات کامل یافته، شواهد، طبقه‌بندی و سابقه بازبینی.",
-  "bugReview.reviewHelp": "نتیجه بازبینی مدیر را انتخاب کنید. یافته‌های قدیمی همیشه می‌توانند به وضعیت جدید بازگردند.",
+  "bugReview.reviewHelp":
+    "نتیجه بازبینی مدیر را انتخاب کنید. یافته‌های قدیمی همیشه می‌توانند به وضعیت جدید بازگردند.",
   "bugReview.sections.submission": "یافته ارسال‌شده",
-  "bugReview.sections.submissionDescription": "تمام اطلاعات توصیفی و اثر کسب‌وکاری ثبت‌شده توسط تست‌کننده نفوذ.",
+  "bugReview.sections.submissionDescription":
+    "تمام اطلاعات توصیفی و اثر کسب‌وکاری ثبت‌شده توسط تست‌کننده نفوذ.",
   "bugReview.sections.technical": "جزئیات فنی",
   "bugReview.sections.classification": "طبقه‌بندی امنیتی",
   "bugReview.sections.record": "اطلاعات رکورد و ممیزی",
-  "bugReview.sections.recordDescription": "ارتباط پروژه، هویت گزارش‌دهنده، مسئول بازبینی و زمان‌ها.",
+  "bugReview.sections.recordDescription":
+    "ارتباط پروژه، هویت گزارش‌دهنده، مسئول بازبینی و زمان‌ها.",
   "bugReview.sections.additional": "داده‌های ذخیره‌شده اضافی",
-  "bugReview.sections.additionalDescription": "فیلدهای قدیمی یا توسعه‌ای ذخیره‌شده همراه این رکورد باگ.",
+  "bugReview.sections.additionalDescription":
+    "فیلدهای قدیمی یا توسعه‌ای ذخیره‌شده همراه این رکورد باگ.",
   "bugReview.attachments.title": "شواهد اثبات مفهوم",
   "bugReview.attachments.count": "{count} پیوست",
   "bugReview.attachments.empty": "هیچ پیوست اثبات مفهومی ارسال نشده است.",
@@ -1140,15 +1199,20 @@ const fa: Record<TranslationKey, string> = {
   "bugReview.attachments.next": "بعدی",
   "bugReview.attachments.closePreview": "بستن پیش‌نمایش تمام‌صفحه",
   "pentestWorkspace.additionalInformation.title": "درخواست اطلاعات تکمیلی",
-  "pentestWorkspace.additionalInformation.description": "توضیحات درخواستی و در صورت نیاز تصاویر، ویدیوها یا فایل‌های پشتیبان را اضافه کنید.",
-  "pentestWorkspace.additionalInformation.placeholder": "جزئیات فنی، مراحل بازتولید یا توضیحات تکمیلی درخواستی را بنویسید...",
+  "pentestWorkspace.additionalInformation.description":
+    "توضیحات درخواستی و در صورت نیاز تصاویر، ویدیوها یا فایل‌های پشتیبان را اضافه کنید.",
+  "pentestWorkspace.additionalInformation.placeholder":
+    "جزئیات فنی، مراحل بازتولید یا توضیحات تکمیلی درخواستی را بنویسید...",
   "pentestWorkspace.additionalInformation.submit": "ارسال اطلاعات تکمیلی",
-  "pentestWorkspace.additionalInformation.success": "اطلاعات تکمیلی برای مدیر امنیت ارسال شد.",
+  "pentestWorkspace.additionalInformation.success":
+    "اطلاعات تکمیلی برای مدیر امنیت ارسال شد.",
   "pentestWorkspace.additionalInformation.error": "ارسال اطلاعات تکمیلی ممکن نشد.",
-  "pentestWorkspace.additionalInformation.textRequired": "وارد کردن متن اطلاعات تکمیلی الزامی است.",
+  "pentestWorkspace.additionalInformation.textRequired":
+    "وارد کردن متن اطلاعات تکمیلی الزامی است.",
   "pentestWorkspace.additionalInformation.history": "اطلاعات تکمیلی",
   "bugReview.sections.additionalInformation": "پاسخ تکمیلی گزارش‌دهنده",
-  "bugReview.sections.additionalInformationDescription": "توضیحاتی که پس از درخواست اطلاعات بیشتر ارسال شده‌اند.",
+  "bugReview.sections.additionalInformationDescription":
+    "توضیحاتی که پس از درخواست اطلاعات بیشتر ارسال شده‌اند.",
   "bugReview.stored.bugTitle": "عنوان ذخیره‌شده باگ",
   "bugReview.stored.label": "برچسب ذخیره‌شده",
   "bugReview.stored.persianLabel": "برچسب فارسی",
@@ -1295,10 +1359,29 @@ const fa: Record<TranslationKey, string> = {
     "ذخیره ارزیابی انجام نشد. مقدار قبلی بازیابی شد.",
   "pentestWorkspace.assessment.failedWithoutFinding":
     "ناموفق — هنوز آسیب‌پذیری‌ای ثبت نشده است.",
+  "pentestWorkspace.assessment.findingsRegistered":
+    "{count} یافته برای این آزمون ثبت شده است.",
+  "pentestWorkspace.assessment.findingActionHint":
+    "با ثبت یافته‌های بیشتر، وضعیت ارزیابی ناموفق باقی می‌ماند.",
+  "pentestWorkspace.assessment.addFinding": "ثبت یافته",
+  "pentestWorkspace.assessment.addAnotherFinding": "افزودن یافته دیگر",
   "pentestWorkspace.findings.new": "یافته جدید",
   "pentestWorkspace.findings.view": "مشاهده",
   "pentestWorkspace.findings.details": "جزئیات یافته",
   "pentestWorkspace.findings.edit": "ویرایش یافته",
+  "pentestWorkspace.findings.delete": "حذف",
+  "pentestWorkspace.findings.deleteTitle": "این یافته حذف شود؟",
+  "pentestWorkspace.findings.deleteDescription":
+    "یافته «{title}» برای همیشه حذف می‌شود. این عملیات قابل بازگشت نیست.",
+  "pentestWorkspace.findings.deletePocsWarning":
+    "همه {count} فایل اثبات مفهوم پیوست‌شده نیز برای همیشه حذف خواهند شد.",
+  "pentestWorkspace.findings.cancelDelete": "نگه‌داشتن یافته",
+  "pentestWorkspace.findings.confirmDelete": "حذف یافته",
+  "pentestWorkspace.findings.deleteSuccess": "یافته و فایل‌های اثبات مفهوم حذف شدند.",
+  "pentestWorkspace.findings.deleteLastSuccess":
+    "یافته و فایل‌های اثبات مفهوم حذف شدند. وضعیت آیتم آزمون مرتبط اکنون موفق است.",
+  "pentestWorkspace.findings.deleteError":
+    "حذف یافته انجام نشد. فقط یافته‌هایی که هنوز در وضعیت جدید هستند قابل حذف‌اند.",
   "pentestWorkspace.findings.close": "بستن",
   "pentestWorkspace.findings.preview": "پیش‌نمایش",
   "pentestWorkspace.findings.noPocs": "نمونه اثباتی پیوست نشده است.",
@@ -1308,6 +1391,19 @@ const fa: Record<TranslationKey, string> = {
   "pentestWorkspace.findings.projectTitle": "همه یافته‌های پروژه",
   "pentestWorkspace.findings.projectDescription":
     "همه یافته‌های ثبت‌شده را بررسی کنید. برای ایجاد یافته جدید یک آیتم چک‌لیست را انتخاب کنید.",
+  "pentestWorkspace.findings.selectedTest": "آیتم آزمون انتخاب‌شده",
+  "pentestWorkspace.findings.selectTestHint":
+    "برای ایجاد یافته، یک آیتم آزمون را از استانداردهای تخصیص‌یافته انتخاب کنید.",
+  "pentestWorkspace.findings.summary.total": "همه یافته‌ها",
+  "pentestWorkspace.findings.summary.priority": "بحرانی / بالا",
+  "pentestWorkspace.findings.summary.action": "نیازمند اقدام",
+  "pentestWorkspace.findings.search": "جستجو در عنوان، مسیر یا کد آزمون",
+  "pentestWorkspace.findings.results": "نمایش {count} یافته",
+  "pentestWorkspace.findings.noResults": "یافته‌ای با این فیلترها مطابقت ندارد.",
+  "pentestWorkspace.findings.clearFilters": "پاک‌کردن فیلترها",
+  "pentestWorkspace.findings.noLocation": "مسیر آسیب‌دیده ثبت نشده است",
+  "pentestWorkspace.findings.evidenceCount": "{count} مدرک",
+  "pentestWorkspace.findings.emptyTitle": "یافته‌ای ثبت نشده است",
   "pentestWorkspace.findings.loading": "در حال بارگذاری یافته‌های پروژه...",
   "pentestWorkspace.findings.loadError": "بارگذاری یافته‌های پروژه انجام نشد",
   "pentestWorkspace.findings.modalTitle": "ارسال یافته",
@@ -1329,7 +1425,8 @@ const fa: Record<TranslationKey, string> = {
   "pentestWorkspace.findings.evidencePlaceholder":
     "درخواست/پاسخ، توضیح تصویر، payload اثبات",
   "pentestWorkspace.findings.exploitDetails": "جزئیات بهره‌برداری",
-  "pentestWorkspace.findings.exploitDetailsPlaceholder": "درخواست‌ها، payloadها، پیش‌نیازها و جزئیات بازتولید",
+  "pentestWorkspace.findings.exploitDetailsPlaceholder":
+    "درخواست‌ها، payloadها، پیش‌نیازها و جزئیات بازتولید",
   "pentestWorkspace.findings.steps": "مراحل بازتولید",
   "pentestWorkspace.findings.stepsPlaceholder": "۱. ورود با... ۲. ارسال...",
   "pentestWorkspace.findings.impact": "اثر",
@@ -1338,14 +1435,18 @@ const fa: Record<TranslationKey, string> = {
   "pentestWorkspace.findings.recommendationPlaceholder":
     "کنترل دسترسی سمت سرور، allowlist، چرخش کلیدها...",
   "pentestWorkspace.findings.solution": "راه‌حل",
-  "pentestWorkspace.findings.solutionPlaceholder": "تغییرات پیکربندی یا کد لازم برای رفع مشکل",
+  "pentestWorkspace.findings.solutionPlaceholder":
+    "تغییرات پیکربندی یا کد لازم برای رفع مشکل",
   "pentestWorkspace.findings.toolsUsed": "ابزارهای استفاده‌شده",
-  "pentestWorkspace.findings.toolsUsedPlaceholder": "Burp Suite، curl، ابزارهای توسعه مرورگر...",
+  "pentestWorkspace.findings.toolsUsedPlaceholder":
+    "Burp Suite، curl، ابزارهای توسعه مرورگر...",
   "pentestWorkspace.findings.references": "مراجع",
   "pentestWorkspace.findings.referencesPlaceholder": "در هر خط یک نشانی یا مرجع",
   "pentestWorkspace.findings.securingMethods": "روش‌های ایمن‌سازی",
-  "pentestWorkspace.findings.securing.web_server_settings": "ایمن‌سازی با تنظیمات وب‌سرور",
-  "pentestWorkspace.findings.securing.program_code_modification": "ایمن‌سازی با تغییر در کد برنامه",
+  "pentestWorkspace.findings.securing.web_server_settings":
+    "ایمن‌سازی با تنظیمات وب‌سرور",
+  "pentestWorkspace.findings.securing.program_code_modification":
+    "ایمن‌سازی با تغییر در کد برنامه",
   "pentestWorkspace.findings.wafPossibility": "امکان ایمن‌سازی با WAF",
   "pentestWorkspace.findings.waf.yes": "بله",
   "pentestWorkspace.findings.waf.somewhat": "تاحدی",
@@ -1386,8 +1487,7 @@ const fa: Record<TranslationKey, string> = {
     "تعداد پیوست‌ها از حداکثر مجاز بیشتر است.",
   "pentestWorkspace.attachments.error.totalSizeExceeded":
     "حجم مجموع پیوست‌ها از محدودیت مجاز بیشتر است.",
-  "pentestWorkspace.attachments.error.duplicateFile":
-    "این فایل قبلاً انتخاب شده است.",
+  "pentestWorkspace.attachments.error.duplicateFile": "این فایل قبلاً انتخاب شده است.",
   "pentestWorkspace.cvss.formTitle": "CVSS نسخه ۴.۰",
   "pentestWorkspace.cvss.formDescription":
     "امتیاز استاندارد CVSS نسخه ۴.۰ را محاسبه و اعمال کنید.",

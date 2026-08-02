@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "d985a161237526cb",
+  "sourceFingerprint": "1cc5b2c102ae8cd3",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -61,7 +61,7 @@
   "stats": {
     "indexedFiles": 351,
     "domains": 13,
-    "apiEndpoints": 70,
+    "apiEndpoints": 71,
     "frontendRoutes": 25
   },
   "majorRelationships": [
@@ -310,6 +310,17 @@
       "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
       "permissions": [
         "PENTEST_VULNERABILITIES_CREATE"
+      ],
+      "capabilities": [
+        "open-pentest-workspace"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/pentest/vulnerabilities/:id",
+      "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
+      "permissions": [
+        "PENTEST_VULNERABILITIES_UPDATE"
       ],
       "capabilities": [
         "open-pentest-workspace"
@@ -2156,7 +2167,7 @@
             "apps/api/src/constants/uploads.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "88d3d6d3b02c"
+          "contentHash": "d3c571d15ebc"
         },
         {
           "path": "apps/api/src/modules/pentest/middlewares/pocUpload.middleware.ts",
@@ -2271,7 +2282,7 @@
             "apps/api/src/middlewares/permission.middleware.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "13ae1d05ccbe"
+          "contentHash": "eb32f4088e2b"
         },
         {
           "path": "apps/api/src/modules/pentest/services/assignedSecurityStandard.service.test.ts",
@@ -2335,7 +2346,7 @@
             "apps/api/src/modules/pentest/services/bugReview.service.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "0c7e1ae2b5d6"
+          "contentHash": "7100d3aae899"
         },
         {
           "path": "apps/api/src/modules/pentest/services/bugReview.service.ts",
@@ -2352,13 +2363,13 @@
           ],
           "symbols": [
             "assertBugStateTransition",
+            "assertBugCanBeDeleted",
             "resolveSecurityManagerId",
             "resolveAssignedSecurityManager",
             "requireAssignedSecurityManager",
             "listProjectBugsForManager",
             "getProjectBugForManager",
-            "notifySecurityManagerOfBug",
-            "resolveBugReporterId"
+            "notifySecurityManagerOfBug"
           ],
           "related": [
             "apps/api/src/constants/http.ts",
@@ -2367,7 +2378,7 @@
             "apps/api/src/constants/routes.ts",
             "apps/api/src/modules/notifications/services/notification.service.ts"
           ],
-          "contentHash": "7926a3c59ae1"
+          "contentHash": "306a8e781206"
         },
         {
           "path": "apps/api/src/modules/pentest/services/cvssV4.constants.ts",
@@ -2473,7 +2484,7 @@
           "related": [
             "apps/api/src/modules/pentest/validators/pentest.validators.ts"
           ],
-          "contentHash": "fc9f15ac28a2"
+          "contentHash": "a9f2bd63f912"
         },
         {
           "path": "apps/api/src/modules/pentest/validators/pentest.validators.ts",
@@ -2490,12 +2501,12 @@
           "symbols": [
             "createVulnerabilitySchema",
             "updateVulnerabilitySchema",
+            "deleteVulnerabilitySchema",
             "assignedSecurityStandardsSchema",
             "saveItemAssessmentSchema",
             "projectBugSchema",
             "projectBugsSchema",
-            "updateBugReviewStateSchema",
-            "submitBugAdditionalInformationSchema"
+            "updateBugReviewStateSchema"
           ],
           "related": [
             "apps/api/src/constants/projects.ts",
@@ -2504,7 +2515,7 @@
             "apps/api/src/modules/pentest/models/pentestWorkSession.model.ts",
             "apps/api/src/modules/pentest/services/cvssV4.constants.ts"
           ],
-          "contentHash": "b21f8c93a88f"
+          "contentHash": "ca7c2ee1adc5"
         },
         {
           "path": "apps/api/src/modules/security-standards/controllers/securityStandard.controller.ts",
@@ -2679,7 +2690,7 @@
             "apps/web-fsa/src/shared/api/unwrapApiData.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "bd6a4e88c2ce"
+          "contentHash": "cf471bdf4def"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
@@ -2862,9 +2873,9 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/shared/ui/feedback/EmptyState.tsx",
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
-            "packages/contracts/src/index.ts"
+            "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
           ],
-          "contentHash": "a2bb9352e7c8"
+          "contentHash": "9892a500b6e8"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/AttachmentUploader.tsx",
@@ -2958,7 +2969,7 @@
             "apps/web-fsa/src/entities/pentest/model/workspace.ts",
             "apps/web-fsa/src/entities/pentest/ui/modules/FindingDetailsModal.tsx"
           ],
-          "contentHash": "4961ee2489ed"
+          "contentHash": "af233b038ed2"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/FindingDetailsModal.tsx",
@@ -2983,7 +2994,7 @@
             "apps/web-fsa/src/entities/pentest/model/workspace.ts",
             "apps/web-fsa/src/entities/pentest/ui/modules/AttachmentUploader.tsx"
           ],
-          "contentHash": "06ed3eab8c99"
+          "contentHash": "056892d83689"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/FindingReportModal.tsx",
@@ -3174,7 +3185,7 @@
             "apps/web-fsa/src/entities/pentest/ui/modules/ModuleFallback.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "521e94459862"
+          "contentHash": "78533c1e0ae7"
         },
         {
           "path": "apps/web-fsa/src/pages/pentest-workspace/PentestWorkspacePage.tsx",
@@ -5529,7 +5540,7 @@
             "AuditAction",
             "AuditEntityType"
           ],
-          "contentHash": "143f3ef9e41c"
+          "contentHash": "56eb5454c826"
         },
         {
           "path": "apps/api/src/constants/tasks.ts",
@@ -6144,7 +6155,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "4b37dd4467c5"
+          "contentHash": "72fe2b0ec0b8"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",

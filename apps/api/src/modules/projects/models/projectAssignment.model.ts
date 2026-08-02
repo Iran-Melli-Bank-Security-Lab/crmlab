@@ -107,6 +107,7 @@ const projectAssignmentSchema = new Schema(
     managerVerifyDate: { type: Date },
     stateChanges: { type: [stateChangeSchema], default: [] },
     totalWorkTime: { type: Number, default: 0, min: 0 },
+    workTimerStartedAt: { type: Date, default: null },
     created_at: { type: Date },
     updated_at: { type: Date },
   },

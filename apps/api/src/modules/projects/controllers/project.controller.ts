@@ -47,6 +47,7 @@ import {
   saveProjectSecurityScope,
 } from "../services/projectSecurityScope.service";
 import { notifyProjectAssignments } from "../services/projectAssignmentNotification.service";
+import { toProjectAssignmentWorkTimerSnapshot } from "../services/projectAssignmentWorkTimer.service";
 import {
   getEffectiveProvisioningStatus,
   notifyInitialDevopsAssignment,
@@ -65,6 +66,17 @@ type ProjectRecipientField =
   | "devops"
   | "representative";
 type ProjectAssignableRole = ProjectAssignmentRole;
+
+function findPentesterAssignment(
+  assignments: readonly ProjectResponsibilityAssignmentSource[],
+  userId: string
+) {
+  return assignments.find((assignment) =>
+    String(assignment.userId || assignment.pentester || "") === userId &&
+    (assignment.assignmentRole === PROJECT_ASSIGNMENT_ROLES.PENTESTER ||
+      (!assignment.assignmentRole && assignment.pentester))
+  );
+}
 
 const recipientRules: Record<
   ProjectRecipientField,
@@ -500,7 +512,9 @@ async function getProjectListFilter(
       ] },
       { status: { $ne: "removed" } },
     ],
-  }).select("projectId project userId pentester managerId manager assignmentRole");
+  }).select(
+    "projectId project userId pentester managerId manager assignmentRole status totalWorkTime workTimerStartedAt"
+  );
   const assignedProjectIds = assignments.flatMap((assignment) => {
     const projectId = assignment.projectId || assignment.project;
     return projectId ? [projectId] : [];
@@ -699,6 +713,13 @@ export const getProjects: RequestHandler = async (req, res, next) => {
             view === "unified" ? undefined : view
           )
         );
+        const pentestAssignment = findPentesterAssignment(
+          access.assignmentRecordsByProject.get(projectId) || [],
+          req.user!.id
+        );
+        const workTimer = pentestAssignment
+          ? toProjectAssignmentWorkTimerSnapshot(pentestAssignment)
+          : undefined;
         let responseSource: Record<string, unknown> = project;
         if (view === "unified") {
           const rowViews = [...resolveResponsibilityViews(
@@ -744,6 +765,13 @@ export const getProjects: RequestHandler = async (req, res, next) => {
           responsibilityContext,
           myResponsibilities: responsibilityContext.responsibilityKeys,
           allowedActions,
+          ...(workTimer
+            ? {
+                assignmentStatus: workTimer.status,
+                totalWorkTime: workTimer.totalWorkTime,
+                workTimerStartedAt: workTimer.workTimerStartedAt,
+              }
+            : {}),
         };
       })
     );
@@ -789,7 +817,9 @@ export const getProject: RequestHandler = async (req, res, next) => {
               { status: { $ne: "removed" } },
             ],
           })
-            .select("projectId project userId pentester managerId manager assignmentRole securityScope")
+            .select(
+              "projectId project userId pentester managerId manager assignmentRole securityScope status totalWorkTime workTimerStartedAt"
+            )
             .lean(),
           ProjectModel.findById(projectId)
             .select(PROJECT_RESPONSIBILITY_SOURCE_FIELDS.join(" "))
@@ -802,11 +832,13 @@ export const getProject: RequestHandler = async (req, res, next) => {
           user: req.user!,
           assignments: userAssignments,
         });
-    const pentestAssignment = userAssignments.find((assignment) =>
-      String(assignment.userId || assignment.pentester || "") === req.user!.id &&
-      (assignment.assignmentRole === PROJECT_ASSIGNMENT_ROLES.PENTESTER ||
-        (!assignment.assignmentRole && assignment.pentester))
+    const pentestAssignment = findPentesterAssignment(
+      userAssignments,
+      req.user!.id
     );
+    const workTimer = pentestAssignment
+      ? toProjectAssignmentWorkTimerSnapshot(pentestAssignment)
+      : undefined;
 
     sendSuccess(res, {
       ...normalizeLegacyProject(project),
@@ -820,6 +852,13 @@ export const getProject: RequestHandler = async (req, res, next) => {
       } : {}),
       ...(pentestAssignment?.securityScope
         ? { assignedSecurityScope: pentestAssignment.securityScope }
+        : {}),
+      ...(workTimer
+        ? {
+            assignmentStatus: workTimer.status,
+            totalWorkTime: workTimer.totalWorkTime,
+            workTimerStartedAt: workTimer.workTimerStartedAt,
+          }
         : {}),
     });
   } catch (error) {

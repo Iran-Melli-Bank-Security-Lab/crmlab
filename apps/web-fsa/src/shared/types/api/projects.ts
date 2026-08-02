@@ -63,6 +63,9 @@ export type ApiProjectResponse = {
   type?: ProjectType | "devops";
   platform?: ProjectPlatform[] | ProjectPlatform | string[] | string;
   status?: string;
+  assignmentStatus?: "pending" | "in_progress" | "finished";
+  totalWorkTime?: number;
+  workTimerStartedAt?: string | null;
   ownerId?: string;
   projectManager?: string;
   qualityManager?: string;

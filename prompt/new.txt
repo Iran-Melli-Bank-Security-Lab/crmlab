@@ -1,0 +1,259 @@
+Implement persistent project work-time tracking on the **Project Workspace** page.
+
+## Objective
+
+When a user changes a project assignment status to **In Progress**, start tracking how long the user actively keeps the project in that status.
+
+The timer must continue increasing even when:
+
+* The user refreshes the page
+* The user navigates to another page
+* The browser tab is closed
+* The user logs out and returns later
+* The frontend application is not running
+
+The timer must only stop when the user manually changes the project status to either:
+
+* **Pending**
+* **Finished**
+
+The total accumulated work time must be stored in MongoDB in the existing Mongoose model:
+
+```js
+projectAssignment.model
+```
+
+Use this existing field:
+
+```js
+totalWorkTime: {
+  type: Number,
+  default: 0,
+  min: 0,
+},
+```
+
+Store `totalWorkTime` in a clearly defined unit, preferably **seconds**.
+
+## Required Data Model Changes
+
+The existing `totalWorkTime` field is not enough to calculate time while the project is still in progress.
+
+Add a field such as:
+
+```js
+workTimerStartedAt: {
+  type: Date,
+  default: null,
+},
+```
+
+Use this field to store the timestamp of the most recent transition into the **In Progress** status.
+
+Do not continuously write to the database every second.
+
+The database should store:
+
+* The previously accumulated duration in `totalWorkTime`
+* The timestamp at which the current active work session started in `workTimerStartedAt`
+
+The current displayed total should be calculated as:
+
+```js
+displayedTotalWorkTime =
+  totalWorkTime +
+  (currentTime - workTimerStartedAt);
+```
+
+This calculation should only include the second part when the assignment is currently **In Progress**.
+
+## Status Transition Logic
+
+### When changing to In Progress
+
+When the user clicks the **In Progress** button:
+
+1. Check the current assignment status.
+2. If it is not already `in-progress`, set the status to `in-progress`.
+3. Set `workTimerStartedAt` to the current server time.
+4. Keep the existing `totalWorkTime` unchanged.
+5. Return the updated assignment to the frontend.
+6. Start displaying a live increasing timer on the Project Workspace page.
+
+Do not reset `totalWorkTime` when a new work session starts.
+
+If the assignment is already in progress, clicking the button again must not restart or duplicate the timer.
+
+### When changing to Pending or Finished
+
+When the user clicks **Pending** or **Finished**:
+
+1. Check whether the current status is `in-progress`.
+2. If it is, calculate the elapsed duration:
+
+```js
+elapsedSeconds = Math.floor(
+  (Date.now() - workTimerStartedAt.getTime()) / 1000
+);
+```
+
+3. Add the elapsed duration to the existing `totalWorkTime`.
+4. Set `workTimerStartedAt` to `null`.
+5. Change the assignment status to `pending` or `finished`.
+6. Save all changes atomically in MongoDB.
+7. Stop the live timer on the frontend.
+8. Display the final accumulated work time.
+
+If the assignment is not currently in progress, changing it to Pending or Finished must not add any extra time.
+
+## Backend Requirements
+
+Implement the timer logic on the backend, not only on the frontend.
+
+The server time must be treated as the source of truth. Do not trust a duration calculated and submitted by the client because it could be manipulated.
+
+Review the existing project-assignment status update controller, service, routes, and model. Integrate the timer logic into the existing architecture rather than creating duplicate status-update logic.
+
+Prevent these problems:
+
+* Starting multiple active timers for the same assignment
+* Adding the same work session more than once
+* Resetting accumulated time accidentally
+* Negative elapsed durations
+* Duplicate requests causing incorrect totals
+* Client-side manipulation of elapsed time
+
+Use an atomic update or transaction where appropriate to avoid race conditions from multiple requests.
+
+Make sure the API response includes at least:
+
+```js
+{
+  status,
+  totalWorkTime,
+  workTimerStartedAt
+}
+```
+
+## Frontend Requirements
+
+On the Project Workspace page:
+
+1. Fetch the project assignment when the page loads.
+2. Read:
+
+   * `status`
+   * `totalWorkTime`
+   * `workTimerStartedAt`
+3. If the status is `in-progress` and `workTimerStartedAt` exists, calculate the current total using the saved accumulated time plus the elapsed time since `workTimerStartedAt`.
+4. Update the displayed timer once per second.
+5. If the status is `pending` or `finished`, display only the saved `totalWorkTime`.
+6. Stop and clean up the interval when:
+
+   * The status changes away from `in-progress`
+   * The component unmounts
+   * The assignment changes
+7. Do not save the timer value to the database every second.
+8. After each status-change request, synchronize the UI with the values returned by the backend.
+
+Display the duration in a readable format such as:
+
+```text
+00:00:00
+```
+
+Use this format:
+
+```text
+HH:MM:SS
+```
+
+Support durations longer than 24 hours. For example:
+
+```text
+125:32:09
+```
+
+Do not convert the hours into days unless the existing UI already requires that behavior.
+
+## Important Behavior
+
+Example:
+
+* Existing `totalWorkTime`: 3,600 seconds
+* User clicks In Progress at 10:00
+* User closes the browser at 10:10
+* User returns at 11:00
+* The UI should display approximately 7,200 seconds total:
+
+  * 3,600 seconds previously accumulated
+  * 3,600 seconds from the active session
+* The timer must continue increasing
+* The user clicks Pending at 11:30
+* Another 1,800 seconds must be added
+* The final stored `totalWorkTime` should become approximately 9,000 seconds
+* `workTimerStartedAt` should become `null`
+
+## Edge Cases
+
+Handle the following cases safely:
+
+* `workTimerStartedAt` is missing while the status is `in-progress`
+* `workTimerStartedAt` contains an invalid date
+* A stale assignment has `workTimerStartedAt` set while its status is not `in-progress`
+* The user clicks status buttons repeatedly
+* Two browser tabs update the same assignment
+* The status-update request fails
+* The user refreshes immediately after clicking In Progress
+* The project remains in progress for several days
+* `totalWorkTime` is missing in older database records
+* The elapsed duration is calculated as a negative value due to invalid data or clock inconsistencies
+
+Use safe defaults and never allow `totalWorkTime` to become negative or `NaN`.
+
+## Code Quality
+
+* Follow the project’s existing folder structure and coding conventions.
+* Reuse the existing API client, state management, hooks, components, controllers, and services.
+* Avoid unnecessary dependencies.
+* Add reusable helper functions for formatting and calculating durations.
+* Add appropriate loading and error handling.
+* Do not perform unrelated refactoring.
+* Preserve backward compatibility with existing project-assignment records.
+
+## Token-Efficient Verification
+
+Do not create new unit, integration, or end-to-end test files for this task, because the goal is to minimize token usage and avoid unnecessary changes.
+
+Instead:
+
+1. Implement only the required production code.
+2. Reuse the existing project architecture and avoid unrelated refactoring.
+3. Run the existing TypeScript type-check, lint, or build command if available.
+4. Fix only errors caused by this implementation.
+5. Do not fix unrelated existing warnings or errors.
+6. Manually review the status-transition logic for:
+
+   * Starting work from Pending
+   * Preventing duplicate timer starts
+   * Stopping work when switching to Pending
+   * Stopping work when switching to Finished
+   * Accumulating multiple work sessions
+   * Restoring the running timer after a page refresh
+   * Handling invalid or missing timer timestamps
+7. Do not write test files unless an existing test must be minimally updated to prevent the current test suite from failing.
+
+Focus the available context and tokens on understanding and implementing the feature correctly.
+
+## Deliverables
+
+After reviewing the existing codebase:
+
+1. Implement the required backend model and status-transition logic.
+2. Implement the frontend live timer.
+3. Update the relevant API types or interfaces.
+4. Add or update tests.
+5. List every modified file.
+6. Briefly explain how the persistent timer works.
+7. Mention any assumptions you had to make about the existing status values or architecture.
+8. Do not provide only an explanation—apply the changes directly to the codebase.

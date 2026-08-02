@@ -18,6 +18,9 @@ export type ProjectResponsibilityAssignmentSource = {
   pentester?: unknown;
   assignmentRole?: unknown;
   status?: unknown;
+  securityScope?: unknown;
+  totalWorkTime?: unknown;
+  workTimerStartedAt?: unknown;
 };
 
 type ProjectResponsibilitySource = Record<string, unknown> & {

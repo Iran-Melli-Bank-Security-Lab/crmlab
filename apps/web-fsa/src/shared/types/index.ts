@@ -40,6 +40,7 @@ export type ProjectStatus = "planning" | "active" | "blocked" | "review" | "comp
 export type ProjectPriority = "low" | "medium" | "high" | "critical";
 export type ProjectDiscipline = "security" | "quality" | "devops" | "platform";
 export type ProjectAssignmentRole = "pentester" | "qa" | "devops" | "manager";
+export type ProjectWorkStatus = "pending" | "in_progress" | "finished";
 export type ProjectAssignmentStatus =
   | "assigned"
   | "in_progress"
@@ -66,6 +67,9 @@ export type Project = {
   testExpiresAt?: string;
   discipline: ProjectDiscipline;
   status: ProjectStatus;
+  workStatus?: ProjectWorkStatus;
+  totalWorkTime?: number;
+  workTimerStartedAt?: string | null;
   priority: ProjectPriority;
   owner: string;
   assignee: string;

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "614e5f36e26e45e4",
+  "sourceFingerprint": "c1f119e4bcb49288",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -59,7 +59,7 @@
     "vendored source"
   ],
   "stats": {
-    "indexedFiles": 350,
+    "indexedFiles": 351,
     "domains": 13,
     "apiEndpoints": 70,
     "frontendRoutes": 25
@@ -865,7 +865,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/constants/roles.ts"
           ],
-          "contentHash": "b3d20432bff4"
+          "contentHash": "6e95e1dab296"
         },
         {
           "path": "apps/api/src/modules/projects/controllers/projectProvisioning.controller.ts",
@@ -944,7 +944,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/projects/constants/securityScope.ts"
           ],
-          "contentHash": "2cfbc0ea0711"
+          "contentHash": "6e363cdf8ae0"
         },
         {
           "path": "apps/api/src/modules/projects/models/projectSecurityScope.model.ts",
@@ -1077,6 +1077,31 @@
           "contentHash": "1314b4e3557d"
         },
         {
+          "path": "apps/api/src/modules/projects/services/projectAssignmentWorkTimer.service.ts",
+          "kind": "service",
+          "responsibility": "Business logic for project Assignment Work Timer service.",
+          "keywords": [
+            "api",
+            "modules",
+            "projects",
+            "services",
+            "project",
+            "assignment",
+            "work"
+          ],
+          "symbols": [
+            "WorkTimerStatus",
+            "ProjectAssignmentWorkTimerSnapshot",
+            "toProjectAssignmentWorkTimerSnapshot",
+            "transitionProjectAssignmentWorkTimer"
+          ],
+          "related": [
+            "apps/api/src/constants/projects.ts",
+            "apps/api/src/modules/projects/models/projectAssignment.model.ts"
+          ],
+          "contentHash": "aefb9c5ddd61"
+        },
+        {
           "path": "apps/api/src/modules/projects/services/projectIndex.service.ts",
           "kind": "service",
           "responsibility": "Business logic for project Index service.",
@@ -1197,7 +1222,7 @@
             "apps/api/src/utils/AppError.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "05d08d45db30"
+          "contentHash": "7ef939fcf2dd"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectSecurityScope.service.ts",
@@ -1478,7 +1503,7 @@
             "apps/web-fsa/src/shared/types/index.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "2ece73e2f3ea"
+          "contentHash": "8135967179af"
         },
         {
           "path": "apps/web-fsa/src/entities/project/model/provisioning.test.ts",
@@ -2071,7 +2096,7 @@
           "related": [
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "f4ceccbfd0f3"
+          "contentHash": "cbe73e71524d"
         },
         {
           "path": "docs/PROJECT_EXPLAINED_FROM_ZERO.md",
@@ -2131,7 +2156,7 @@
             "apps/api/src/constants/uploads.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "c15ae303d8b2"
+          "contentHash": "8ec5d4f971a6"
         },
         {
           "path": "apps/api/src/modules/pentest/middlewares/pocUpload.middleware.ts",
@@ -2479,7 +2504,7 @@
             "apps/api/src/modules/pentest/models/pentestWorkSession.model.ts",
             "apps/api/src/modules/pentest/services/cvssV4.constants.ts"
           ],
-          "contentHash": "d2e2b729a67a"
+          "contentHash": "b21f8c93a88f"
         },
         {
           "path": "apps/api/src/modules/security-standards/controllers/securityStandard.controller.ts",
@@ -2654,7 +2679,7 @@
             "apps/web-fsa/src/shared/api/unwrapApiData.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "c068fde3d39b"
+          "contentHash": "b6a216fd50cb"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
@@ -2814,7 +2839,7 @@
             "apps/web-fsa/src/entities/pentest/api/pentestApi.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "c0017c960dbd"
+          "contentHash": "b0d35ef44378"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/AssignedStandardsPanel.tsx",
@@ -3084,7 +3109,7 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "ff2164feb886"
+          "contentHash": "5c2736e6a743"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/TextAreaField.tsx",
@@ -3150,7 +3175,7 @@
             "apps/web-fsa/src/entities/pentest/ui/modules/ModuleFallback.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "48b21e35a158"
+          "contentHash": "acb0309c7af1"
         },
         {
           "path": "apps/web-fsa/src/pages/pentest-workspace/PentestWorkspacePage.tsx",
@@ -6637,7 +6662,7 @@
             "packages/authz/src/index.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "ebe516e81a71"
+          "contentHash": "98d8971ee87a"
         },
         {
           "path": "apps/web-fsa/src/shared/ui/feedback/EmptyState.tsx",

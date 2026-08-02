@@ -1,259 +1,207 @@
-Implement persistent project work-time tracking on the **Project Workspace** page.
+Update the **Project Workspace** page so that the `FindingComposer` section displays **all findings/bugs registered for the current project by default**, without requiring the user to select a project item first.
 
-## Objective
+## Current Problem
 
-When a user changes a project assignment status to **In Progress**, start tracking how long the user actively keeps the project in that status.
+Currently, `FindingComposer` appears to depend on a selected item and only displays bugs/findings related to that selected item.
 
-The timer must continue increasing even when:
+As a result, when no item is selected, the user cannot see the bugs already registered for the project.
 
-* The user refreshes the page
-* The user navigates to another page
-* The browser tab is closed
-* The user logs out and returns later
-* The frontend application is not running
+## Required Behavior
 
-The timer must only stop when the user manually changes the project status to either:
+When the Project Workspace page loads:
 
-* **Pending**
-* **Finished**
+1. Fetch all findings/bugs associated with the current project or project assignment.
+2. Display all of them inside the `FindingComposer` section immediately.
+3. Do not require the user to select an item before the findings are shown.
+4. The default state of `FindingComposer` must represent the complete project-level findings list.
 
-The total accumulated work time must be stored in MongoDB in the existing Mongoose model:
+Selecting an item may still be supported, but item selection must not be required to display the existing findings.
 
-```js
-projectAssignment.model
-```
+## Filtering Behavior
 
-Use this existing field:
+Use the following behavior:
 
-```js
-totalWorkTime: {
-  type: Number,
-  default: 0,
-  min: 0,
-},
-```
+* When no item is selected, show all findings for the current project.
+* When an item is selected, keep showing all project findings unless the existing UI explicitly provides a separate filtering control.
+* Do not automatically hide findings that belong to other items merely because one item is selected.
+* Item selection should only be used when creating a new finding or editing its item association, if that relationship is required by the existing data model.
 
-Store `totalWorkTime` in a clearly defined unit, preferably **seconds**.
+The main findings list should remain project-wide.
 
-## Required Data Model Changes
+## Data Loading
 
-The existing `totalWorkTime` field is not enough to calculate time while the project is still in progress.
+Review the existing data flow for:
 
-Add a field such as:
+* `FindingComposer`
+* Project Workspace
+* Selected project item state
+* Findings API requests
+* Findings hooks, contexts, stores, or query parameters
 
-```js
-workTimerStartedAt: {
-  type: Date,
-  default: null,
-},
-```
-
-Use this field to store the timestamp of the most recent transition into the **In Progress** status.
-
-Do not continuously write to the database every second.
-
-The database should store:
-
-* The previously accumulated duration in `totalWorkTime`
-* The timestamp at which the current active work session started in `workTimerStartedAt`
-
-The current displayed total should be calculated as:
+Remove any unnecessary condition similar to:
 
 ```js
-displayedTotalWorkTime =
-  totalWorkTime +
-  (currentTime - workTimerStartedAt);
-```
-
-This calculation should only include the second part when the assignment is currently **In Progress**.
-
-## Status Transition Logic
-
-### When changing to In Progress
-
-When the user clicks the **In Progress** button:
-
-1. Check the current assignment status.
-2. If it is not already `in-progress`, set the status to `in-progress`.
-3. Set `workTimerStartedAt` to the current server time.
-4. Keep the existing `totalWorkTime` unchanged.
-5. Return the updated assignment to the frontend.
-6. Start displaying a live increasing timer on the Project Workspace page.
-
-Do not reset `totalWorkTime` when a new work session starts.
-
-If the assignment is already in progress, clicking the button again must not restart or duplicate the timer.
-
-### When changing to Pending or Finished
-
-When the user clicks **Pending** or **Finished**:
-
-1. Check whether the current status is `in-progress`.
-2. If it is, calculate the elapsed duration:
-
-```js
-elapsedSeconds = Math.floor(
-  (Date.now() - workTimerStartedAt.getTime()) / 1000
-);
-```
-
-3. Add the elapsed duration to the existing `totalWorkTime`.
-4. Set `workTimerStartedAt` to `null`.
-5. Change the assignment status to `pending` or `finished`.
-6. Save all changes atomically in MongoDB.
-7. Stop the live timer on the frontend.
-8. Display the final accumulated work time.
-
-If the assignment is not currently in progress, changing it to Pending or Finished must not add any extra time.
-
-## Backend Requirements
-
-Implement the timer logic on the backend, not only on the frontend.
-
-The server time must be treated as the source of truth. Do not trust a duration calculated and submitted by the client because it could be manipulated.
-
-Review the existing project-assignment status update controller, service, routes, and model. Integrate the timer logic into the existing architecture rather than creating duplicate status-update logic.
-
-Prevent these problems:
-
-* Starting multiple active timers for the same assignment
-* Adding the same work session more than once
-* Resetting accumulated time accidentally
-* Negative elapsed durations
-* Duplicate requests causing incorrect totals
-* Client-side manipulation of elapsed time
-
-Use an atomic update or transaction where appropriate to avoid race conditions from multiple requests.
-
-Make sure the API response includes at least:
-
-```js
-{
-  status,
-  totalWorkTime,
-  workTimerStartedAt
+if (!selectedItem) {
+  return;
 }
 ```
 
-## Frontend Requirements
+or:
 
-On the Project Workspace page:
-
-1. Fetch the project assignment when the page loads.
-2. Read:
-
-   * `status`
-   * `totalWorkTime`
-   * `workTimerStartedAt`
-3. If the status is `in-progress` and `workTimerStartedAt` exists, calculate the current total using the saved accumulated time plus the elapsed time since `workTimerStartedAt`.
-4. Update the displayed timer once per second.
-5. If the status is `pending` or `finished`, display only the saved `totalWorkTime`.
-6. Stop and clean up the interval when:
-
-   * The status changes away from `in-progress`
-   * The component unmounts
-   * The assignment changes
-7. Do not save the timer value to the database every second.
-8. After each status-change request, synchronize the UI with the values returned by the backend.
-
-Display the duration in a readable format such as:
-
-```text
-00:00:00
+```js
+enabled: Boolean(selectedItemId)
 ```
 
-Use this format:
+when that condition prevents project-level findings from loading.
+
+The findings request should primarily use the current:
 
 ```text
-HH:MM:SS
+projectId
 ```
 
-Support durations longer than 24 hours. For example:
+or:
 
 ```text
-125:32:09
+projectAssignmentId
 ```
 
-Do not convert the hours into days unless the existing UI already requires that behavior.
+depending on the existing backend architecture.
 
-## Important Behavior
+Do not use `selectedItemId` as the required identifier for fetching the complete findings list.
 
-Example:
+## API Behavior
 
-* Existing `totalWorkTime`: 3,600 seconds
-* User clicks In Progress at 10:00
-* User closes the browser at 10:10
-* User returns at 11:00
-* The UI should display approximately 7,200 seconds total:
+Check whether the existing findings endpoint supports retrieving findings by project.
 
-  * 3,600 seconds previously accumulated
-  * 3,600 seconds from the active session
-* The timer must continue increasing
-* The user clicks Pending at 11:30
-* Another 1,800 seconds must be added
-* The final stored `totalWorkTime` should become approximately 9,000 seconds
-* `workTimerStartedAt` should become `null`
+Prefer reusing an existing endpoint such as:
+
+```text
+GET /findings?projectId=...
+```
+
+or its equivalent in the current codebase.
+
+When fetching the default findings list:
+
+* Filter by the current project or assignment.
+* Do not require an item ID.
+* Return findings belonging to all items in that project.
+* Include findings that may not be associated with any item, if the schema allows that.
+
+Only modify the backend if the current endpoint cannot retrieve findings at the project level.
+
+Do not create a duplicate endpoint when the existing endpoint can be extended safely.
+
+## Finding Creation
+
+Preserve the existing finding creation behavior.
+
+If creating a finding requires selecting an item:
+
+1. The user may still select an item before submitting the finding.
+2. The selected item ID can be included in the create request.
+3. After successful creation, add or refetch the new finding in the project-wide findings list.
+4. Do not replace the full findings list with only the findings of the selected item.
+
+If item association is optional, allow the finding to be created without an item according to the existing schema and validation rules.
+
+## Finding Updates and Deletion
+
+After a finding is:
+
+* Created
+* Updated
+* Resolved
+* Reopened
+* Deleted
+
+refresh or update the complete project-wide findings list.
+
+Do not refresh only a selected item's findings.
+
+Avoid duplicate findings after optimistic updates or refetching.
+
+## UI Requirements
+
+Inside `FindingComposer`:
+
+* Show all registered project findings when the page first loads.
+* Show an appropriate loading state while findings are being fetched.
+* Show the existing empty state only when the project genuinely has no findings.
+* Do not show a message such as “Select an item to view findings.”
+* Item selection must not clear the findings list.
+* Changing the selected item must not cause the complete list to disappear.
+* Preserve existing finding cards, status controls, editing, deletion, and creation UI.
+
+Where useful, each finding can continue displaying its associated item name or item identifier so the user can understand which item the finding belongs to.
+
+## State Management
+
+Separate these two concepts:
+
+```js
+selectedItem
+```
+
+and:
+
+```js
+projectFindings
+```
+
+`selectedItem` should represent the item currently selected for interaction or new finding creation.
+
+`projectFindings` should contain all findings belonging to the current project.
+
+Do not derive the entire displayed findings list exclusively from `selectedItem.findings`.
+
+Avoid code patterns where clearing `selectedItem` also clears all loaded findings.
 
 ## Edge Cases
 
-Handle the following cases safely:
+Handle these cases safely:
 
-* `workTimerStartedAt` is missing while the status is `in-progress`
-* `workTimerStartedAt` contains an invalid date
-* A stale assignment has `workTimerStartedAt` set while its status is not `in-progress`
-* The user clicks status buttons repeatedly
-* Two browser tabs update the same assignment
-* The status-update request fails
-* The user refreshes immediately after clicking In Progress
-* The project remains in progress for several days
-* `totalWorkTime` is missing in older database records
-* The elapsed duration is calculated as a negative value due to invalid data or clock inconsistencies
+* No item is selected.
+* The project contains findings from multiple items.
+* A finding has no associated item.
+* The selected item changes.
+* The selected item is deleted or becomes unavailable.
+* The findings request fails.
+* The project has no findings.
+* A new finding is created for the currently selected item.
+* The user rapidly switches between items.
+* Existing findings API responses contain populated item objects instead of only item IDs.
 
-Use safe defaults and never allow `totalWorkTime` to become negative or `NaN`.
+## Token-Efficient Implementation
 
-## Code Quality
+Keep the implementation focused and token-efficient.
 
-* Follow the project’s existing folder structure and coding conventions.
-* Reuse the existing API client, state management, hooks, components, controllers, and services.
-* Avoid unnecessary dependencies.
-* Add reusable helper functions for formatting and calculating durations.
-* Add appropriate loading and error handling.
-* Do not perform unrelated refactoring.
-* Preserve backward compatibility with existing project-assignment records.
+Inspect only files directly related to:
 
-## Token-Efficient Verification
+* Project Workspace
+* `FindingComposer`
+* Findings fetching and mutations
+* Selected item state
+* Relevant findings backend controller/service, only if required
 
-Do not create new unit, integration, or end-to-end test files for this task, because the goal is to minimize token usage and avoid unnecessary changes.
+Do not explore or refactor unrelated parts of the repository.
 
-Instead:
+Do not create new unit, integration, or end-to-end test files for this task.
 
-1. Implement only the required production code.
-2. Reuse the existing project architecture and avoid unrelated refactoring.
-3. Run the existing TypeScript type-check, lint, or build command if available.
-4. Fix only errors caused by this implementation.
-5. Do not fix unrelated existing warnings or errors.
-6. Manually review the status-transition logic for:
-
-   * Starting work from Pending
-   * Preventing duplicate timer starts
-   * Stopping work when switching to Pending
-   * Stopping work when switching to Finished
-   * Accumulating multiple work sessions
-   * Restoring the running timer after a page refresh
-   * Handling invalid or missing timer timestamps
-7. Do not write test files unless an existing test must be minimally updated to prevent the current test suite from failing.
-
-Focus the available context and tokens on understanding and implementing the feature correctly.
+Run the existing type-check, lint, or build command if available, and fix only errors caused by this implementation.
 
 ## Deliverables
 
-After reviewing the existing codebase:
+Apply the changes directly to the codebase.
 
-1. Implement the required backend model and status-transition logic.
-2. Implement the frontend live timer.
-3. Update the relevant API types or interfaces.
-4. Add or update tests.
-5. List every modified file.
-6. Briefly explain how the persistent timer works.
-7. Mention any assumptions you had to make about the existing status values or architecture.
-8. Do not provide only an explanation—apply the changes directly to the codebase.
+After implementation:
+
+1. List every modified file.
+2. Explain why findings previously required an item selection.
+3. Explain how findings are now fetched at the project level.
+4. Confirm that all project findings are displayed when no item is selected.
+5. Confirm that selecting or clearing an item no longer removes the findings list.
+6. Mention any backend changes, if they were necessary.
+
+Do not provide only instructions or sample code. Inspect the existing implementation and make the required changes directly.

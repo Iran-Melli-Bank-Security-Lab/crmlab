@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "c1f119e4bcb49288",
+  "sourceFingerprint": "d985a161237526cb",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -2156,7 +2156,7 @@
             "apps/api/src/constants/uploads.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "8ec5d4f971a6"
+          "contentHash": "88d3d6d3b02c"
         },
         {
           "path": "apps/api/src/modules/pentest/middlewares/pocUpload.middleware.ts",
@@ -2679,7 +2679,7 @@
             "apps/web-fsa/src/shared/api/unwrapApiData.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "b6a216fd50cb"
+          "contentHash": "bd6a4e88c2ce"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
@@ -2717,7 +2717,7 @@
             "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
             "apps/web-fsa/src/entities/pentest/model/attachments.ts"
           ],
-          "contentHash": "e371c8b30494"
+          "contentHash": "6863af0feb66"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/model/attachments.ts",
@@ -2745,7 +2745,7 @@
           "related": [
             "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts"
           ],
-          "contentHash": "dcd72996da55"
+          "contentHash": "9d75ef5cc184"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/model/bugReview.ts",
@@ -2958,7 +2958,7 @@
             "apps/web-fsa/src/entities/pentest/model/workspace.ts",
             "apps/web-fsa/src/entities/pentest/ui/modules/FindingDetailsModal.tsx"
           ],
-          "contentHash": "231e3a0eca19"
+          "contentHash": "4961ee2489ed"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/FindingDetailsModal.tsx",
@@ -2983,7 +2983,7 @@
             "apps/web-fsa/src/entities/pentest/model/workspace.ts",
             "apps/web-fsa/src/entities/pentest/ui/modules/AttachmentUploader.tsx"
           ],
-          "contentHash": "b22f0432cb50"
+          "contentHash": "06ed3eab8c99"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/FindingReportModal.tsx",
@@ -3008,7 +3008,7 @@
             "apps/web-fsa/src/entities/pentest/model/workspace.ts",
             "apps/web-fsa/src/entities/pentest/ui/modules/AttachmentUploader.tsx"
           ],
-          "contentHash": "4fc74439d0e9"
+          "contentHash": "58fbee23b3fc"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/Icon.tsx",
@@ -3105,11 +3105,10 @@
           "related": [
             "apps/web-fsa/src/entities/pentest/api/pentestApi.ts",
             "apps/web-fsa/src/entities/pentest/model/workspace.ts",
-            "apps/web-fsa/src/entities/pentest/ui/modules/Metric.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "5c2736e6a743"
+          "contentHash": "5ec997e6ba66"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/TextAreaField.tsx",
@@ -3175,7 +3174,7 @@
             "apps/web-fsa/src/entities/pentest/ui/modules/ModuleFallback.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "acb0309c7af1"
+          "contentHash": "521e94459862"
         },
         {
           "path": "apps/web-fsa/src/pages/pentest-workspace/PentestWorkspacePage.tsx",
@@ -3200,7 +3199,7 @@
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
             "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
           ],
-          "contentHash": "068fdd5dbc54"
+          "contentHash": "b53c78b646af"
         }
       ]
     },
@@ -6145,7 +6144,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "7de8191433b1"
+          "contentHash": "4b37dd4467c5"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",
@@ -6344,7 +6343,7 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
           ],
-          "contentHash": "e5ec353bce65"
+          "contentHash": "c98c8fd44d9e"
         },
         {
           "path": "apps/web-fsa/src/pages/security-bugs/SecurityBugDetailsPage.tsx",

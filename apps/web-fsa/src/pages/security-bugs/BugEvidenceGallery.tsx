@@ -12,14 +12,13 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
-import type { PersistedPoc } from "@/entities/pentest/model/attachments";
-import { formatAttachmentSize } from "@/entities/pentest/model/attachments";
+import {
+  formatAttachmentSize,
+  getAttachmentPreviewUrl,
+  type PersistedPoc,
+} from "@/entities/pentest/model/attachments";
 import { useLanguage } from "@/features/language/model";
 import Button from "@/shared/ui/primitives/Button";
-
-function inlineUrl(url: string) {
-  return `${url}${url.includes("?") ? "&" : "?"}disposition=inline`;
-}
 
 function AttachmentMeta({ poc }: { poc: PersistedPoc }) {
   return (
@@ -93,7 +92,7 @@ export default function BugEvidenceGallery({ pocs }: { pocs: PersistedPoc[] }) {
               >
                 <button type="button" onClick={() => setPreviewIndex(index)}>
                   <Image
-                    src={inlineUrl(poc.url)}
+                    src={getAttachmentPreviewUrl(poc.url)}
                     alt={poc.originalName}
                     width="full"
                     height="190px"
@@ -124,7 +123,7 @@ export default function BugEvidenceGallery({ pocs }: { pocs: PersistedPoc[] }) {
                 <video
                   controls
                   preload="metadata"
-                  src={inlineUrl(poc.url)}
+                  src={getAttachmentPreviewUrl(poc.url)}
                   aria-label={poc.originalName}
                   style={{ display: "block", width: "100%", maxHeight: "420px" }}
                 />
@@ -165,7 +164,7 @@ export default function BugEvidenceGallery({ pocs }: { pocs: PersistedPoc[] }) {
                 <HStack>
                   <Button asChild variant="secondary">
                     <a
-                      href={inlineUrl(poc.url)}
+                      href={getAttachmentPreviewUrl(poc.url)}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -214,7 +213,7 @@ export default function BugEvidenceGallery({ pocs }: { pocs: PersistedPoc[] }) {
               >
                 {preview && (
                   <Image
-                    src={inlineUrl(preview.url)}
+                    src={getAttachmentPreviewUrl(preview.url)}
                     alt={preview.originalName}
                     maxW="100%"
                     maxH="calc(100dvh - 190px)"

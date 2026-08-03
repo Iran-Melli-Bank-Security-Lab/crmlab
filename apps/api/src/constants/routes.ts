@@ -63,6 +63,8 @@ export const ROUTES = {
     BASE: "/api/pentest",
     ASSIGNED_STANDARDS: "/projects/:projectId/assigned-standards",
     ITEM_ASSESSMENTS: "/projects/:projectId/item-assessments",
+    REMAINING_ITEM_ASSESSMENTS_PASS:
+      "/projects/:projectId/item-assessments/remaining-pass",
     VULNERABILITIES: "/vulnerabilities",
     VULNERABILITY: "/vulnerabilities/:id",
     PROJECT_BUGS: "/projects/:projectId/bugs",

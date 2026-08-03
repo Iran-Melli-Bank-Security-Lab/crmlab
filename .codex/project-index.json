@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "1cc5b2c102ae8cd3",
+  "sourceFingerprint": "dcca243ed00f4c0a",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -61,7 +61,7 @@
   "stats": {
     "indexedFiles": 351,
     "domains": 13,
-    "apiEndpoints": 71,
+    "apiEndpoints": 72,
     "frontendRoutes": 25
   },
   "majorRelationships": [
@@ -653,6 +653,17 @@
       "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
       "permissions": [
         "PENTEST_VULNERABILITIES_UPDATE"
+      ],
+      "capabilities": [
+        "open-pentest-workspace"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "ROUTES.PENTEST.REMAINING_ITEM_ASSESSMENTS_PASS",
+      "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
+      "permissions": [
+        "PENTEST_VULNERABILITIES_CREATE"
       ],
       "capabilities": [
         "open-pentest-workspace"
@@ -2153,12 +2164,12 @@
           "symbols": [
             "getPoc",
             "updateMyItemAssessment",
+            "passMyRemainingItemAssessments",
             "getMyAssignedSecurityStandards",
             "getVulnerabilities",
             "getProjectBugsForReview",
             "getProjectBugForReview",
-            "updateBugReviewState",
-            "submitBugAdditionalInformation"
+            "updateBugReviewState"
           ],
           "related": [
             "apps/api/src/config/uploadStorage.ts",
@@ -2167,7 +2178,7 @@
             "apps/api/src/constants/uploads.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "d3c571d15ebc"
+          "contentHash": "e27c15c02099"
         },
         {
           "path": "apps/api/src/modules/pentest/middlewares/pocUpload.middleware.ts",
@@ -2282,7 +2293,7 @@
             "apps/api/src/middlewares/permission.middleware.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "eb32f4088e2b"
+          "contentHash": "ac18217f7fb4"
         },
         {
           "path": "apps/api/src/modules/pentest/services/assignedSecurityStandard.service.test.ts",
@@ -2458,6 +2469,7 @@
           ],
           "symbols": [
             "saveItemAssessment",
+            "markRemainingItemAssessmentsPass",
             "getFailedItemAssessment"
           ],
           "related": [
@@ -2466,7 +2478,7 @@
             "apps/api/src/modules/pentest/services/assignedSecurityStandard.service.ts",
             "apps/api/src/utils/AppError.ts"
           ],
-          "contentHash": "0625f61949de"
+          "contentHash": "d671a2874bf3"
         },
         {
           "path": "apps/api/src/modules/pentest/validators/pentest.validators.test.ts",
@@ -2690,7 +2702,7 @@
             "apps/web-fsa/src/shared/api/unwrapApiData.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "cf471bdf4def"
+          "contentHash": "9295b10e8881"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
@@ -2875,7 +2887,7 @@
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
             "apps/web-fsa/src/shared/ui/primitives/Button.tsx"
           ],
-          "contentHash": "9892a500b6e8"
+          "contentHash": "7ed1fdf59cd1"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/ui/modules/AttachmentUploader.tsx",
@@ -3185,7 +3197,7 @@
             "apps/web-fsa/src/entities/pentest/ui/modules/ModuleFallback.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "78533c1e0ae7"
+          "contentHash": "20342b54312d"
         },
         {
           "path": "apps/web-fsa/src/pages/pentest-workspace/PentestWorkspacePage.tsx",
@@ -6155,7 +6167,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "72fe2b0ec0b8"
+          "contentHash": "7fc868a2b4f7"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",
@@ -7159,7 +7171,7 @@
             "ROUTES",
             "API_ENDPOINTS"
           ],
-          "contentHash": "496e72503b08"
+          "contentHash": "e6bfa1ae8845"
         },
         {
           "path": "apps/api/src/constants/security.ts",
@@ -7531,7 +7543,7 @@
             "packages/contracts/src/notification.ts",
             "packages/contracts/src/projectResponsibility.ts"
           ],
-          "contentHash": "87df78991a3b"
+          "contentHash": "f01b711f8b28"
         },
         {
           "path": "packages/contracts/src/notification.ts",
@@ -7634,7 +7646,7 @@
             "ProjectSecurityScopeContract",
             "PentesterScopeAssignmentContract"
           ],
-          "contentHash": "5c4d01685ddf"
+          "contentHash": "48b52e509a75"
         },
         {
           "path": "packages/contracts/src/task.ts",

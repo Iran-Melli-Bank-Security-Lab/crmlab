@@ -37,6 +37,7 @@ export type {
   ItemAssessmentContract,
   ItemAssessmentProgressContract,
   ItemAssessmentStatusContract,
+  MarkRemainingItemAssessmentsPassResponseContract,
   SaveItemAssessmentResponseContract,
   PentesterScopeAssignmentContract,
   ProjectPentesterScopesContract,

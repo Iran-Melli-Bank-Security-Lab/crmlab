@@ -548,6 +548,20 @@ const en = {
   "pentestWorkspace.assessment.saving": "Saving assessment...",
   "pentestWorkspace.assessment.saveError":
     "Could not save the assessment. The previous value was restored.",
+  "pentestWorkspace.assessment.markRemainingPass": "Mark {count} remaining items as Pass",
+  "pentestWorkspace.assessment.noRemaining": "All assigned items are reviewed",
+  "pentestWorkspace.assessment.remainingCount":
+    "{count} assigned items remain unreviewed.",
+  "pentestWorkspace.assessment.bulkSaving": "Marking remaining items as Pass...",
+  "pentestWorkspace.assessment.bulkConfirmTitle": "Mark remaining items as Pass?",
+  "pentestWorkspace.assessment.bulkConfirmDescription":
+    "This will mark {count} unreviewed items as Pass. Existing Pass, Failed, Not Accessible, and Not Applicable selections will not change.",
+  "pentestWorkspace.assessment.bulkCancel": "Cancel",
+  "pentestWorkspace.assessment.bulkConfirm": "Mark {count} items as Pass",
+  "pentestWorkspace.assessment.bulkSuccess":
+    "{count} remaining items were marked as Pass.",
+  "pentestWorkspace.assessment.bulkError":
+    "Could not mark the remaining items as Pass. Previous values were restored. Please try again.",
   "pentestWorkspace.assessment.failedWithoutFinding":
     "Failed — no vulnerability has been submitted yet.",
   "pentestWorkspace.assessment.findingsRegistered":
@@ -1357,6 +1371,23 @@ const fa: Record<TranslationKey, string> = {
   "pentestWorkspace.assessment.saving": "در حال ذخیره ارزیابی...",
   "pentestWorkspace.assessment.saveError":
     "ذخیره ارزیابی انجام نشد. مقدار قبلی بازیابی شد.",
+  "pentestWorkspace.assessment.markRemainingPass":
+    "علامت‌گذاری {count} آیتم باقی‌مانده به‌عنوان موفق",
+  "pentestWorkspace.assessment.noRemaining": "همه آیتم‌های تخصیص‌یافته بررسی شده‌اند",
+  "pentestWorkspace.assessment.remainingCount":
+    "{count} آیتم تخصیص‌یافته هنوز بررسی نشده است.",
+  "pentestWorkspace.assessment.bulkSaving":
+    "در حال علامت‌گذاری آیتم‌های باقی‌مانده به‌عنوان موفق...",
+  "pentestWorkspace.assessment.bulkConfirmTitle":
+    "آیتم‌های باقی‌مانده موفق علامت‌گذاری شوند؟",
+  "pentestWorkspace.assessment.bulkConfirmDescription":
+    "این کار {count} آیتم بررسی‌نشده را موفق علامت‌گذاری می‌کند. وضعیت‌های موفق، ناموفق، غیرقابل دسترس و نامرتبط موجود تغییر نمی‌کنند.",
+  "pentestWorkspace.assessment.bulkCancel": "انصراف",
+  "pentestWorkspace.assessment.bulkConfirm": "علامت‌گذاری {count} آیتم به‌عنوان موفق",
+  "pentestWorkspace.assessment.bulkSuccess":
+    "{count} آیتم باقی‌مانده با موفقیت علامت‌گذاری شد.",
+  "pentestWorkspace.assessment.bulkError":
+    "علامت‌گذاری آیتم‌های باقی‌مانده انجام نشد. مقادیر قبلی بازیابی شدند. دوباره تلاش کنید.",
   "pentestWorkspace.assessment.failedWithoutFinding":
     "ناموفق — هنوز آسیب‌پذیری‌ای ثبت نشده است.",
   "pentestWorkspace.assessment.findingsRegistered":

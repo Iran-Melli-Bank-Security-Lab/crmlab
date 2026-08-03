@@ -119,6 +119,14 @@ export type SaveItemAssessmentResponseContract = {
   progress: ItemAssessmentProgressContract;
 };
 
+export type MarkRemainingItemAssessmentsPassResponseContract = {
+  updatedItems: Array<{
+    standardId: string;
+    itemId: string;
+  }>;
+  progress: ItemAssessmentProgressContract;
+};
+
 export type AssignedSecurityStandardContract = {
   id: string;
   standardKey: string;

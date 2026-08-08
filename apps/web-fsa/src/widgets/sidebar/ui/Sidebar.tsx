@@ -136,7 +136,7 @@ function NavigationPanel({
             borderRadius="md"
             align="center"
             justify="center"
-            bg="white"
+            bg="var(--apple-surface-subtle)"
             border="1px solid"
             borderColor="var(--apple-border-soft)"
             overflow="hidden"
@@ -385,7 +385,7 @@ export default function Sidebar() {
                     borderRadius="md"
                     align="center"
                     justify="center"
-                    bg="white"
+                    bg="var(--apple-surface-subtle)"
                     border="1px solid"
                     borderColor="var(--apple-border-soft)"
                     overflow="hidden"
@@ -397,6 +397,7 @@ export default function Sidebar() {
                       width="full"
                       height="full"
                       objectFit="contain"
+                      bg="transparent"
                       p="2px"
                     />
                   </Flex>

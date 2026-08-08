@@ -3,6 +3,7 @@ import type { Permission } from "@role-dashboard/authz";
 export type ProjectRowActionContract =
   | "view-project"
   | "open-pentest-workspace"
+  | "view-project-bugs"
   | "assign-pentesters"
   | "review-security-bugs";
 

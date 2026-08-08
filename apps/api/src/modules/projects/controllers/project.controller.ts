@@ -5,6 +5,7 @@ import { HTTP_STATUS } from "@/constants/http";
 import { PERMISSIONS } from "@/constants/permissions";
 import {
   PROJECT_ASSIGNMENT_ROLES,
+  PROJECT_ASSIGNMENT_STATUS,
   PROJECT_PROVISIONING_STATUS,
   PROJECT_TYPES,
   type ProjectAssignmentRole,
@@ -912,6 +913,102 @@ export const getProject: RequestHandler = async (req, res, next) => {
 export const getProjectSecurityStandards: RequestHandler = async (req, res, next) => {
   try {
     sendSuccess(res, await listProjectSecurityStandards(String(req.params.id)));
+  } catch (error) {
+    next(error);
+  }
+};
+
+function normalizedBugVisibilitySettings(project: {
+  pentesterBugVisibility?: {
+    timeRequirementEnabled?: boolean;
+    requiredHours?: number;
+    userOverrides?: Array<{ userId?: unknown; requiredHours?: number }>;
+  };
+}) {
+  const stored = project.pentesterBugVisibility;
+  return {
+    timeRequirementEnabled: stored?.timeRequirementEnabled !== false,
+    requiredHours:
+      typeof stored?.requiredHours === "number" && Number.isFinite(stored.requiredHours)
+      ? Number(stored?.requiredHours)
+      : 30,
+    userOverrides: (stored?.userOverrides || []).flatMap((override) =>
+      override.userId
+        ? [{
+            userId: String(override.userId),
+            requiredHours: Number(override.requiredHours) || 0,
+          }]
+        : []
+    ),
+  };
+}
+
+async function eligiblePentestersForBugVisibility(projectId: string) {
+  const assignments = await ProjectAssignmentModel.find({
+    $and: [
+      { $or: [{ projectId }, { project: projectId }] },
+      { status: { $ne: PROJECT_ASSIGNMENT_STATUS.REMOVED } },
+      {
+        $or: [
+          { assignmentRole: PROJECT_ASSIGNMENT_ROLES.PENTESTER },
+          { assignmentRole: { $exists: false }, pentester: { $exists: true } },
+        ],
+      },
+    ],
+  }).select("userId pentester").lean();
+  const ids = [...new Set(assignments
+    .map((assignment) => String(assignment.userId || assignment.pentester || ""))
+    .filter(Boolean))];
+  const users = await UserModel.find({ _id: { $in: ids } })
+    .select("firstName lastName username")
+    .lean();
+  return users.map((user) => ({
+    userId: String(user._id),
+    name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
+    username: user.username,
+  }));
+}
+
+export const getProjectBugVisibilitySettings: RequestHandler = async (req, res, next) => {
+  try {
+    const projectId = String(req.params.id);
+    const project = await ProjectModel.findById(projectId)
+      .select("pentesterBugVisibility")
+      .lean();
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    sendSuccess(res, {
+      ...normalizedBugVisibilitySettings(project),
+      eligiblePentesters: await eligiblePentestersForBugVisibility(projectId),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const putProjectBugVisibilitySettings: RequestHandler = async (req, res, next) => {
+  try {
+    const projectId = String(req.params.id);
+    const eligiblePentesters = await eligiblePentestersForBugVisibility(projectId);
+    const eligibleIds = new Set(eligiblePentesters.map((user) => user.userId));
+    const invalidOverride = req.body.userOverrides.find(
+      (override: { userId: string }) => !eligibleIds.has(override.userId)
+    );
+    if (invalidOverride) {
+      throw new AppError(
+        "Bug visibility overrides require an active pentester assignment",
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    const project = await ProjectModel.findByIdAndUpdate(
+      projectId,
+      { $set: { pentesterBugVisibility: req.body } },
+      { new: true, runValidators: true }
+    ).select("pentesterBugVisibility").lean();
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    sendSuccess(res, {
+      ...normalizedBugVisibilitySettings(project),
+      eligiblePentesters,
+    });
   } catch (error) {
     next(error);
   }

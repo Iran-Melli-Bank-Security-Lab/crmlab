@@ -550,7 +550,9 @@ export const projectTableColumns = {
     minW: "140px",
     maxW: "180px",
     align: "end",
-    render: (project, t) => project.allowedActions?.includes("review-security-bugs") ? (
+    render: (project, t) =>
+      project.allowedActions?.includes("review-security-bugs") ||
+      project.allowedActions?.includes("view-project-bugs") ? (
       <Box
         asChild
         display="inline-flex"
@@ -569,7 +571,9 @@ export const projectTableColumns = {
           to={`/projects/${project.id}/bugs`}
           onClick={(event) => event.stopPropagation()}
         >
-          {t("projectTable.reviewBugs")}
+          {project.allowedActions?.includes("review-security-bugs")
+            ? t("projectTable.reviewBugs")
+            : t("projectTable.viewBugs")}
         </Link>
       </Box>
     ) : <Text color="var(--apple-muted)">—</Text>,

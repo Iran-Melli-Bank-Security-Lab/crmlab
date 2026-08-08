@@ -81,6 +81,23 @@ const provisioningHistorySchema = new Schema(
   { _id: true }
 );
 
+const bugVisibilityOverrideSchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    requiredHours: { type: Number, required: true, min: 0, max: 10000 },
+  },
+  { _id: false }
+);
+
+const pentesterBugVisibilitySchema = new Schema(
+  {
+    timeRequirementEnabled: { type: Boolean, default: true },
+    requiredHours: { type: Number, default: 30, min: 0, max: 10000 },
+    userOverrides: { type: [bugVisibilityOverrideSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const projectSchema = new Schema(
   {
     projectName: { type: String, required: true, trim: true },
@@ -148,6 +165,14 @@ const projectSchema = new Schema(
     verifiedReportByAdmin: { type: Date },
     numberOfTest: { type: Number },
     reportPassword: { type: String, default: "" },
+    pentesterBugVisibility: {
+      type: pentesterBugVisibilitySchema,
+      default: () => ({
+        timeRequirementEnabled: true,
+        requiredHours: 30,
+        userOverrides: [],
+      }),
+    },
     created_date: { type: Date },
   },
   {

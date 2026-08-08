@@ -21,6 +21,7 @@ export type ProjectListMode = "admin" | "unified" | NonAdminProjectView;
 export type ProjectRowAction =
   | "view-project"
   | "open-pentest-workspace"
+  | "view-project-bugs"
   | "assign-pentesters"
   | "review-security-bugs";
 
@@ -72,12 +73,14 @@ export function resolveProjectRowActions(
     .filter((action): action is ProjectRowAction =>
       (action === "view-project" ||
         action === "open-pentest-workspace" ||
+        action === "view-project-bugs" ||
         action === "assign-pentesters" ||
         action === "review-security-bugs") &&
       context.capabilities[action] &&
       (!view ||
       action === "view-project" ||
       (action === "open-pentest-workspace" && view === "pentest") ||
+      (action === "view-project-bugs" && view === "pentest") ||
       (action === "assign-pentesters" && view === "security") ||
       (action === "review-security-bugs" && view === "security"))
     );

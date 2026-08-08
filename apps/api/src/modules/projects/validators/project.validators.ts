@@ -87,6 +87,29 @@ export const projectSecurityScopeSchema = z.object({
   body: securityScopeReferenceSchema,
 });
 
+const bugVisibilityUserOverride = z.object({
+  userId: objectId,
+  requiredHours: z.number().min(0).max(10000),
+}).strict();
+
+export const projectBugVisibilitySettingsSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({
+    timeRequirementEnabled: z.boolean(),
+    requiredHours: z.number().min(0).max(10000),
+    userOverrides: z.array(bugVisibilityUserOverride).max(200),
+  }).strict().superRefine((input, context) => {
+    const ids = input.userOverrides.map((override) => override.userId);
+    if (new Set(ids).size !== ids.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["userOverrides"],
+        message: "Duplicate user overrides are not allowed",
+      });
+    }
+  }),
+});
+
 export const assignUsersRequestSchema = z
   .object({
     userIds: z.array(objectId),

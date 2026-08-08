@@ -128,9 +128,13 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
     ],
   }),
   securityBugs: column({
-    defaultLabel: "Bug review", faLabel: "بازبینی باگ‌ها", dataType: "action",
-    minWidth: "140px", maxWidth: "180px", sortable: false, sourceFields: [],
-    requiredPermissions: [PERMISSIONS.SECURITY_VULNERABILITIES_READ],
+    defaultLabel: "Project bugs", faLabel: "باگ‌های پروژه", dataType: "action",
+    minWidth: "140px", maxWidth: "180px", sortable: false, isMandatory: true,
+    sourceFields: [],
+    requiredPermissions: [
+      PERMISSIONS.SECURITY_VULNERABILITIES_READ,
+      PERMISSIONS.PENTEST_VULNERABILITIES_READ,
+    ],
   }),
   testCoverage: column({
     defaultLabel: "Coverage", faLabel: "پوشش", dataType: "count", minWidth: "130px",
@@ -308,7 +312,7 @@ export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   phase: ["pentest", "qa"],
   riskScore: ["security", "pentest"],
   vulnerabilities: ["security", "pentest"],
-  securityBugs: ["security"],
+  securityBugs: ["security", "pentest"],
   testCoverage: ["quality", "qa"],
   openBugs: ["quality", "qa"],
   assignmentDueDate: ["pentest", "qa"],

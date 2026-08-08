@@ -1,11 +1,17 @@
-import { Badge, Box, Heading, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
-import type { ReactNode } from "react";
+import { Badge, Box, Heading, HStack, NativeSelect, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { useEffect, useState, type ReactNode } from "react";
+import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
-import { useGetProjectQuery } from "@/entities/project/api/projectsApi";
+import {
+  useGetProjectBugVisibilitySettingsQuery,
+  useGetProjectQuery,
+  useUpdateProjectBugVisibilitySettingsMutation,
+} from "@/entities/project/api/projectsApi";
 import { formatCompactGroupId, formatDate } from "@/entities/project/ui/table/formatters";
 import { usePermission } from "@/features/access-control/model/usePermission";
 import Button from "@/shared/ui/primitives/Button";
+import Input from "@/shared/ui/primitives/Input";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project, ProjectDiscipline, ProjectStatus } from "@/shared/types";
@@ -111,6 +117,127 @@ function DetailItem({ label, value }: { label: string; value?: ReactNode }) {
   );
 }
 
+function AdminBugVisibilitySettings({ projectId }: { projectId: string }) {
+  const { data, isLoading } = useGetProjectBugVisibilitySettingsQuery(projectId);
+  const [updateSettings, updateResult] = useUpdateProjectBugVisibilitySettingsMutation();
+  const [enabled, setEnabled] = useState(true);
+  const [requiredHours, setRequiredHours] = useState("30");
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!data) return;
+    setEnabled(data.timeRequirementEnabled);
+    setRequiredHours(String(data.requiredHours));
+    setOverrides(Object.fromEntries(
+      data.userOverrides.map((override) => [override.userId, String(override.requiredHours)])
+    ));
+  }, [data]);
+
+  const save = async () => {
+    const hours = Number(requiredHours);
+    if (!Number.isFinite(hours) || hours < 0) {
+      toast.error("Required hours must be zero or greater");
+      return;
+    }
+    try {
+      await updateSettings({
+        projectId,
+        settings: {
+          timeRequirementEnabled: enabled,
+          requiredHours: hours,
+          userOverrides: Object.entries(overrides).flatMap(([userId, value]) => {
+            if (value.trim() === "") return [];
+            const overrideHours = Number(value);
+            return Number.isFinite(overrideHours) && overrideHours >= 0
+              ? [{ userId, requiredHours: overrideHours }]
+              : [];
+          }),
+        },
+      }).unwrap();
+      toast.success("Pentester bug visibility settings saved");
+    } catch {
+      toast.error("Could not save bug visibility settings");
+    }
+  };
+
+  return (
+    <DetailPanel title="Pentester bug visibility">
+      <Text color="var(--apple-muted)" fontSize="sm" mb={4}>
+        Pentesters always see their own findings. Verified findings from other users
+        are unlocked after the configured work time.
+      </Text>
+      {isLoading ? (
+        <Text color="var(--apple-muted)">Loading settings...</Text>
+      ) : (
+        <VStack align="stretch" gap={4}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+            <Box>
+              <Text fontSize="sm" fontWeight="800" mb={2}>Time requirement</Text>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  value={enabled ? "enabled" : "disabled"}
+                  onChange={(event) => setEnabled(event.target.value === "enabled")}
+                >
+                  <option value="enabled">Enabled</option>
+                  <option value="disabled">Disabled</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Box>
+            <Box>
+              <Text fontSize="sm" fontWeight="800" mb={2}>Default required hours</Text>
+              <Input
+                type="number"
+                min="0"
+                max="10000"
+                step="0.5"
+                value={requiredHours}
+                disabled={!enabled}
+                onChange={(event) => setRequiredHours(event.target.value)}
+              />
+            </Box>
+          </SimpleGrid>
+
+          {data?.eligiblePentesters.length ? (
+            <Box>
+              <Text fontSize="sm" fontWeight="800" mb={2}>Per-user overrides</Text>
+              <VStack align="stretch" gap={2}>
+                {data.eligiblePentesters.map((user) => (
+                  <HStack key={user.userId} gap={3} flexWrap="wrap">
+                    <Box flex="1" minW="220px">
+                      <Text fontWeight="750">{user.name}</Text>
+                      {user.username && (
+                        <Text color="var(--apple-muted)" fontSize="xs">@{user.username}</Text>
+                      )}
+                    </Box>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="10000"
+                      step="0.5"
+                      width="180px"
+                      placeholder="Use project default"
+                      value={overrides[user.userId] || ""}
+                      disabled={!enabled}
+                      onChange={(event) => setOverrides((current) => ({
+                        ...current,
+                        [user.userId]: event.target.value,
+                      }))}
+                    />
+                  </HStack>
+                ))}
+              </VStack>
+            </Box>
+          ) : null}
+          <Button alignSelf="start" onClick={save} isLoading={updateResult.isLoading}>
+            Save visibility settings
+          </Button>
+        </VStack>
+      )}
+    </DetailPanel>
+  );
+}
+
 function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   const style = statusStyles[status];
   return (
@@ -156,6 +283,7 @@ export default function ProjectDetails() {
     Boolean(project) &&
     project.discipline === "security" &&
     hasPermission(PERMISSIONS.PENTEST_PROJECTS_READ);
+  const isAdmin = hasPermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE);
 
   if (isLoading) {
     return <LoadingScreen text="Loading project..." />;
@@ -285,6 +413,10 @@ export default function ProjectDetails() {
           </Box>
         )}
       </DetailPanel>
+
+      {isAdmin && project.discipline === "security" && (
+        <AdminBugVisibilitySettings projectId={project.id} />
+      )}
       <ProjectProvisioningPanel
         project={project}
         readOnly

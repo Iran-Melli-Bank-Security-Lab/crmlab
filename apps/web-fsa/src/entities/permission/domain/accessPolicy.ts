@@ -11,6 +11,7 @@ export type DashboardAccessPolicy = AccessPolicy & {
 };
 
 export const PROJECT_ACCESS_PERMISSIONS: Permission[] = [
+  PERMISSIONS.ADMIN_SYSTEM_MANAGE,
   PERMISSIONS.SECURITY_PROJECTS_READ,
   PERMISSIONS.QUALITY_PROJECTS_READ,
   PERMISSIONS.PENTEST_PROJECTS_READ,
@@ -72,11 +73,17 @@ export const ROUTE_ACCESS_POLICIES = {
   },
   securityProjectBugs: {
     path: "/projects/:projectId/bugs",
-    permissions: [PERMISSIONS.SECURITY_VULNERABILITIES_READ],
+    permissions: [
+      PERMISSIONS.SECURITY_VULNERABILITIES_READ,
+      PERMISSIONS.PENTEST_VULNERABILITIES_READ,
+    ],
   },
   securityBugDetails: {
     path: "/projects/:projectId/bugs/:bugId",
-    permissions: [PERMISSIONS.SECURITY_VULNERABILITIES_READ],
+    permissions: [
+      PERMISSIONS.SECURITY_VULNERABILITIES_READ,
+      PERMISSIONS.PENTEST_VULNERABILITIES_READ,
+    ],
   },
   createProject: {
     path: "/projects/create",

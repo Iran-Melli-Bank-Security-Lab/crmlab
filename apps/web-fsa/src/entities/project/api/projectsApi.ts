@@ -26,6 +26,13 @@ type ProjectListResponse =
   | { data?: ApiProjectResponse[]; projects?: ApiProjectResponse[] };
 type UsersResponse = User[] | { users?: User[]; items?: User[]; data?: User[] };
 
+export type ProjectBugVisibilitySettings = {
+  timeRequirementEnabled: boolean;
+  requiredHours: number;
+  userOverrides: Array<{ userId: string; requiredHours: number }>;
+  eligiblePentesters: Array<{ userId: string; name: string; username?: string }>;
+};
+
 function normalizeUsersResponse(response: UsersResponse): User[] {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.users)) return response.users;
@@ -185,6 +192,30 @@ export const projectsApi = api.injectEndpoints({
         { type: "Projects", id: projectId },
       ],
     }),
+    getProjectBugVisibilitySettings: builder.query<ProjectBugVisibilitySettings, string>({
+      query: (projectId) => `/projects/${projectId}/bug-visibility-settings`,
+      transformResponse: (response) =>
+        unwrapApiData<ProjectBugVisibilitySettings>(response),
+      providesTags: (_result, _error, projectId) => [
+        { type: "Projects", id: `bug-visibility-${projectId}` },
+      ],
+    }),
+    updateProjectBugVisibilitySettings: builder.mutation<
+      ProjectBugVisibilitySettings,
+      { projectId: string; settings: Omit<ProjectBugVisibilitySettings, "eligiblePentesters"> }
+    >({
+      query: ({ projectId, settings }) => ({
+        url: `/projects/${projectId}/bug-visibility-settings`,
+        method: "PUT",
+        body: settings,
+      }),
+      transformResponse: (response) =>
+        unwrapApiData<ProjectBugVisibilitySettings>(response),
+      invalidatesTags: (_result, _error, { projectId }) => [
+        "Projects",
+        { type: "Projects", id: `bug-visibility-${projectId}` },
+      ],
+    }),
     getProjectAssignees: builder.query<User[], { projectId: string; role: "pentester" | "qa" }>({
       query: ({ projectId, role }) => ({
         url: `/projects/${projectId}/eligible-assignees`,
@@ -249,6 +280,8 @@ export const {
   useAssignProjectUsersMutation,
   useCreateProjectMutation,
   useGetProjectQuery,
+  useGetProjectBugVisibilitySettingsQuery,
+  useUpdateProjectBugVisibilitySettingsMutation,
   useGetProjectAssigneesQuery,
   useGetProjectPentesterScopesQuery,
   useGetProjectSecurityScopeQuery,

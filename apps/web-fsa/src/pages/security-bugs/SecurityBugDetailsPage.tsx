@@ -148,8 +148,24 @@ const DISPLAYED_KEYS = new Set([
   "wafSecuringPossibility", "pocs", "tools", "parameters", "other_information",
   "status", "state", "stateChangedBy", "stateChangedAt", "createdBy", "user",
   "pentester", "creator", "reporter", "created_at", "updated_at", "createdAt",
-  "updatedAt", "additionalInformation",
+  "updatedAt", "additionalInformation", "isOwn", "canReview", "submitter",
 ]);
+
+function localizedRecordDate(value: unknown, language: "en" | "fa") {
+  if (!value) return undefined;
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(
+    language === "fa" ? "fa-IR-u-ca-persian" : "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }
+  ).format(date);
+}
 
 function labels(
   t: (key: TranslationKey, values?: Record<string, string | number>) => string
@@ -246,7 +262,7 @@ function entriesFor(
 export default function SecurityBugDetailsPage() {
   const { projectId = "", bugId = "" } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: bug, isLoading, error, refetch } =
     useGetProjectBugForReviewQuery(
       { projectId, bugId },
@@ -339,11 +355,34 @@ export default function SecurityBugDetailsPage() {
       </Box>
 
       <Grid
-        templateColumns={{ base: "minmax(0, 1fr)", xl: "minmax(0, 1fr) 360px" }}
+        templateColumns={{
+          base: "minmax(0, 1fr)",
+          xl: bug.canReview ? "minmax(0, 1fr) 360px" : "minmax(0, 1fr)",
+        }}
         gap={5}
         alignItems="start"
       >
         <VStack align="stretch" gap={5}>
+          <DetailsSection
+            title="Submission information"
+            entries={[
+              {
+                key: "submitter",
+                label: "Submitter",
+                value: bug.submitter?.username
+                  ? `${bug.submitter.name} (${bug.submitter.username})`
+                  : bug.submitter?.name,
+              },
+              {
+                key: "submittedAt",
+                label: "Date",
+                value: localizedRecordDate(
+                  bug.createdAt || bug.created_at,
+                  language
+                ),
+              },
+            ]}
+          />
           <DetailsSection
             title={t("bugReview.sections.submission")}
             description={t("bugReview.sections.submissionDescription")}
@@ -488,7 +527,7 @@ export default function SecurityBugDetailsPage() {
           />
         </VStack>
 
-        <Box
+        {bug.canReview && <Box
           position={{ xl: "sticky" }}
           top={{ xl: "20px" }}
           p={4}
@@ -526,7 +565,7 @@ export default function SecurityBugDetailsPage() {
           >
             {t("bugReview.saveState")}
           </Button>
-        </Box>
+        </Box>}
       </Grid>
 
       <Box

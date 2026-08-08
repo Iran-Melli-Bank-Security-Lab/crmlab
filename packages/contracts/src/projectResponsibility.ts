@@ -3,6 +3,7 @@ import { PERMISSIONS, type Permission } from "@role-dashboard/authz";
 export const PROJECT_CAPABILITY_KEYS = [
   "view-project",
   "open-pentest-workspace",
+  "view-project-bugs",
   "assign-pentesters",
   "assign-project-members",
   "review-security-bugs",
@@ -75,6 +76,7 @@ const projectResponsibilityDefinitions = [
     capabilities: {
       ...viewAction([PERMISSIONS.PENTEST_PROJECTS_READ]),
       "open-pentest-workspace": [PERMISSIONS.PENTEST_PROJECTS_READ],
+      "view-project-bugs": [PERMISSIONS.PENTEST_VULNERABILITIES_READ],
     },
   },
   {

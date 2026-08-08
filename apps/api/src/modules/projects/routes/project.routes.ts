@@ -15,6 +15,7 @@ import {
   assignUsersSchema,
   createProjectSchema,
   projectSecurityScopeSchema,
+  projectBugVisibilitySettingsSchema,
   provisioningBlockedSchema,
   provisioningReadySchema,
   provisioningResolutionSchema,
@@ -31,6 +32,8 @@ import {
   getProjectPentesterScopes,
   getProjects,
   putProjectSecurityScope,
+  getProjectBugVisibilitySettings,
+  putProjectBugVisibilitySettings,
 } from "../controllers/project.controller";
 import {
   confirmProvisioningReady,
@@ -113,6 +116,18 @@ router.put(
   putProjectSecurityScope
 );
 router.get(
+  "/:id/bug-visibility-settings",
+  requirePermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE),
+  validate(projectBugVisibilitySettingsSchema.pick({ params: true })),
+  getProjectBugVisibilitySettings
+);
+router.put(
+  "/:id/bug-visibility-settings",
+  requirePermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE),
+  validate(projectBugVisibilitySettingsSchema),
+  putProjectBugVisibilitySettings
+);
+router.get(
   "/:id/pentester-scopes",
   requirePermission(PERMISSIONS.SECURITY_PROJECTS_ASSIGN),
   requireProjectCapability("assign-pentesters", "params.id"),
@@ -121,6 +136,7 @@ router.get(
 router.get(
   ROUTES.PARAM_ID,
   requireAnyPermission(
+    PERMISSIONS.ADMIN_SYSTEM_MANAGE,
     PERMISSIONS.PENTEST_PROJECTS_READ,
     PERMISSIONS.QA_PROJECTS_READ,
     PERMISSIONS.DEVOPS_PROJECTS_READ,

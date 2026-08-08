@@ -64,8 +64,11 @@ export type ApiProjectResponse = {
   platform?: ProjectPlatform[] | ProjectPlatform | string[] | string;
   status?: string;
   assignmentStatus?: "pending" | "in_progress" | "finished";
+  pentesterTableStatus?: "new" | "in_progress" | "pending" | "completed";
   totalWorkTime?: number;
   workTimerStartedAt?: string | null;
+  progress?: number;
+  vulnerabilities?: number;
   ownerId?: string;
   projectManager?: string;
   qualityManager?: string;

@@ -19,6 +19,7 @@ export type ProjectResponsibilityAssignmentSource = {
   assignmentRole?: unknown;
   status?: unknown;
   securityScope?: unknown;
+  progress?: unknown;
   totalWorkTime?: unknown;
   workTimerStartedAt?: unknown;
 };

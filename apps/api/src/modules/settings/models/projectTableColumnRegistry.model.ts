@@ -95,7 +95,7 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
   assignmentStatus: column({
     defaultLabel: "Assignment", faLabel: "تخصیص", dataType: "status",
     minWidth: "150px", sourceFields: [],
-    requiredPermissions: [PERMISSIONS.PENTEST_PROJECTS_READ, PERMISSIONS.QA_PROJECTS_READ],
+    requiredPermissions: [PERMISSIONS.QA_PROJECTS_READ],
   }),
   priority: column({
     defaultLabel: "Priority", faLabel: "اولویت", dataType: "status",
@@ -158,6 +158,7 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
   status: column({
     defaultLabel: "Status", faLabel: "وضعیت", dataType: "status", minWidth: "130px",
     filterable: true, sourceFields: ["status"], requiredPermissions: [
+      PERMISSIONS.PENTEST_PROJECTS_READ,
       PERMISSIONS.SECURITY_PROJECTS_READ,
       PERMISSIONS.QUALITY_PROJECTS_READ,
       PERMISSIONS.DEVOPS_PROJECTS_READ,
@@ -301,7 +302,7 @@ const USER_COLUMNS = [
 export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   summary: ["security", "pentest", "devops", "quality", "qa", "representative"],
   myResponsibilities: ["security", "pentest", "devops", "quality", "qa", "representative"],
-  assignmentStatus: ["pentest", "qa"],
+  assignmentStatus: ["qa"],
   priority: ["security", "pentest", "devops", "quality", "qa"],
   scope: ["pentest", "qa"],
   phase: ["pentest", "qa"],
@@ -312,7 +313,7 @@ export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   openBugs: ["quality", "qa"],
   assignmentDueDate: ["pentest", "qa"],
   progress: ["pentest", "qa"],
-  status: ["security", "devops", "quality", "representative"],
+  status: ["security", "pentest", "devops", "quality", "representative"],
   provisioningStatus: ["security", "devops", "quality", "representative"],
   projectManager: ["devops"],
   labRepresentative: ["devops"],

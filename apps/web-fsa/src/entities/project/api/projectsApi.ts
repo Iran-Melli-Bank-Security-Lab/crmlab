@@ -61,6 +61,17 @@ function normalizeStatus(value: string | undefined): Project["status"] {
   }
 }
 
+function normalizeVisibleStatus(project: ApiProjectResponse): Project["status"] {
+  const responsibilities =
+    project.responsibilityContext?.responsibilityKeys || project.myResponsibilities || [];
+  const usePentesterLifecycle =
+    responsibilities.includes("pentester") &&
+    !responsibilities.includes("security_manager") &&
+    Boolean(project.pentesterTableStatus);
+  if (usePentesterLifecycle) return project.pentesterTableStatus!;
+  return normalizeStatus(project.status);
+}
+
 function normalizeProject(project: ApiProjectResponse): Project {
   const testExpiresAt = project.testExpiresAt || project.expireDay || project.expireDayQuality;
   const projectManagerId = project.projectManager ? String(project.projectManager) : undefined;
@@ -98,7 +109,7 @@ function normalizeProject(project: ApiProjectResponse): Project {
     createdAt: project.createdAt,
     testExpiresAt,
     discipline: project.type === "quality" ? "quality" : project.type === "devops" ? "devops" : "security",
-    status: normalizeStatus(project.status),
+    status: normalizeVisibleStatus(project),
     workStatus: project.assignmentStatus,
     totalWorkTime: project.totalWorkTime,
     workTimerStartedAt: project.workTimerStartedAt,
@@ -106,9 +117,9 @@ function normalizeProject(project: ApiProjectResponse): Project {
     owner: project.projectManager ? String(project.projectManager) : "-",
     assignee: project.devops ? String(project.devops) : "-",
     dueDate: testExpiresAt || project.createdAt || new Date().toISOString(),
-    progress: 0,
+    progress: project.progress ?? 0,
     riskScore: 0,
-    vulnerabilities: 0,
+    vulnerabilities: project.vulnerabilities ?? 0,
     testCoverage: 0,
     openBugs: 0,
     environment: devopsInfo.environment || "-",

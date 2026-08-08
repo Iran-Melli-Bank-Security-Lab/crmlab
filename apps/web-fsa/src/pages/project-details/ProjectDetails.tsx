@@ -13,6 +13,21 @@ import ProjectProvisioningPanel from "@/entities/devops/ui/ProjectProvisioningPa
 import QaAssignmentPanel from "@/entities/project/ui/assignment/QaAssignmentPanel";
 
 const statusStyles: Record<ProjectStatus, { bg: string; color: string; border: string }> = {
+  new: {
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    border: "var(--apple-blue-border)",
+  },
+  in_progress: {
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    border: "var(--apple-blue-border)",
+  },
+  pending: {
+    bg: "var(--apple-warning-bg)",
+    color: "var(--apple-warning-text)",
+    border: "var(--apple-warning-border)",
+  },
   planning: {
     bg: "var(--apple-surface-hover)",
     color: "var(--apple-secondary)",

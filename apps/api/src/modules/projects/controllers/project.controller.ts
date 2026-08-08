@@ -15,6 +15,10 @@ import type { Role } from "@/constants/roles";
 import { ProjectModel, type ProjectDocument } from "../models/project.model";
 import { ProjectAssignmentModel } from "../models/projectAssignment.model";
 import { UserModel } from "@/modules/users/models/user.model";
+import {
+  getProjectFindingCounts,
+  resolveVisibleProjectFindingCount,
+} from "@/modules/pentest/services/projectFindingCount.service";
 import { toAuthUserContext } from "@/modules/users/services/userAuth.service";
 import { writeAuditLog } from "@/modules/audit/services/audit.service";
 import { addConnectedUsersToProject, emitToProject } from "@/realtime/socket.delivery";
@@ -47,7 +51,10 @@ import {
   saveProjectSecurityScope,
 } from "../services/projectSecurityScope.service";
 import { notifyProjectAssignments } from "../services/projectAssignmentNotification.service";
-import { toProjectAssignmentWorkTimerSnapshot } from "../services/projectAssignmentWorkTimer.service";
+import {
+  toPentesterTableStatus,
+  toProjectAssignmentWorkTimerSnapshot,
+} from "../services/projectAssignmentWorkTimer.service";
 import {
   getEffectiveProvisioningStatus,
   notifyInitialDevopsAssignment,
@@ -513,7 +520,7 @@ async function getProjectListFilter(
       { status: { $ne: "removed" } },
     ],
   }).select(
-    "projectId project userId pentester managerId manager assignmentRole status totalWorkTime workTimerStartedAt"
+    "projectId project userId pentester managerId manager assignmentRole status progress totalWorkTime workTimerStartedAt"
   );
   const assignedProjectIds = assignments.flatMap((assignment) => {
     const projectId = assignment.projectId || assignment.project;
@@ -683,6 +690,10 @@ export const getProjects: RequestHandler = async (req, res, next) => {
       query = query.select([
         ...capabilities.projectionFields,
         ...PROJECT_RESPONSIBILITY_SOURCE_FIELDS,
+        // Needed internally to close a pentester lifecycle badge when the
+        // project itself has already been completed. It is still omitted from
+        // the response unless the caller may request the project Status column.
+        "status",
       ].join(" "));
     }
     query = capabilities?.sort
@@ -696,6 +707,16 @@ export const getProjects: RequestHandler = async (req, res, next) => {
       query = query.skip((page - 1) * pageSize).limit(pageSize);
     }
     const projects = await query.lean();
+    const canReadSecurityFindings = req.user!.permissions.some((permission) =>
+      permission === PERMISSIONS.PENTEST_VULNERABILITIES_READ ||
+      permission === PERMISSIONS.SECURITY_VULNERABILITIES_READ
+    );
+    const findingCounts = canReadSecurityFindings
+      ? await getProjectFindingCounts(
+          projects.map((project) => String(project._id)),
+          req.user!.id
+        )
+      : new Map();
     sendSuccess(
       res,
       projects.map((project) => {
@@ -720,6 +741,16 @@ export const getProjects: RequestHandler = async (req, res, next) => {
         const workTimer = pentestAssignment
           ? toProjectAssignmentWorkTimerSnapshot(pentestAssignment)
           : undefined;
+        const storedProgress = Number(pentestAssignment?.progress);
+        const projectFindingCounts = findingCounts.get(projectId);
+        const isSecurityManager = responsibilityContext.responsibilityKeys.includes(
+          "security_manager"
+        );
+        const visibleFindingCount = resolveVisibleProjectFindingCount({
+          counts: projectFindingCounts,
+          isSecurityManager,
+          isPentester: Boolean(pentestAssignment),
+        });
         let responseSource: Record<string, unknown> = project;
         if (view === "unified") {
           const rowViews = [...resolveResponsibilityViews(
@@ -765,12 +796,20 @@ export const getProjects: RequestHandler = async (req, res, next) => {
           responsibilityContext,
           myResponsibilities: responsibilityContext.responsibilityKeys,
           allowedActions,
+          vulnerabilities: visibleFindingCount,
           ...(workTimer
             ? {
                 assignmentStatus: workTimer.status,
+                pentesterTableStatus: toPentesterTableStatus(
+                  pentestAssignment?.status,
+                  project.status
+                ),
                 totalWorkTime: workTimer.totalWorkTime,
                 workTimerStartedAt: workTimer.workTimerStartedAt,
               }
+            : {}),
+          ...(pentestAssignment
+            ? { progress: Number.isFinite(storedProgress) ? storedProgress : 0 }
             : {}),
         };
       })
@@ -856,6 +895,10 @@ export const getProject: RequestHandler = async (req, res, next) => {
       ...(workTimer
         ? {
             assignmentStatus: workTimer.status,
+            pentesterTableStatus: toPentesterTableStatus(
+              pentestAssignment?.status,
+              project.status
+            ),
             totalWorkTime: workTimer.totalWorkTime,
             workTimerStartedAt: workTimer.workTimerStartedAt,
           }

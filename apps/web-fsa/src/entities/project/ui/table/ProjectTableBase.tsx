@@ -32,6 +32,9 @@ import type {
 } from "./types";
 
 const statusLabelKeys: Record<ProjectStatus, TranslationKey> = {
+  new: "projectTable.status.new",
+  in_progress: "projectTable.status.inProgress",
+  pending: "projectTable.status.pended",
   planning: "projectTable.status.planning",
   active: "projectTable.status.active",
   blocked: "projectTable.status.blocked",

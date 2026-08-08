@@ -81,7 +81,15 @@ function normalizeProjectTableSettings(
     if (!Array.isArray(value) || value.some((key) => typeof key !== "string")) {
       throw new AppError(`Invalid ${field}`, HTTP_STATUS.BAD_REQUEST);
     }
-    const unique = [...new Set(value as string[])];
+    const migratePentesterStatusColumn =
+      context === "user-projects" &&
+      allowedColumns.has("status") &&
+      !allowedColumns.has("assignmentStatus");
+    const unique = [...new Set((value as string[]).map((key) =>
+      migratePentesterStatusColumn && key === "assignmentStatus"
+        ? "status"
+        : key
+    ))];
     const unauthorized = unique.filter((key) => !allowedColumns.has(key));
     if (rejectUnauthorized && unauthorized.length) {
       throw new AppError(`Unauthorized ${field}: ${unauthorized.join(", ")}`, HTTP_STATUS.FORBIDDEN);

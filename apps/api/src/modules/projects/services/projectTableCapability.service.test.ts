@@ -34,7 +34,8 @@ test("single-workflow users receive only columns granted by effective permission
     PERMISSIONS.PENTEST_PROJECTS_READ,
     PERMISSIONS.PENTEST_VULNERABILITIES_READ,
   ]);
-  assert.ok(pentest.includes("assignmentStatus"));
+  assert.ok(pentest.includes("status"));
+  assert.ok(!pentest.includes("assignmentStatus"));
   assert.ok(pentest.includes("riskScore"));
   assert.ok(!pentest.includes("environment"));
 
@@ -371,6 +372,18 @@ test("legacy project table settings insert a missing Project column first", () =
 
   assert.equal(sanitized.visibleColumns[0], "summary");
   assert.equal(sanitized.columnOrder[0], "summary");
+});
+
+test("stored pentester settings migrate the assignment column to Status", () => {
+  const sanitized = sanitizeStoredProjectTableSettings("user-projects", {
+    visibleColumns: ["summary", "assignmentStatus", "progress"],
+    columnOrder: ["summary", "assignmentStatus", "progress"],
+    aliases: {},
+  }, [PERMISSIONS.PENTEST_PROJECTS_READ]);
+
+  assert.ok(sanitized.visibleColumns.includes("status"));
+  assert.ok(!sanitized.visibleColumns.includes("assignmentStatus"));
+  assert.ok(sanitized.columnOrder.includes("status"));
 });
 
 test("admin view authorization remains separate", () => {

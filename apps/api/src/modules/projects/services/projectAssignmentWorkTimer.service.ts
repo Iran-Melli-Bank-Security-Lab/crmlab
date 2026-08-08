@@ -10,6 +10,33 @@ export type WorkTimerStatus = Extract<
   "pending" | "in_progress" | "finished"
 >;
 
+export type PentesterTableStatus =
+  | "new"
+  | "in_progress"
+  | "pending"
+  | "completed";
+
+export function toPentesterTableStatus(
+  value: unknown,
+  projectStatus?: unknown
+): PentesterTableStatus {
+  if (
+    projectStatus === PROJECT_ASSIGNMENT_STATUS.FINISHED ||
+    projectStatus === "closed"
+  ) {
+    return "completed";
+  }
+  if (value === PROJECT_ASSIGNMENT_STATUS.IN_PROGRESS) return "in_progress";
+  if (value === PROJECT_ASSIGNMENT_STATUS.PENDING) return "pending";
+  if (
+    value === PROJECT_ASSIGNMENT_STATUS.FINISHED ||
+    value === "closed"
+  ) {
+    return "completed";
+  }
+  return "new";
+}
+
 export type ProjectAssignmentWorkTimerSnapshot = {
   status: WorkTimerStatus;
   totalWorkTime: number;

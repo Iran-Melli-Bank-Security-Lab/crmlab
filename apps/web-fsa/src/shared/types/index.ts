@@ -36,12 +36,23 @@ export type UploadResponse = UploadResponseContract;
 export type ApiError = ApiErrorContract;
 export type UserFormPayload = UserFormPayloadContract;
 
-export type ProjectStatus = "planning" | "active" | "blocked" | "review" | "completed";
+export type ProjectStatus =
+  | "new"
+  | "in_progress"
+  | "pending"
+  | "planning"
+  | "active"
+  | "blocked"
+  | "review"
+  | "completed";
 export type ProjectPriority = "low" | "medium" | "high" | "critical";
 export type ProjectDiscipline = "security" | "quality" | "devops" | "platform";
 export type ProjectAssignmentRole = "pentester" | "qa" | "devops" | "manager";
 export type ProjectWorkStatus = "pending" | "in_progress" | "finished";
 export type ProjectAssignmentStatus =
+  | "new"
+  | "pending"
+  | "completed"
   | "assigned"
   | "in_progress"
   | "submitted"
@@ -68,6 +79,7 @@ export type Project = {
   discipline: ProjectDiscipline;
   status: ProjectStatus;
   workStatus?: ProjectWorkStatus;
+  assignmentStatus?: ProjectAssignmentStatus;
   totalWorkTime?: number;
   workTimerStartedAt?: string | null;
   priority: ProjectPriority;

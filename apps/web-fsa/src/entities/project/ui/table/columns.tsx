@@ -13,6 +13,9 @@ import ProjectResponsibilities from "./ProjectResponsibilities";
 import type { ProjectTableColumn } from "./types";
 
 const statusLabelKeys: Record<ProjectStatus, TranslationKey> = {
+  new: "projectTable.status.new",
+  in_progress: "projectTable.status.inProgress",
+  pending: "projectTable.status.pended",
   planning: "projectTable.status.planning",
   active: "projectTable.status.active",
   blocked: "projectTable.status.blocked",
@@ -24,6 +27,21 @@ const statusStyles: Record<
   ProjectStatus,
   { bg: string; color: string; borderColor: string }
 > = {
+  new: {
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    borderColor: "var(--apple-blue-border)",
+  },
+  in_progress: {
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    borderColor: "var(--apple-blue-border)",
+  },
+  pending: {
+    bg: "var(--apple-warning-bg)",
+    color: "var(--apple-warning-text)",
+    borderColor: "var(--apple-warning-border)",
+  },
   planning: {
     bg: "var(--apple-surface-hover)",
     color: "var(--apple-secondary)",
@@ -85,6 +103,9 @@ const priorityStyles: Record<
 };
 
 const assignmentStatusLabelKeys: Record<ProjectAssignmentStatus, TranslationKey> = {
+  new: "projectTable.assignment.new",
+  pending: "projectTable.assignment.pending",
+  completed: "projectTable.assignment.completed",
   assigned: "projectTable.assignment.assigned",
   in_progress: "projectTable.assignment.in_progress",
   submitted: "projectTable.assignment.submitted",
@@ -96,6 +117,21 @@ const assignmentStatusStyles: Record<
   ProjectAssignmentStatus,
   { bg: string; color: string; borderColor: string }
 > = {
+  new: {
+    bg: "var(--apple-blue-soft)",
+    color: "var(--apple-blue)",
+    borderColor: "var(--apple-blue-border)",
+  },
+  pending: {
+    bg: "var(--apple-warning-bg)",
+    color: "var(--apple-warning-text)",
+    borderColor: "var(--apple-warning-border)",
+  },
+  completed: {
+    bg: "var(--apple-success-bg)",
+    color: "var(--apple-success-text)",
+    borderColor: "var(--apple-success-border)",
+  },
   assigned: {
     bg: "var(--apple-surface-hover)",
     color: "var(--apple-secondary)",

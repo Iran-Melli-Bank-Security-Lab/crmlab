@@ -30,6 +30,10 @@ import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import BugEvidenceGallery from "./BugEvidenceGallery";
 import { BUG_REVIEW_STATE_LABEL_KEYS } from "@/entities/pentest/model/bugReview";
+import {
+  formatAttachmentSize,
+  getAttachmentPreviewUrl,
+} from "@/entities/pentest/model/attachments";
 
 type DetailEntry = {
   key: string;
@@ -137,7 +141,9 @@ const DISPLAYED_KEYS = new Set([
   "title", "bugTitle", "label", "labelfa", "wstg", "severity", "description",
   "affectedAsset", "evidence", "reproductionSteps", "exploits", "impact",
   "recommendation", "solutions", "cve", "CVE", "cveCvss", "CVSS", "httpMethod",
-  "path", "parameter", "exploitDetails", "solution", "toolsUsed", "references",
+  "path", "paths", "parameter", "affectedUsername", "affectedUserRole",
+  "exploitDetails", "solution", "toolsUsed", "references",
+  "requestHeaders", "requestHeadersFile",
   "refrence", "securingByOptions", "securingByWAF", "securingMethods",
   "wafSecuringPossibility", "pocs", "tools", "parameters", "other_information",
   "status", "state", "stateChangedBy", "stateChangedAt", "createdBy", "user",
@@ -172,7 +178,6 @@ function labels(
       ["cveCvss", t("pentestWorkspace.findings.cveCvss")],
       ["CVSS", t("bugReview.stored.legacyCvss")],
       ["httpMethod", t("bugReview.method")],
-      ["path", t("bugReview.path")],
       ["parameter", t("bugReview.parameter")],
       ["toolsUsed", t("pentestWorkspace.findings.toolsUsed")],
       ["tools", t("bugReview.stored.tools")],
@@ -264,6 +269,11 @@ export default function SecurityBugDetailsPage() {
   }
 
   const currentState = bug.state || BUG_REVIEW_STATES.NEW;
+  const affectedPaths = bug.paths?.length
+    ? bug.paths
+    : bug.path
+      ? [bug.path]
+      : [];
   const effectiveSelectedState = selectedState ||
     (isBugReviewState(currentState) ? currentState : BUG_REVIEW_STATES.NEW);
   const allowedStates = BUG_REVIEW_STATE_VALUES.filter((state) =>
@@ -343,6 +353,123 @@ export default function SecurityBugDetailsPage() {
             title={t("bugReview.sections.technical")}
             entries={entriesFor(bug, fieldLabels.technical)}
           />
+          <DetailsSection
+            title={t("bugReview.sections.affectedUser")}
+            entries={[
+              {
+                key: "affectedUsername",
+                label: t("pentestWorkspace.findings.affectedUsername"),
+                value: bug.affectedUsername,
+              },
+              {
+                key: "affectedUserRole",
+                label: t("pentestWorkspace.findings.affectedUserRole"),
+                value: bug.affectedUserRole,
+              },
+            ]}
+          />
+          {affectedPaths.length > 0 && (
+            <Box
+              p={{ base: 4, md: 5 }}
+              border="1px solid"
+              borderColor="var(--apple-border)"
+              borderRadius="lg"
+              bg="var(--apple-surface-raised)"
+              boxShadow="var(--surface-shadow)"
+            >
+              <Heading size="md">
+                {t("pentestWorkspace.findings.affectedPaths")}
+              </Heading>
+              <VStack align="stretch" gap={2} mt={4}>
+                {affectedPaths.map((path) => (
+                  <Box
+                    key={path}
+                    p={3}
+                    border="1px solid"
+                    borderColor="var(--apple-border-soft)"
+                    borderRadius="md"
+                    bg="var(--apple-surface-subtle)"
+                  >
+                    <Text
+                      fontFamily="mono"
+                      fontSize="xs"
+                      overflowWrap="anywhere"
+                      dir="ltr"
+                      textAlign="start"
+                    >
+                      {path}
+                    </Text>
+                  </Box>
+                ))}
+              </VStack>
+            </Box>
+          )}
+          {(bug.requestHeaders || bug.requestHeadersFile) && (
+            <Box
+              p={{ base: 4, md: 5 }}
+              border="1px solid"
+              borderColor="var(--apple-border)"
+              borderRadius="lg"
+              bg="var(--apple-surface-raised)"
+              boxShadow="var(--surface-shadow)"
+            >
+              <Heading size="md">
+                {t("pentestWorkspace.requestHeaders.title")}
+              </Heading>
+              {bug.requestHeaders && (
+                <Text
+                  as="pre"
+                  m={0}
+                  mt={4}
+                  p={3.5}
+                  borderRadius="md"
+                  bg="var(--apple-surface-subtle)"
+                  fontFamily="mono"
+                  fontSize="xs"
+                  lineHeight="1.65"
+                  whiteSpace="pre-wrap"
+                  overflowWrap="anywhere"
+                  dir="ltr"
+                  textAlign="start"
+                >
+                  {bug.requestHeaders}
+                </Text>
+              )}
+              {bug.requestHeadersFile && (
+                <HStack
+                  mt={4}
+                  p={3}
+                  border="1px solid"
+                  borderColor="var(--apple-border-soft)"
+                  borderRadius="md"
+                  flexWrap="wrap"
+                >
+                  <Box flex="1" minW="220px">
+                    <Text fontWeight="800" lineClamp={1}>
+                      {bug.requestHeadersFile.originalName}
+                    </Text>
+                    <Text color="var(--apple-muted)" fontSize="xs">
+                      {formatAttachmentSize(bug.requestHeadersFile.size)}
+                    </Text>
+                  </Box>
+                  <Button asChild variant="secondary">
+                    <a
+                      href={getAttachmentPreviewUrl(bug.requestHeadersFile.url)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t("pentestWorkspace.requestHeaders.viewFile")}
+                    </a>
+                  </Button>
+                  <Button asChild variant="secondary">
+                    <a href={bug.requestHeadersFile.url}>
+                      {t("pentestWorkspace.requestHeaders.downloadFile")}
+                    </a>
+                  </Button>
+                </HStack>
+              )}
+            </Box>
+          )}
           <DetailsSection
             title={t("bugReview.sections.classification")}
             entries={entriesFor(bug, fieldLabels.classification)}

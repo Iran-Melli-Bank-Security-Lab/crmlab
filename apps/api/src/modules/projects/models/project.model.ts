@@ -98,6 +98,24 @@ const pentesterBugVisibilitySchema = new Schema(
   { _id: false }
 );
 
+const deadlineExtensionRequestSchema = new Schema(
+  {
+    requestedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    requestedAt: { type: Date, required: true, default: Date.now },
+    message: { type: String, trim: true, maxlength: 2000 },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+      required: true,
+    },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    reviewedAt: { type: Date },
+    approvedDeadline: { type: Date },
+  },
+  { _id: true }
+);
+
 const projectSchema = new Schema(
   {
     projectName: { type: String, required: true, trim: true },
@@ -161,6 +179,14 @@ const projectSchema = new Schema(
     expireDay: { type: Date },
     testExpiresAt: { type: Date },
     expireDayQuality: { type: Date },
+    deadlineEnabled: { type: Boolean, default: true },
+    closureReason: { type: String, enum: ["deadline", "manual"] },
+    deadlineExpiredAt: { type: Date },
+    manuallyClosedAt: { type: Date },
+    deadlineExtensionRequests: {
+      type: [deadlineExtensionRequestSchema],
+      default: [],
+    },
     verifiedByAdmin: { type: Date },
     verifiedReportByAdmin: { type: Date },
     numberOfTest: { type: Number },

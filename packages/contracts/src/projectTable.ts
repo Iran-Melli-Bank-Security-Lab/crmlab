@@ -5,6 +5,7 @@ export type ProjectRowActionContract =
   | "open-pentest-workspace"
   | "view-project-bugs"
   | "assign-pentesters"
+  | "assign-project-members"
   | "review-security-bugs";
 
 export type ProjectTableColumnContract = {

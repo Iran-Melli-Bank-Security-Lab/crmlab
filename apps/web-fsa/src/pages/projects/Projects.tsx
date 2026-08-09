@@ -10,7 +10,6 @@ import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
 import type { Project } from "@/shared/types";
 import PentesterAssignmentDock from "@/entities/project/ui/assignment/PentesterAssignmentDock";
 import PageHeader from "@/shared/ui/layout/PageHeader";
-import { hasNonDevopsResponsibility } from "@/entities/project/model/provisioning";
 
 const AdminProjectsTable = lazy(
   () => import("@/entities/project/ui/table/views/AdminProjectsTable")
@@ -30,27 +29,37 @@ export default function Projects() {
   const assignmentCloseTimer = useRef<
     ReturnType<typeof globalThis.setTimeout> | undefined
   >(undefined);
-  const {
-    data: projects = [],
-    error,
-    isLoading,
-  } = useGetProjectsQuery(isAdmin ? "admin" : {});
+  const canViewPentest = permissions.includes(PERMISSIONS.PENTEST_PROJECTS_READ);
+  const canViewSecurity = permissions.includes(PERMISSIONS.SECURITY_PROJECTS_READ);
+  const canViewQuality = permissions.includes(PERMISSIONS.QUALITY_PROJECTS_READ);
+  const adminQuery = useGetProjectsQuery("admin", { skip: !isAdmin });
+  const pentestQuery = useGetProjectsQuery("pentest", {
+    skip: isAdmin || !canViewPentest,
+  });
+  const securityQuery = useGetProjectsQuery("security", {
+    skip: isAdmin || !canViewSecurity,
+  });
+  const qualityQuery = useGetProjectsQuery("quality", {
+    skip: isAdmin || !canViewQuality,
+  });
+  const roleTables = [
+    ...(canViewPentest ? [{ view: "pentest" as const, title: t("projectViews.pentest.tableTitle"), query: pentestQuery }] : []),
+    ...(canViewSecurity ? [{ view: "security" as const, title: t("projectViews.security.tableTitle"), query: securityQuery }] : []),
+    ...(canViewQuality ? [{ view: "quality" as const, title: t("projectViews.quality.tableTitle"), query: qualityQuery }] : []),
+  ];
+  const projects = isAdmin
+    ? adminQuery.data || []
+    : Array.from(new Map(roleTables.flatMap(({ query }) => query.data || [])
+        .map((project) => [project.id, project])).values());
+  const isLoading = isAdmin
+    ? adminQuery.isLoading
+    : roleTables.some(({ query }) => query.isLoading);
+  const error = isAdmin
+    ? adminQuery.error
+    : roleTables.find(({ query }) => query.error)?.query.error;
   const assignmentProject = useMemo(
     () => projects.find((project) => project.id === assignmentProjectId),
     [assignmentProjectId, projects]
-  );
-  const visibleProjects = useMemo(
-    () =>
-      isAdmin
-        ? projects
-        : projects.filter((project) => {
-            const responsibilities =
-              project.responsibilityContext?.responsibilityKeys ||
-              project.myResponsibilities ||
-              [];
-            return hasNonDevopsResponsibility(responsibilities);
-          }),
-    [isAdmin, projects]
   );
 
   const createFromProject = useCallback(
@@ -128,15 +137,27 @@ export default function Projects() {
             <AdminProjectsTable
               view="admin"
               title={t("projectViews.admin.tableTitle")}
-              projects={visibleProjects}
+              projects={projects}
               onCreateFromProject={createFromProject}
             />
           ) : (
-            <UserProjectsTable
-              title={t("projects.tableTitle")}
-              projects={visibleProjects}
-              onAssignPentesters={openAssignmentDock}
-            />
+            <VStack align="stretch" gap={{ base: 5, md: 6 }}>
+              {roleTables.map(({ view, title, query }) => (
+                <UserProjectsTable
+                  key={view}
+                  view={view}
+                  title={title}
+                  projects={query.data || []}
+                  onAssignPentesters={
+                    view === "security"
+                      ? openAssignmentDock
+                      : view === "quality"
+                        ? (project) => navigate(`/projects/${project.id}`)
+                        : undefined
+                  }
+                />
+              ))}
+            </VStack>
           )}
         </Suspense>
       )}

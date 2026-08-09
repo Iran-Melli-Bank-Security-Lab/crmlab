@@ -16,6 +16,63 @@ export type PentesterTableStatus =
   | "pending"
   | "completed";
 
+export async function closeProjectAssignmentWorkTimers(
+  projectIds: readonly string[],
+  closedAt = new Date()
+) {
+  if (!projectIds.length) return;
+  const validStartedAt = {
+    $convert: { input: "$workTimerStartedAt", to: "date", onError: null, onNull: null },
+  };
+  await ProjectAssignmentModel.updateMany(
+    {
+      status: { $ne: PROJECT_ASSIGNMENT_STATUS.REMOVED },
+      $or: [{ projectId: { $in: projectIds } }, { project: { $in: projectIds } }],
+    },
+    [{
+      $set: {
+        totalWorkTime: {
+          $add: [
+            { $convert: { input: "$totalWorkTime", to: "long", onError: 0, onNull: 0 } },
+            {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$status", PROJECT_ASSIGNMENT_STATUS.IN_PROGRESS] },
+                    { $ne: [validStartedAt, null] },
+                  ],
+                },
+                { $floor: { $divide: [{ $max: [0, { $subtract: [closedAt, validStartedAt] }] }, 1000] } },
+                0,
+              ],
+            },
+          ],
+        },
+        status: PROJECT_ASSIGNMENT_STATUS.CLOSED,
+        workTimerStartedAt: null,
+        updatedAt: closedAt,
+        updated_at: closedAt,
+      },
+    }],
+    { updatePipeline: true }
+  );
+}
+
+export async function reopenDeadlineClosedAssignments(projectId: string) {
+  await ProjectAssignmentModel.updateMany(
+    {
+      status: PROJECT_ASSIGNMENT_STATUS.CLOSED,
+      $or: [{ projectId }, { project: projectId }],
+    },
+    {
+      $set: {
+        status: PROJECT_ASSIGNMENT_STATUS.PENDING,
+        workTimerStartedAt: null,
+      },
+    }
+  );
+}
+
 export function toPentesterTableStatus(
   value: unknown,
   projectStatus?: unknown

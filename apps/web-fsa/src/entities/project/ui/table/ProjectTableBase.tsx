@@ -663,8 +663,11 @@ export default function ProjectTableBase({
                         width="full"
                       >
                         <Box minW={0} maxW="full" flex="1">
-                          {column.key === "pentesters" ? (
-                            onAssignPentesters && project.allowedActions?.includes("assign-pentesters") ? (
+                          {column.key === "pentesters" || column.key === "qaUsers" ? (
+                            onAssignPentesters && (
+                              project.allowedActions?.includes("assign-pentesters") ||
+                              project.allowedActions?.includes("assign-project-members")
+                            ) ? (
                               <Button
                                 variant="secondary"
                                 minH="30px"

@@ -74,6 +74,37 @@ export const createProjectSchema = z.object({
   body: createProjectRequestSchema,
 });
 
+export const closeProjectSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ status: z.literal("closed") }).strict(),
+});
+
+export const deadlineSettingsSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ deadlineEnabled: z.boolean() }).strict(),
+});
+
+export const createDeadlineExtensionRequestSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({ message: z.string().trim().max(2000).optional() }).strict(),
+});
+
+export const reviewDeadlineExtensionRequestSchema = z.object({
+  params: z.object({ id: objectId, requestId: objectId }),
+  body: z.object({
+    status: z.enum(["approved", "rejected"]),
+    deadline: dateString.optional(),
+  }).strict().superRefine((input, context) => {
+    if (input.status === "approved" && !input.deadline) {
+      context.addIssue({
+        code: "custom",
+        path: ["deadline"],
+        message: "A new deadline is required when approving the request",
+      });
+    }
+  }),
+});
+
 export const securityScopeReferenceSchema = z
   .object({
     standardKey: z.string().trim().min(1).max(80),

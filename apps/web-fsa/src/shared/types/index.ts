@@ -76,6 +76,9 @@ export type Project = {
   platform?: ApiProjectPlatform | string;
   createdAt?: string;
   testExpiresAt?: string;
+  deadlineEnabled?: boolean;
+  deadlinePassed?: boolean;
+  closureReason?: "deadline" | "manual";
   discipline: ProjectDiscipline;
   status: ProjectStatus;
   workStatus?: ProjectWorkStatus;

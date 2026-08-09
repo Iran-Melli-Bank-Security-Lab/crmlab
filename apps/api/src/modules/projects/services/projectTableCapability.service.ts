@@ -23,6 +23,7 @@ export type ProjectRowAction =
   | "open-pentest-workspace"
   | "view-project-bugs"
   | "assign-pentesters"
+  | "assign-project-members"
   | "review-security-bugs";
 
 export const PROJECT_VIEW_PERMISSIONS = Object.fromEntries(
@@ -75,6 +76,7 @@ export function resolveProjectRowActions(
         action === "open-pentest-workspace" ||
         action === "view-project-bugs" ||
         action === "assign-pentesters" ||
+        action === "assign-project-members" ||
         action === "review-security-bugs") &&
       context.capabilities[action] &&
       (!view ||
@@ -82,6 +84,8 @@ export function resolveProjectRowActions(
       (action === "open-pentest-workspace" && view === "pentest") ||
       (action === "view-project-bugs" && view === "pentest") ||
       (action === "assign-pentesters" && view === "security") ||
+      (action === "assign-project-members" &&
+        (view === "security" || view === "quality")) ||
       (action === "review-security-bugs" && view === "security"))
     );
 }

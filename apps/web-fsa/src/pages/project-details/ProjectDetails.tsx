@@ -1,4 +1,4 @@
-import { Badge, Box, Heading, HStack, NativeSelect, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Heading, HStack, NativeSelect, SimpleGrid, Text, Textarea, VStack } from "@chakra-ui/react";
 import { useEffect, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -6,6 +6,11 @@ import { PERMISSIONS } from "@/entities/permission/model/permissions";
 import {
   useGetProjectBugVisibilitySettingsQuery,
   useGetProjectQuery,
+  useCloseProjectMutation,
+  useCreateDeadlineExtensionRequestMutation,
+  useGetDeadlineExtensionRequestsQuery,
+  useReviewDeadlineExtensionRequestMutation,
+  useUpdateProjectDeadlineSettingsMutation,
   useUpdateProjectBugVisibilitySettingsMutation,
 } from "@/entities/project/api/projectsApi";
 import { formatCompactGroupId, formatDate } from "@/entities/project/ui/table/formatters";
@@ -238,6 +243,134 @@ function AdminBugVisibilitySettings({ projectId }: { projectId: string }) {
   );
 }
 
+function DeadlineManagement({ project, isAdmin }: { project: Project; isAdmin: boolean }) {
+  const { data: requests = [], isLoading } = useGetDeadlineExtensionRequestsQuery(project.id);
+  const [updateSettings, settingsState] = useUpdateProjectDeadlineSettingsMutation();
+  const [createRequest, createState] = useCreateDeadlineExtensionRequestMutation();
+  const [reviewRequest, reviewState] = useReviewDeadlineExtensionRequestMutation();
+  const [message, setMessage] = useState("");
+  const [deadlines, setDeadlines] = useState<Record<string, string>>({});
+  const hasPendingRequest = requests.some((request) => request.status === "pending");
+
+  const toggleDeadline = async () => {
+    try {
+      await updateSettings({
+        projectId: project.id,
+        deadlineEnabled: project.deadlineEnabled === false,
+      }).unwrap();
+      toast.success(project.deadlineEnabled === false ? "Deadline enabled" : "Deadline disabled");
+    } catch {
+      toast.error("Unable to update deadline enforcement");
+    }
+  };
+
+  const submitRequest = async () => {
+    try {
+      await createRequest({ projectId: project.id, message: message.trim() || undefined }).unwrap();
+      setMessage("");
+      toast.success("Deadline extension request sent");
+    } catch {
+      toast.error("Unable to send deadline extension request");
+    }
+  };
+
+  const review = async (requestId: string, status: "approved" | "rejected") => {
+    const localDeadline = deadlines[requestId];
+    if (status === "approved" && !localDeadline) {
+      toast.error("Select a new deadline first");
+      return;
+    }
+    try {
+      await reviewRequest({
+        projectId: project.id,
+        requestId,
+        status,
+        deadline: localDeadline ? new Date(localDeadline).toISOString() : undefined,
+      }).unwrap();
+      toast.success(`Request ${status}`);
+    } catch {
+      toast.error("Unable to review deadline request");
+    }
+  };
+
+  return (
+    <DetailPanel title="Deadline management">
+      <HStack justify="space-between" gap={4} flexWrap="wrap">
+        <Box>
+          <Text fontWeight="850">
+            Deadline enforcement: {project.deadlineEnabled === false ? "Disabled" : "Enabled"}
+          </Text>
+          <Text color="var(--apple-muted)" fontSize="sm" mt={1}>
+            Stored deadline: {formatDate(project.testExpiresAt || project.dueDate)}
+          </Text>
+        </Box>
+        {isAdmin && (
+          <Button variant="secondary" onClick={toggleDeadline} isLoading={settingsState.isLoading}>
+            {project.deadlineEnabled === false ? "Enable Deadline" : "Disable Deadline"}
+          </Button>
+        )}
+      </HStack>
+
+      {!isAdmin && project.deadlinePassed && (
+        <Box mt={5} pt={5} borderTop="1px solid" borderColor="var(--apple-border-soft)">
+          <Text fontWeight="850">Request more time</Text>
+          <Textarea
+            mt={3}
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            placeholder="Optional reason or message"
+            maxLength={2000}
+          />
+          <Button
+            mt={3}
+            onClick={submitRequest}
+            isLoading={createState.isLoading}
+            disabled={hasPendingRequest}
+          >
+            {hasPendingRequest ? "Request pending" : "Send extension request"}
+          </Button>
+        </Box>
+      )}
+
+      <VStack align="stretch" gap={3} mt={requests.length || isLoading ? 5 : 0}>
+        {isLoading && <Text color="var(--apple-muted)">Loading requests…</Text>}
+        {requests.map((request) => (
+          <Box key={request.id} p={4} border="1px solid" borderColor="var(--apple-border-soft)" borderRadius="md">
+            <HStack justify="space-between" gap={3} flexWrap="wrap">
+              <Box>
+                <Text fontWeight="850">{request.requester?.name || "My request"}</Text>
+                <Text fontSize="xs" color="var(--apple-muted)">
+                  {new Date(request.requestedAt).toLocaleString()} · {request.status}
+                </Text>
+              </Box>
+              <Badge>{request.status}</Badge>
+            </HStack>
+            {request.message && <Text mt={3} whiteSpace="pre-wrap">{request.message}</Text>}
+            {isAdmin && request.status === "pending" && (
+              <HStack mt={4} gap={2} flexWrap="wrap">
+                <Input
+                  type="datetime-local"
+                  value={deadlines[request.id] || ""}
+                  onChange={(event) => setDeadlines((current) => ({
+                    ...current,
+                    [request.id]: event.target.value,
+                  }))}
+                />
+                <Button onClick={() => review(request.id, "approved")} isLoading={reviewState.isLoading}>
+                  Approve
+                </Button>
+                <Button variant="secondary" onClick={() => review(request.id, "rejected")} isLoading={reviewState.isLoading}>
+                  Reject
+                </Button>
+              </HStack>
+            )}
+          </Box>
+        ))}
+      </VStack>
+    </DetailPanel>
+  );
+}
+
 function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   const style = statusStyles[status];
   return (
@@ -279,9 +412,11 @@ export default function ProjectDetails() {
   } = useGetProjectQuery(projectId, {
     skip: !projectId,
   });
+  const [closeProject, closeResult] = useCloseProjectMutation();
   const canOpenPentestWorkspace =
     Boolean(project) &&
     project.discipline === "security" &&
+    project.status !== "completed" &&
     hasPermission(PERMISSIONS.PENTEST_PROJECTS_READ);
   const isAdmin = hasPermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE);
 
@@ -296,6 +431,18 @@ export default function ProjectDetails() {
   if (!project) {
     return <ErrorState title="Project unavailable" error={{ data: { message: "Project not found" } }} />;
   }
+
+  const manuallyCloseProject = async () => {
+    if (!window.confirm("Close this project now? Users will no longer be able to work or submit bugs.")) {
+      return;
+    }
+    try {
+      await closeProject(project.id).unwrap();
+      toast.success("Project closed");
+    } catch {
+      toast.error("Unable to close project");
+    }
+  };
 
   return (
     <VStack align="stretch" gap={6}>
@@ -338,6 +485,15 @@ export default function ProjectDetails() {
           {canOpenPentestWorkspace && (
             <Button onClick={() => navigate(`/projects/pentest/${project.id}`)}>
               Open workspace
+            </Button>
+          )}
+          {isAdmin && project.status !== "completed" && (
+            <Button
+              variant="secondary"
+              onClick={manuallyCloseProject}
+              isLoading={closeResult.isLoading}
+            >
+              Close project
             </Button>
           )}
         </HStack>
@@ -413,6 +569,8 @@ export default function ProjectDetails() {
           </Box>
         )}
       </DetailPanel>
+
+      <DeadlineManagement project={project} isAdmin={isAdmin} />
 
       {isAdmin && project.discipline === "security" && (
         <AdminBugVisibilitySettings projectId={project.id} />

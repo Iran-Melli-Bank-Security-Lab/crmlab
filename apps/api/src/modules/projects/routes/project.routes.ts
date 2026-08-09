@@ -14,6 +14,10 @@ import { validate } from "@/middlewares/validate.middleware";
 import {
   assignUsersSchema,
   createProjectSchema,
+  closeProjectSchema,
+  deadlineSettingsSchema,
+  createDeadlineExtensionRequestSchema,
+  reviewDeadlineExtensionRequestSchema,
   projectSecurityScopeSchema,
   projectBugVisibilitySettingsSchema,
   provisioningBlockedSchema,
@@ -25,6 +29,11 @@ import {
 import {
   assignUsersToProject,
   createProject,
+  closeProject,
+  updateProjectDeadlineSettings,
+  getDeadlineExtensionRequests,
+  createDeadlineExtensionRequest,
+  reviewDeadlineExtensionRequest,
   getEligibleProjectAssignees,
   getProject,
   getProjectSecurityScope,
@@ -63,6 +72,52 @@ router.post(
   requirePermission(PERMISSIONS.ADMIN_PROJECTS_CREATE),
   validate(createProjectSchema),
   createProject
+);
+router.put(
+  "/:id/status",
+  requirePermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE),
+  validate(closeProjectSchema),
+  closeProject
+);
+router.put(
+  "/:id/deadline-settings",
+  requirePermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE),
+  validate(deadlineSettingsSchema),
+  updateProjectDeadlineSettings
+);
+router.get(
+  "/:id/deadline-extension-requests",
+  requireAnyPermission(
+    PERMISSIONS.ADMIN_SYSTEM_MANAGE,
+    PERMISSIONS.PENTEST_PROJECTS_READ,
+    PERMISSIONS.QA_PROJECTS_READ,
+    PERMISSIONS.DEVOPS_PROJECTS_READ,
+    PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.QUALITY_PROJECTS_READ
+  ),
+  requireProjectAccess("params.id"),
+  getDeadlineExtensionRequests
+);
+router.post(
+  "/:id/deadline-extension-requests",
+  requireAnyPermission(
+    PERMISSIONS.PENTEST_PROJECTS_READ,
+    PERMISSIONS.QA_PROJECTS_READ,
+    PERMISSIONS.DEVOPS_PROJECTS_READ,
+    PERMISSIONS.REPRESENTATIVE_PROJECTS_READ,
+    PERMISSIONS.SECURITY_PROJECTS_READ,
+    PERMISSIONS.QUALITY_PROJECTS_READ
+  ),
+  requireProjectAccess("params.id"),
+  validate(createDeadlineExtensionRequestSchema),
+  createDeadlineExtensionRequest
+);
+router.put(
+  "/:id/deadline-extension-requests/:requestId",
+  requirePermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE),
+  validate(reviewDeadlineExtensionRequestSchema),
+  reviewDeadlineExtensionRequest
 );
 router.post(
   "/:id/provisioning/start",

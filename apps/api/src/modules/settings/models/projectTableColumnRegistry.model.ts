@@ -222,6 +222,7 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
     defaultLabel: "Due", faLabel: "مهلت", dataType: "date", minWidth: "130px",
     sourceFields: ["testExpiresAt", "expireDay", "expireDayQuality"],
     requiredPermissions: [
+      PERMISSIONS.PENTEST_PROJECTS_READ,
       PERMISSIONS.SECURITY_PROJECTS_READ,
       PERMISSIONS.QUALITY_PROJECTS_READ,
       PERMISSIONS.DEVOPS_PROJECTS_READ,
@@ -288,6 +289,11 @@ export const PROJECT_TABLE_COLUMN_CATALOG: Record<string, ColumnCatalogItem> = {
     minWidth: "150px", maxWidth: "190px", sortable: false, sourceFields: [],
     requiredPermissions: [PERMISSIONS.SECURITY_PROJECTS_ASSIGN], isSensitive: true,
   }),
+  qaUsers: column({
+    defaultLabel: "QA Users", faLabel: "کاربران تضمین کیفیت", dataType: "action",
+    minWidth: "150px", maxWidth: "190px", sortable: false, sourceFields: [],
+    requiredPermissions: [PERMISSIONS.QUALITY_PROJECTS_ASSIGN], isSensitive: true,
+  }),
 };
 
 const ADMIN_COLUMNS = [
@@ -325,7 +331,7 @@ export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   devopsFailureReason: ["representative"],
   devopsFailureAt: ["representative"],
   assignee: ["security", "quality", "representative"],
-  dueDate: ["security", "devops", "quality", "representative"],
+  dueDate: ["security", "pentest", "devops", "quality", "representative"],
   environment: ["devops"],
   repository: ["devops"],
   pipeline: ["devops"],
@@ -339,7 +345,14 @@ export const PROJECT_TABLE_COLUMN_VIEWS: Record<string, string[]> = {
   testExpiresAt: ["representative"],
   createdAt: ["representative"],
   pentesters: ["security"],
+  qaUsers: ["quality"],
 };
+
+const roleColumns = (view: "pentest" | "security" | "quality") =>
+  USER_COLUMNS.filter((columnKey) =>
+    columnKey !== "myResponsibilities" &&
+    (PROJECT_TABLE_COLUMN_VIEWS[columnKey] || []).includes(view)
+  );
 
 export const PROJECT_TABLE_CONTEXT_REGISTRY = {
   admin: {
@@ -349,6 +362,21 @@ export const PROJECT_TABLE_CONTEXT_REGISTRY = {
   },
   "user-projects": {
     defaultLabel: "My Projects", faLabel: "پروژه‌های من", columns: USER_COLUMNS,
+  },
+  "pentest-projects": {
+    defaultLabel: "Pentester Projects", faLabel: "پروژه‌های تست‌کننده نفوذ",
+    requiredPermission: PERMISSIONS.PENTEST_PROJECTS_READ,
+    columns: roleColumns("pentest"),
+  },
+  "security-projects": {
+    defaultLabel: "Security Technical Manager Projects", faLabel: "پروژه‌های مدیر فنی امنیت",
+    requiredPermission: PERMISSIONS.SECURITY_PROJECTS_READ,
+    columns: roleColumns("security"),
+  },
+  "quality-projects": {
+    defaultLabel: "Quality Technical Manager Projects", faLabel: "پروژه‌های مدیر فنی کیفیت",
+    requiredPermission: PERMISSIONS.QUALITY_PROJECTS_READ,
+    columns: roleColumns("quality"),
   },
   tasks: {
     defaultLabel: "Task Table", faLabel: "جدول وظایف",

@@ -7,7 +7,7 @@ import type {
   ProjectStatus,
 } from "@/shared/types";
 import type { TranslationKey } from "@/features/language/model";
-import { formatCompactGroupId } from "./formatters";
+import { formatCompactGroupId, formatDate } from "./formatters";
 import ProjectSummary from "./ProjectSummary";
 import ProjectResponsibilities from "./ProjectResponsibilities";
 import type { ProjectTableColumn } from "./types";
@@ -195,6 +195,62 @@ function ProgressMeter({ value }: { value: number }) {
         {value}%
       </Text>
     </HStack>
+  );
+}
+
+function DeadlineIndicator({
+  dueDate,
+  closed,
+  enabled,
+}: {
+  dueDate: string;
+  closed: boolean;
+  enabled: boolean;
+}) {
+  const deadline = new Date(dueDate).getTime();
+  const remainingHours = (deadline - Date.now()) / 3_600_000;
+  const expired = !Number.isFinite(deadline) || remainingHours <= 0;
+  const urgent = enabled && !closed && !expired && remainingHours <= 48;
+  const near = enabled && !urgent && !closed && !expired && remainingHours <= 168;
+  const color = !enabled
+    ? "var(--apple-muted)"
+    : closed || expired
+    ? "var(--apple-danger-text)"
+    : urgent || near
+      ? "var(--apple-warning-text)"
+      : "var(--apple-blue)";
+  const label = !enabled
+    ? "Deadline disabled"
+    : closed || expired
+    ? "Closed"
+    : remainingHours <= 48
+      ? `${Math.max(1, Math.ceil(remainingHours))}h left`
+      : `${Math.ceil(remainingHours / 24)}d left`;
+  const urgency = closed || expired
+    ? 100
+    : Math.max(8, Math.min(100, 100 - (remainingHours / 168) * 100));
+  const exactDeadline = Number.isFinite(deadline)
+    ? new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(deadline))
+    : formatDate(dueDate);
+
+  return (
+    <Box as="details" minW="120px" onClick={(event) => event.stopPropagation()}>
+      <Box as="summary" cursor="pointer" listStyle="none" color={color}>
+        <HStack justify="space-between" gap={2} mb={1.5}>
+          <Text fontSize="xs" fontWeight="850">{label}</Text>
+          {urgent && <Text fontSize="2xs" fontWeight="800">≤ 2 days</Text>}
+        </HStack>
+        <Box h="1.5" bg="var(--apple-surface-hover)" borderRadius="full" overflow="hidden">
+          <Box h="full" width={`${urgency}%`} bg={color} borderRadius="full" />
+        </Box>
+      </Box>
+      <Text mt={2} fontSize="xs" color="var(--apple-secondary)">
+        {exactDeadline}
+      </Text>
+    </Box>
   );
 }
 
@@ -496,6 +552,13 @@ export const projectTableColumns = {
     kind: "date",
     sortable: true,
     sortValue: (project) => new Date(project.dueDate).getTime(),
+    render: (project) => (
+      <DeadlineIndicator
+        dueDate={project.dueDate}
+        closed={project.status === "completed"}
+        enabled={project.deadlineEnabled !== false}
+      />
+    ),
   },
   testExpiresAt: {
     key: "testExpiresAt",
@@ -552,7 +615,8 @@ export const projectTableColumns = {
     align: "end",
     render: (project, t) =>
       project.allowedActions?.includes("review-security-bugs") ||
-      project.allowedActions?.includes("view-project-bugs") ? (
+      project.allowedActions?.includes("view-project-bugs") ||
+      project.allowedActions?.includes("open-pentest-workspace") ? (
       <Box
         asChild
         display="inline-flex"
@@ -636,6 +700,14 @@ export const projectTableColumns = {
     key: "pentesters",
     label: "Pentesters",
     labelKey: "projectTable.columns.pentesters",
+    minW: "150px",
+    maxW: "190px",
+    align: "end",
+  },
+  qaUsersAction: {
+    key: "qaUsers",
+    label: "QA Users",
+    labelKey: "projectTable.columns.qaUsers",
     minW: "150px",
     maxW: "190px",
     align: "end",

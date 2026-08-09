@@ -15,6 +15,7 @@ export const PROJECT_STATUS = {
   IN_PROGRESS: "in_progress",
   PENDING: "pending",
   FINISHED: "finished",
+  CLOSED: "closed",
   REMOVED: "removed",
 } as const;
 
@@ -23,6 +24,7 @@ export const PROJECT_STATUS_VALUES = [
   PROJECT_STATUS.IN_PROGRESS,
   PROJECT_STATUS.PENDING,
   PROJECT_STATUS.FINISHED,
+  PROJECT_STATUS.CLOSED,
   PROJECT_STATUS.REMOVED,
 ] as const;
 

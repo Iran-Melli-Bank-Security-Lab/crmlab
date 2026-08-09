@@ -13,6 +13,9 @@ export type { ProjectTableContext } from "../models/projectTableColumnRegistry.m
 export function getAllowedProjectTableContexts(permissions: Permission[]) {
   return (Object.keys(PROJECT_TABLE_CONTEXT_REGISTRY) as ProjectTableContext[]).filter(
     (context) => {
+      // Retained only for stored-settings compatibility. Active non-admin
+      // project tables use their responsibility-specific contexts.
+      if (context === "user-projects") return false;
       const requiredPermission = getProjectTableContextRequiredPermission(context);
       if (requiredPermission && !permissions.includes(requiredPermission)) return false;
       return context !== "user-projects" ||

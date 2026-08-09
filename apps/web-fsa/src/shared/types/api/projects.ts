@@ -78,6 +78,9 @@ export type ApiProjectResponse = {
   expireDay?: string;
   expireDayQuality?: string;
   testExpiresAt?: string;
+  deadlineEnabled?: boolean;
+  deadlinePassed?: boolean;
+  closureReason?: "deadline" | "manual";
   createdAt?: string;
   updatedAt?: string;
   provisioningStatus?:

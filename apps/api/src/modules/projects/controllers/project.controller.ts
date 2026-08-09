@@ -2,11 +2,13 @@ import type { RequestHandler } from "express";
 import mongoose, { type QueryFilter } from "mongoose";
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/constants/audit";
 import { HTTP_STATUS } from "@/constants/http";
+import { NOTIFICATION_PRIORITIES, NOTIFICATION_TYPES } from "@/constants/notifications";
 import { PERMISSIONS } from "@/constants/permissions";
 import {
   PROJECT_ASSIGNMENT_ROLES,
   PROJECT_ASSIGNMENT_STATUS,
   PROJECT_PROVISIONING_STATUS,
+  PROJECT_STATUS,
   PROJECT_TYPES,
   type ProjectAssignmentRole,
   type ProjectType,
@@ -52,12 +54,18 @@ import {
   saveProjectSecurityScope,
 } from "../services/projectSecurityScope.service";
 import { notifyProjectAssignments } from "../services/projectAssignmentNotification.service";
+import { createNotifications } from "@/modules/notifications/services/notification.service";
 import {
+  closeProjectAssignmentWorkTimers,
+  reopenDeadlineClosedAssignments,
   toPentesterTableStatus,
   toProjectAssignmentWorkTimerSnapshot,
 } from "../services/projectAssignmentWorkTimer.service";
 import {
   getEffectiveProvisioningStatus,
+  assertProjectOpenForWork,
+  closeExpiredProjects,
+  getProjectDeadline,
   notifyInitialDevopsAssignment,
 } from "../services/projectProvisioning.service";
 import {
@@ -383,12 +391,20 @@ function isString(value: unknown): value is string {
 function normalizeLegacyProject<T extends Record<string, unknown>>(project: T) {
   const type = getEffectiveProjectType(project);
   const rawStatus = String(project.status || "open").toLowerCase();
-  const status = rawStatus === "closed" ? "finished" : rawStatus;
+  const deadlineEnabled = project.deadlineEnabled !== false;
+  const deadlineClosurePaused = rawStatus === "closed" &&
+    project.closureReason === "deadline" && !deadlineEnabled;
+  const status = deadlineClosurePaused
+    ? "open"
+    : rawStatus === "closed" ? "finished" : rawStatus;
+  const deadline = getProjectDeadline(project);
 
   return {
     ...project,
     type,
     status,
+    deadlineEnabled,
+    deadlinePassed: Boolean(deadline && deadline.getTime() <= Date.now()),
     provisioningStatus: getEffectiveProvisioningStatus(project),
     createdAt: project.createdAt || project.created_date,
     id: String(project._id),
@@ -427,6 +443,12 @@ const PROJECT_DETAIL_CORE_FIELDS = [
   "devopsResolutionMessage",
   "devopsResolutionSubmittedAt",
   "devopsResolutionSubmittedBy",
+  "deadlineEnabled",
+  "closureReason",
+  "deadlineExpiredAt",
+  "testExpiresAt",
+  "expireDay",
+  "expireDayQuality",
 ] as const;
 
 const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
@@ -450,10 +472,26 @@ function provisioningAwareRowActions(
   project: Record<string, unknown>,
   actions: ReturnType<typeof resolveProjectRowActions>
 ) {
-  return getEffectiveProvisioningStatus(project) ===
+  const provisionedActions = getEffectiveProvisioningStatus(project) ===
     PROJECT_PROVISIONING_STATUS.DEVOPS_READY
     ? actions
-    : actions.filter((action) => action !== "assign-pentesters");
+    : actions.filter((action) =>
+        action !== "assign-pentesters" && action !== "assign-project-members"
+      );
+  const deadline = getProjectDeadline(project)?.getTime();
+  const deadlineEnabled = project.deadlineEnabled !== false;
+  const manuallyClosed = project.status === PROJECT_STATUS.FINISHED ||
+    project.status === PROJECT_STATUS.REMOVED ||
+    (project.status === PROJECT_STATUS.CLOSED && project.closureReason !== "deadline");
+  const isClosed = manuallyClosed ||
+    (deadlineEnabled && deadline !== undefined && deadline <= Date.now());
+  return isClosed
+      ? provisionedActions.filter((action) =>
+        action !== "open-pentest-workspace" &&
+        action !== "assign-pentesters" &&
+        action !== "assign-project-members"
+      )
+    : provisionedActions;
 }
 
 function assertProjectReadyForTeamAssignment(project: {
@@ -661,6 +699,7 @@ async function getProjectListFilter(
 
 export const getProjects: RequestHandler = async (req, res, next) => {
   try {
+    await closeExpiredProjects();
     const view = requireProjectListView(req.query.view, req.user!.permissions);
     const access = await getProjectListFilter(view, req.user!);
     const isAdminView = view === "admin";
@@ -695,6 +734,17 @@ export const getProjects: RequestHandler = async (req, res, next) => {
         // project itself has already been completed. It is still omitted from
         // the response unless the caller may request the project Status column.
         "status",
+        // Needed internally for expiration and deadline warning decisions.
+  "testExpiresAt",
+  "deadlineEnabled",
+  "closureReason",
+  "deadlineExpiredAt",
+  "manuallyClosedAt",
+        "expireDay",
+        "expireDayQuality",
+        "deadlineEnabled",
+        "closureReason",
+        "deadlineExpiredAt",
       ].join(" "));
     }
     query = capabilities?.sort
@@ -708,6 +758,30 @@ export const getProjects: RequestHandler = async (req, res, next) => {
       query = query.skip((page - 1) * pageSize).limit(pageSize);
     }
     const projects = await query.lean();
+    const now = Date.now();
+    await createNotifications(projects.flatMap((project) => {
+      if (project.deadlineEnabled === false ||
+        [PROJECT_STATUS.CLOSED, PROJECT_STATUS.FINISHED, PROJECT_STATUS.REMOVED]
+        .includes(String(project.status) as never)) return [];
+      const deadlineValue = project.testExpiresAt || project.expireDay || project.expireDayQuality;
+      const deadline = deadlineValue ? new Date(deadlineValue).getTime() : Number.NaN;
+      if (!Number.isFinite(deadline)) return [];
+      const remainingHours = (deadline - now) / 3_600_000;
+      if (remainingHours <= 0 || remainingHours > 48) return [];
+      return [{
+        userId: req.user!.id,
+        projectId: String(project._id),
+        type: NOTIFICATION_TYPES.SYSTEM_ANNOUNCEMENT,
+        title: "Project deadline approaching",
+        message: `The deadline for "${project.projectName}" will arrive within 2 days.`,
+        priority: NOTIFICATION_PRIORITIES.HIGH,
+        actionUrl: `/projects/${project._id}`,
+        entityId: String(project._id),
+        dedupeKey: `project.deadline-48h:${project._id}:${new Date(deadline).toISOString()}`,
+      }];
+    })).catch((error) => {
+      console.error("Project deadline warning delivery failed", error);
+    });
     const canReadSecurityFindings = req.user!.permissions.some((permission) =>
       permission === PERMISSIONS.PENTEST_VULNERABILITIES_READ ||
       permission === PERMISSIONS.SECURITY_VULNERABILITIES_READ
@@ -797,13 +871,21 @@ export const getProjects: RequestHandler = async (req, res, next) => {
           responsibilityContext,
           myResponsibilities: responsibilityContext.responsibilityKeys,
           allowedActions,
+          deadlineEnabled: project.deadlineEnabled !== false,
+          deadlinePassed: Boolean(getProjectDeadline(project) &&
+            getProjectDeadline(project)!.getTime() <= now),
+          closureReason: project.closureReason,
           vulnerabilities: visibleFindingCount,
           ...(workTimer
             ? {
                 assignmentStatus: workTimer.status,
                 pentesterTableStatus: toPentesterTableStatus(
                   pentestAssignment?.status,
-                  project.status
+                  project.status === PROJECT_STATUS.CLOSED &&
+                    project.closureReason === "deadline" &&
+                    project.deadlineEnabled === false
+                    ? PROJECT_STATUS.OPEN
+                    : project.status
                 ),
                 totalWorkTime: workTimer.totalWorkTime,
                 workTimerStartedAt: workTimer.workTimerStartedAt,
@@ -823,6 +905,7 @@ export const getProjects: RequestHandler = async (req, res, next) => {
 export const getProject: RequestHandler = async (req, res, next) => {
   try {
     const projectId = String(req.params.id);
+    await closeExpiredProjects();
     const isAdmin = req.user!.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE);
     const capabilities = isAdmin
       ? undefined
@@ -898,13 +981,194 @@ export const getProject: RequestHandler = async (req, res, next) => {
             assignmentStatus: workTimer.status,
             pentesterTableStatus: toPentesterTableStatus(
               pentestAssignment?.status,
-              project.status
+              project.status === PROJECT_STATUS.CLOSED &&
+                project.closureReason === "deadline" &&
+                project.deadlineEnabled === false
+                ? PROJECT_STATUS.OPEN
+                : project.status
             ),
             totalWorkTime: workTimer.totalWorkTime,
             workTimerStartedAt: workTimer.workTimerStartedAt,
           }
         : {}),
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const closeProject: RequestHandler = async (req, res, next) => {
+  try {
+    const project = await ProjectModel.findByIdAndUpdate(
+      String(req.params.id),
+      {
+        $set: {
+          status: PROJECT_STATUS.CLOSED,
+          closureReason: "manual",
+          manuallyClosedAt: new Date(),
+        },
+        $unset: { deadlineExpiredAt: 1 },
+      },
+      { new: true }
+    );
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    await closeProjectAssignmentWorkTimers([project._id.toString()]);
+    await writeAuditLog({
+      req,
+      action: AUDIT_ACTIONS.PROJECT_CLOSE,
+      entityType: AUDIT_ENTITY_TYPES.PROJECT,
+      entityId: project._id.toString(),
+      metadata: { status: PROJECT_STATUS.CLOSED, manuallyClosed: true },
+    });
+    sendSuccess(res, normalizeLegacyProject(project.toObject()));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProjectDeadlineSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const project = await ProjectModel.findById(String(req.params.id));
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    const wasDeadlineClosed = project.closureReason === "deadline";
+    project.deadlineEnabled = req.body.deadlineEnabled;
+    await project.save();
+    if (!req.body.deadlineEnabled && wasDeadlineClosed) {
+      await reopenDeadlineClosedAssignments(project._id.toString());
+    }
+    if (req.body.deadlineEnabled) {
+      await closeExpiredProjects();
+      if (wasDeadlineClosed) {
+        await closeProjectAssignmentWorkTimers([project._id.toString()]);
+      }
+    }
+    const currentProject = await ProjectModel.findById(project._id).lean();
+    sendSuccess(res, normalizeLegacyProject(currentProject || project.toObject()));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDeadlineExtensionRequests: RequestHandler = async (req, res, next) => {
+  try {
+    const project = await ProjectModel.findById(String(req.params.id))
+      .select("deadlineExtensionRequests")
+      .lean();
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    const isAdmin = req.user!.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE);
+    const requests = (project.deadlineExtensionRequests || []).filter((request) =>
+      isAdmin || String(request.requestedBy) === req.user!.id
+    );
+    const userIds = [...new Set(requests.map((request) => String(request.requestedBy)))];
+    const users = await UserModel.find({ _id: { $in: userIds } })
+      .select("firstName lastName username")
+      .lean();
+    const names = new Map(users.map((user) => [String(user._id), {
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
+      username: user.username,
+    }]));
+    sendSuccess(res, requests.map((request) => ({
+      ...request,
+      id: String(request._id),
+      requester: names.get(String(request.requestedBy)),
+    })));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createDeadlineExtensionRequest: RequestHandler = async (req, res, next) => {
+  try {
+    const project = await ProjectModel.findById(String(req.params.id));
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    const deadline = getProjectDeadline(project);
+    if (!deadline || deadline.getTime() > Date.now()) {
+      throw new AppError("A deadline extension can only be requested after expiry", HTTP_STATUS.CONFLICT);
+    }
+    const pending = project.deadlineExtensionRequests.some((request) =>
+      String(request.requestedBy) === req.user!.id && request.status === "pending"
+    );
+    if (pending) {
+      throw new AppError("You already have a pending deadline extension request", HTTP_STATUS.CONFLICT);
+    }
+    project.deadlineExtensionRequests.push({
+      requestedBy: new mongoose.Types.ObjectId(req.user!.id),
+      requestedAt: new Date(),
+      message: req.body.message,
+      status: "pending",
+    });
+    await project.save();
+    const request = project.deadlineExtensionRequests.at(-1)!;
+    const admins = await UserModel.find({
+      $and: [
+        { $or: [{ roles: ROLES.ADMIN }, { "roles.Admin": { $gt: 0 } }] },
+        { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
+      ],
+    }).select("_id").lean();
+    await createNotifications(admins.map((admin) => ({
+      userId: String(admin._id),
+      projectId: project._id.toString(),
+      type: NOTIFICATION_TYPES.SYSTEM_ANNOUNCEMENT,
+      title: "Deadline extension requested",
+      message: `A deadline extension was requested for "${project.projectName}".`,
+      priority: NOTIFICATION_PRIORITIES.HIGH,
+      actionUrl: `/projects/${project._id}`,
+      entityId: String(request._id),
+      dedupeKey: `project.deadline-extension:${request._id}:${admin._id}`,
+    })));
+    sendSuccess(res, request, HTTP_STATUS.CREATED);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reviewDeadlineExtensionRequest: RequestHandler = async (req, res, next) => {
+  try {
+    const project = await ProjectModel.findById(String(req.params.id));
+    if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+    const request = project.deadlineExtensionRequests.find((item) =>
+      String(item._id) === String(req.params.requestId)
+    );
+    if (!request) throw new AppError("Deadline extension request not found", HTTP_STATUS.NOT_FOUND);
+    if (request.status !== "pending") {
+      throw new AppError("This request has already been reviewed", HTTP_STATUS.CONFLICT);
+    }
+    const approvedDeadline = req.body.status === "approved"
+      ? new Date(req.body.deadline)
+      : undefined;
+    if (approvedDeadline && approvedDeadline.getTime() <= Date.now()) {
+      throw new AppError("The approved deadline must be in the future", HTTP_STATUS.BAD_REQUEST);
+    }
+    request.status = req.body.status;
+    request.reviewedBy = new mongoose.Types.ObjectId(req.user!.id);
+    request.reviewedAt = new Date();
+    request.approvedDeadline = approvedDeadline;
+    if (approvedDeadline) {
+      project.testExpiresAt = approvedDeadline;
+      project.expireDay = approvedDeadline;
+      if (project.expireDayQuality) project.expireDayQuality = approvedDeadline;
+      if (project.closureReason === "deadline") {
+        project.status = PROJECT_STATUS.OPEN;
+        project.closureReason = undefined;
+        project.deadlineExpiredAt = undefined;
+        await reopenDeadlineClosedAssignments(project._id.toString());
+      }
+    }
+    await project.save();
+    await createNotifications([{
+      userId: String(request.requestedBy),
+      projectId: project._id.toString(),
+      type: NOTIFICATION_TYPES.SYSTEM_ANNOUNCEMENT,
+      title: `Deadline extension ${request.status}`,
+      message: request.status === "approved"
+        ? `The deadline extension for "${project.projectName}" was approved.`
+        : `The deadline extension for "${project.projectName}" was rejected.`,
+      priority: NOTIFICATION_PRIORITIES.HIGH,
+      actionUrl: `/projects/${project._id}`,
+      entityId: String(request._id),
+      dedupeKey: `project.deadline-extension-review:${request._id}:${request.status}`,
+    }]);
+    sendSuccess(res, request);
   } catch (error) {
     next(error);
   }
@@ -1239,6 +1503,7 @@ export const getEligibleProjectAssignees: RequestHandler = async (req, res, next
 export const assignUsersToProject: RequestHandler = async (req, res, next) => {
   try {
     const projectId = String(req.params.id);
+    await assertProjectOpenForWork(projectId);
     if (!mongoose.isValidObjectId(projectId)) {
       throw new AppError("Invalid project id", HTTP_STATUS.BAD_REQUEST);
     }

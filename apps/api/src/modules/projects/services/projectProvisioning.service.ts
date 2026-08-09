@@ -5,6 +5,7 @@ import {
   PROJECT_ASSIGNMENT_ROLES,
   PROJECT_ASSIGNMENT_STATUS,
   PROJECT_PROVISIONING_STATUS,
+  PROJECT_STATUS,
   type ProjectProvisioningStatus,
 } from "@/constants/projects";
 import { ROLES } from "@/constants/roles";
@@ -17,9 +18,83 @@ import { UserModel } from "@/modules/users/models/user.model";
 import { AppError } from "@/utils/AppError";
 import { ProjectModel } from "../models/project.model";
 import { ProjectAssignmentModel } from "../models/projectAssignment.model";
+import { closeProjectAssignmentWorkTimers } from "./projectAssignmentWorkTimer.service";
 
 export const LEGACY_PROJECT_PROVISIONING_STATUS =
   PROJECT_PROVISIONING_STATUS.DEVOPS_READY;
+
+const deadlineFilter = (now: Date) => ({
+  $and: [
+    { deadlineEnabled: { $ne: false } },
+    { $or: [
+      { testExpiresAt: { $lte: now } },
+      {
+        testExpiresAt: { $exists: false },
+        expireDay: { $lte: now },
+      },
+      {
+        testExpiresAt: { $exists: false },
+        expireDay: { $exists: false },
+        expireDayQuality: { $lte: now },
+      },
+    ] },
+  ],
+});
+
+export function getProjectDeadline(project: {
+  testExpiresAt?: unknown;
+  expireDay?: unknown;
+  expireDayQuality?: unknown;
+}) {
+  const value = project.testExpiresAt || project.expireDay || project.expireDayQuality;
+  const deadline = value ? new Date(String(value)) : undefined;
+  return deadline && !Number.isNaN(deadline.getTime()) ? deadline : undefined;
+}
+
+export async function closeExpiredProjects(now = new Date()) {
+  const filter = {
+    status: { $nin: [PROJECT_STATUS.CLOSED, PROJECT_STATUS.FINISHED, PROJECT_STATUS.REMOVED] },
+    ...deadlineFilter(now),
+  };
+  const projects = await ProjectModel.find(filter).select("_id").lean();
+  const closedProjects = await Promise.all(projects.map((project) =>
+    ProjectModel.findOneAndUpdate(
+      { _id: project._id, ...filter },
+      {
+        $set: {
+          status: PROJECT_STATUS.CLOSED,
+          closureReason: "deadline",
+          deadlineExpiredAt: now,
+        },
+      },
+      { new: false }
+    ).select("_id").lean()
+  ));
+  const projectIds = closedProjects.flatMap((project) =>
+    project ? [String(project._id)] : []
+  );
+  if (!projectIds.length) return;
+  await closeProjectAssignmentWorkTimers(projectIds, now);
+}
+
+export async function assertProjectOpenForWork(projectId: string) {
+  const now = new Date();
+  await closeExpiredProjects(now);
+  const project = await ProjectModel.findById(projectId)
+    .select("status deadlineEnabled closureReason testExpiresAt expireDay expireDayQuality version")
+    .lean();
+  if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
+  const deadline = getProjectDeadline(project);
+  const deadlineBlocked = project.deadlineEnabled !== false &&
+    Boolean(deadline && deadline.getTime() <= now.getTime());
+  const manuallyClosed = project.status === PROJECT_STATUS.FINISHED ||
+    project.status === PROJECT_STATUS.REMOVED ||
+    (project.status === PROJECT_STATUS.CLOSED && project.closureReason !== "deadline");
+  if (manuallyClosed || deadlineBlocked) {
+    throw new AppError("This project is closed and no longer accepts work", HTTP_STATUS.CONFLICT);
+  }
+  return project;
+}
 
 export function getEffectiveProvisioningStatus(project: {
   provisioningStatus?: string | null;
@@ -100,6 +175,7 @@ type TransitionInput = {
 };
 
 async function transition(input: TransitionInput) {
+  await assertProjectOpenForWork(input.projectId);
   const project = await ProjectModel.findById(input.projectId)
     .select(
       "projectName type projectManager qualityManager devops representative provisioningStatus provisioningAttemptNumber provisioningBlockedAt provisioningBlockedDurationMs"

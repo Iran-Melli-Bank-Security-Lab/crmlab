@@ -33,6 +33,18 @@ export type ProjectBugVisibilitySettings = {
   eligiblePentesters: Array<{ userId: string; name: string; username?: string }>;
 };
 
+export type DeadlineExtensionRequest = {
+  id: string;
+  requestedBy: string;
+  requestedAt: string;
+  message?: string;
+  status: "pending" | "approved" | "rejected";
+  reviewedBy?: string;
+  reviewedAt?: string;
+  approvedDeadline?: string;
+  requester?: { name: string; username?: string };
+};
+
 function normalizeUsersResponse(response: UsersResponse): User[] {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.users)) return response.users;
@@ -115,6 +127,9 @@ function normalizeProject(project: ApiProjectResponse): Project {
     platform: getPlatform(project.platform),
     createdAt: project.createdAt,
     testExpiresAt,
+    deadlineEnabled: project.deadlineEnabled !== false,
+    deadlinePassed: project.deadlinePassed,
+    closureReason: project.closureReason,
     discipline: project.type === "quality" ? "quality" : project.type === "devops" ? "devops" : "security",
     status: normalizeVisibleStatus(project),
     workStatus: project.assignmentStatus,
@@ -190,6 +205,68 @@ export const projectsApi = api.injectEndpoints({
       providesTags: (_result, _error, projectId) => [
         "Projects",
         { type: "Projects", id: projectId },
+      ],
+    }),
+    closeProject: builder.mutation<Project, string>({
+      query: (projectId) => ({
+        url: `/projects/${projectId}/status`,
+        method: "PUT",
+        body: { status: "closed" },
+      }),
+      transformResponse: normalizeProjectDetailResponse,
+      invalidatesTags: (_result, _error, projectId) => [
+        "Projects",
+        { type: "Projects", id: projectId },
+      ],
+    }),
+    updateProjectDeadlineSettings: builder.mutation<
+      Project,
+      { projectId: string; deadlineEnabled: boolean }
+    >({
+      query: ({ projectId, deadlineEnabled }) => ({
+        url: `/projects/${projectId}/deadline-settings`,
+        method: "PUT",
+        body: { deadlineEnabled },
+      }),
+      transformResponse: normalizeProjectDetailResponse,
+      invalidatesTags: (_result, _error, { projectId }) => [
+        "Projects",
+        { type: "Projects", id: projectId },
+      ],
+    }),
+    getDeadlineExtensionRequests: builder.query<DeadlineExtensionRequest[], string>({
+      query: (projectId) => `/projects/${projectId}/deadline-extension-requests`,
+      transformResponse: (response) => unwrapApiData<DeadlineExtensionRequest[]>(response),
+      providesTags: (_result, _error, projectId) => [
+        { type: "Projects", id: `deadline-requests-${projectId}` },
+      ],
+    }),
+    createDeadlineExtensionRequest: builder.mutation<
+      DeadlineExtensionRequest,
+      { projectId: string; message?: string }
+    >({
+      query: ({ projectId, message }) => ({
+        url: `/projects/${projectId}/deadline-extension-requests`,
+        method: "POST",
+        body: { ...(message ? { message } : {}) },
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [
+        { type: "Projects", id: `deadline-requests-${projectId}` },
+      ],
+    }),
+    reviewDeadlineExtensionRequest: builder.mutation<
+      DeadlineExtensionRequest,
+      { projectId: string; requestId: string; status: "approved" | "rejected"; deadline?: string }
+    >({
+      query: ({ projectId, requestId, status, deadline }) => ({
+        url: `/projects/${projectId}/deadline-extension-requests/${requestId}`,
+        method: "PUT",
+        body: { status, ...(deadline ? { deadline } : {}) },
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [
+        "Projects",
+        { type: "Projects", id: projectId },
+        { type: "Projects", id: `deadline-requests-${projectId}` },
       ],
     }),
     getProjectBugVisibilitySettings: builder.query<ProjectBugVisibilitySettings, string>({
@@ -279,6 +356,11 @@ export const projectsApi = api.injectEndpoints({
 export const {
   useAssignProjectUsersMutation,
   useCreateProjectMutation,
+  useCloseProjectMutation,
+  useUpdateProjectDeadlineSettingsMutation,
+  useGetDeadlineExtensionRequestsQuery,
+  useCreateDeadlineExtensionRequestMutation,
+  useReviewDeadlineExtensionRequestMutation,
   useGetProjectQuery,
   useGetProjectBugVisibilitySettingsQuery,
   useUpdateProjectBugVisibilitySettingsMutation,

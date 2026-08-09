@@ -9,16 +9,18 @@ import type { ProjectTableColumn, ProjectTableRow, ProjectTableViewProps } from 
 const localColumns = Object.values(projectTableColumns) as ProjectTableColumn[];
 
 function UserProjectsTable({
+  view,
   projects,
   title,
   onAssignPentesters,
 }: ProjectTableViewProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const tableContext = `${view || "user"}-projects`;
   const { data: registry } = useGetProjectTableColumnRegistryQuery("user-projects");
   const definitions = useMemo(
-    () => registry?.contexts.find((context) => context.context === "user-projects")?.columns || [],
-    [registry]
+    () => registry?.contexts.find((context) => context.context === tableContext)?.columns || [],
+    [registry, tableContext]
   );
   const columns = useMemo(
     () => definitions.flatMap((definition) => {
@@ -52,12 +54,15 @@ function UserProjectsTable({
   );
   const canAssign = Boolean(
     onAssignPentesters &&
-    projects.some((project) => project.allowedActions?.includes("assign-pentesters"))
+    projects.some((project) =>
+      project.allowedActions?.includes("assign-pentesters") ||
+      project.allowedActions?.includes("assign-project-members")
+    )
   );
 
   return (
     <ProjectTableBase
-      paginationId="user-projects"
+      paginationId={tableContext}
       title={title}
       projects={projects}
       columns={columns}

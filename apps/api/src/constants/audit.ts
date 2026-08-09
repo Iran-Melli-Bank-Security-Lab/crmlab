@@ -6,6 +6,7 @@ export const AUDIT_ACTIONS = {
   USER_CREATE: "user.create",
   USER_ROLES_UPDATE: "user.roles_update",
   PROJECT_CREATE: "project.create",
+  PROJECT_CLOSE: "project.close",
   PROJECT_ASSIGN_USERS: "project.assign_users",
   PROJECT_PROVISIONING_TRANSITION: "project.provisioning_transition",
   PENTEST_WORK_SESSION_CREATE: "pentest.work_session_create",

@@ -20,6 +20,7 @@ export type ProjectTableColumn = {
     | keyof ProjectTableRow
     | "summary"
     | "pentesters"
+    | "qaUsers"
     | "securityBugs"
     | "projectManager"
     | "labRepresentative"

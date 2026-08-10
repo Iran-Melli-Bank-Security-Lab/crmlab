@@ -57,6 +57,7 @@ import { notifyProjectAssignments } from "../services/projectAssignmentNotificat
 import { createNotifications } from "@/modules/notifications/services/notification.service";
 import {
   closeProjectAssignmentWorkTimers,
+  reopenDeadlineClosedAssignment,
   reopenDeadlineClosedAssignments,
   toPentesterTableStatus,
   toProjectAssignmentWorkTimerSnapshot,
@@ -65,6 +66,7 @@ import {
   getEffectiveProvisioningStatus,
   assertProjectOpenForWork,
   closeExpiredProjects,
+  getApprovedIndividualDeadline,
   getProjectDeadline,
   notifyInitialDevopsAssignment,
 } from "../services/projectProvisioning.service";
@@ -466,11 +468,19 @@ const PROJECT_RESPONSIBILITY_SOURCE_FIELDS = [
   "devopsResolutionMessage",
   "devopsResolutionSubmittedAt",
   "devopsResolutionSubmittedBy",
+  "status",
+  "deadlineEnabled",
+  "closureReason",
+  "testExpiresAt",
+  "expireDay",
+  "expireDayQuality",
+  "deadlineExtensionRequests",
 ] as const;
 
 function provisioningAwareRowActions(
   project: Record<string, unknown>,
-  actions: ReturnType<typeof resolveProjectRowActions>
+  actions: ReturnType<typeof resolveProjectRowActions>,
+  userId?: string
 ) {
   const provisionedActions = getEffectiveProvisioningStatus(project) ===
     PROJECT_PROVISIONING_STATUS.DEVOPS_READY
@@ -483,8 +493,9 @@ function provisioningAwareRowActions(
   const manuallyClosed = project.status === PROJECT_STATUS.FINISHED ||
     project.status === PROJECT_STATUS.REMOVED ||
     (project.status === PROJECT_STATUS.CLOSED && project.closureReason !== "deadline");
+  const individualDeadline = getApprovedIndividualDeadline(project, userId);
   const isClosed = manuallyClosed ||
-    (deadlineEnabled && deadline !== undefined && deadline <= Date.now());
+    (deadlineEnabled && deadline !== undefined && deadline <= Date.now() && !individualDeadline);
   return isClosed
       ? provisionedActions.filter((action) =>
         action !== "open-pentest-workspace" &&
@@ -797,6 +808,7 @@ export const getProjects: RequestHandler = async (req, res, next) => {
       projects.map((project) => {
         if (isAdminView) return normalizeLegacyProject(project);
         const projectId = String(project._id);
+        const individualDeadline = getApprovedIndividualDeadline(project, req.user!.id);
         const responsibilityContext = resolveProjectResponsibilityContext({
           project,
           user: req.user!,
@@ -807,7 +819,8 @@ export const getProjects: RequestHandler = async (req, res, next) => {
           resolveProjectRowActions(
             responsibilityContext,
             view === "unified" ? undefined : view
-          )
+          ),
+          req.user!.id
         );
         const pentestAssignment = findPentesterAssignment(
           access.assignmentRecordsByProject.get(projectId) || [],
@@ -861,6 +874,9 @@ export const getProjects: RequestHandler = async (req, res, next) => {
         }
         return {
           ...normalizeLegacyProject(responseSource),
+          ...(individualDeadline && project.closureReason === "deadline"
+            ? { status: PROJECT_STATUS.OPEN }
+            : {}),
           provisioningStatus: getEffectiveProvisioningStatus(project),
           provisioningAttemptNumber: project.provisioningAttemptNumber || 1,
           devopsFailureReason: project.devopsFailureReason,
@@ -880,8 +896,12 @@ export const getProjects: RequestHandler = async (req, res, next) => {
             ? {
                 assignmentStatus: workTimer.status,
                 pentesterTableStatus: toPentesterTableStatus(
-                  pentestAssignment?.status,
-                  project.status === PROJECT_STATUS.CLOSED &&
+                  individualDeadline && pentestAssignment?.status === PROJECT_ASSIGNMENT_STATUS.CLOSED
+                    ? PROJECT_ASSIGNMENT_STATUS.PENDING
+                    : pentestAssignment?.status,
+                  individualDeadline
+                    ? PROJECT_STATUS.OPEN
+                    : project.status === PROJECT_STATUS.CLOSED &&
                     project.closureReason === "deadline" &&
                     project.deadlineEnabled === false
                     ? PROJECT_STATUS.OPEN
@@ -962,15 +982,22 @@ export const getProject: RequestHandler = async (req, res, next) => {
     const workTimer = pentestAssignment
       ? toProjectAssignmentWorkTimerSnapshot(pentestAssignment)
       : undefined;
+    const individualDeadline = isAdmin
+      ? undefined
+      : getApprovedIndividualDeadline(responsibilitySource || project, req.user!.id);
 
     sendSuccess(res, {
       ...normalizeLegacyProject(project),
+      ...(individualDeadline && responsibilitySource?.closureReason === "deadline"
+        ? { status: PROJECT_STATUS.OPEN }
+        : {}),
       ...(responsibilityContext ? {
         responsibilityContext,
         myResponsibilities: responsibilityContext.responsibilityKeys,
         allowedActions: provisioningAwareRowActions(
           responsibilitySource || project,
-          resolveProjectRowActions(responsibilityContext)
+          resolveProjectRowActions(responsibilityContext),
+          req.user!.id
         ),
       } : {}),
       ...(pentestAssignment?.securityScope
@@ -980,8 +1007,12 @@ export const getProject: RequestHandler = async (req, res, next) => {
         ? {
             assignmentStatus: workTimer.status,
             pentesterTableStatus: toPentesterTableStatus(
-              pentestAssignment?.status,
-              project.status === PROJECT_STATUS.CLOSED &&
+              individualDeadline && pentestAssignment?.status === PROJECT_ASSIGNMENT_STATUS.CLOSED
+                ? PROJECT_ASSIGNMENT_STATUS.PENDING
+                : pentestAssignment?.status,
+              individualDeadline
+                ? PROJECT_STATUS.OPEN
+                : project.status === PROJECT_STATUS.CLOSED &&
                 project.closureReason === "deadline" &&
                 project.deadlineEnabled === false
                 ? PROJECT_STATUS.OPEN
@@ -1049,16 +1080,73 @@ export const updateProjectDeadlineSettings: RequestHandler = async (req, res, ne
   }
 };
 
+const ACTIVE_DEADLINE_REQUEST_STATUSES = [
+  "pending",
+  "pending_technical_review",
+  "pending_admin_review",
+];
+
+function deadlineTechnicalManagerId(project: {
+  type?: unknown;
+  projectType?: unknown;
+  projectManager?: unknown;
+  qualityManager?: unknown;
+}) {
+  return getEffectiveProjectType(project) === PROJECT_TYPES.QUALITY
+    ? String(project.qualityManager || project.projectManager || "")
+    : String(project.projectManager || "");
+}
+
+async function deadlineRequestActor(project: {
+  _id: unknown;
+  type?: unknown;
+  projectType?: unknown;
+  projectManager?: unknown;
+  qualityManager?: unknown;
+}, userId: string) {
+  const projectType = getEffectiveProjectType(project);
+  const isTechnicalManager = deadlineTechnicalManagerId(project) === userId;
+  const expectedRole = projectType === PROJECT_TYPES.QUALITY
+    ? PROJECT_ASSIGNMENT_ROLES.QA
+    : PROJECT_ASSIGNMENT_ROLES.PENTESTER;
+  const testerAssignment = await ProjectAssignmentModel.findOne({
+    status: { $ne: PROJECT_ASSIGNMENT_STATUS.REMOVED },
+    $and: [
+      { $or: [{ projectId: project._id }, { project: project._id }] },
+      { $or: [{ userId }, { pentester: userId }] },
+      { $or: [
+        { assignmentRole: expectedRole },
+        { assignmentRole: { $exists: false } },
+      ] },
+    ],
+  }).select("_id").lean();
+  return { isTechnicalManager, isTester: Boolean(testerAssignment) };
+}
+
+async function activeDeadlineAdminIds() {
+  const admins = await UserModel.find({
+    $and: [
+      { $or: [{ roles: ROLES.ADMIN }, { "roles.Admin": { $gt: 0 } }] },
+      { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
+    ],
+  }).select("_id").lean();
+  return admins.map((admin) => String(admin._id));
+}
+
 export const getDeadlineExtensionRequests: RequestHandler = async (req, res, next) => {
   try {
     const project = await ProjectModel.findById(String(req.params.id))
-      .select("deadlineExtensionRequests")
+      .select("type projectType projectManager qualityManager deadlineExtensionRequests")
       .lean();
     if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
     const isAdmin = req.user!.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE);
-    const requests = (project.deadlineExtensionRequests || []).filter((request) =>
-      isAdmin || String(request.requestedBy) === req.user!.id
-    );
+    const actor = await deadlineRequestActor(project, req.user!.id);
+    const requests = (project.deadlineExtensionRequests || []).filter((request) => {
+      const type = request.requestType || "project";
+      if (isAdmin) return type === "project";
+      if (actor.isTechnicalManager) return true;
+      return String(request.requestedBy) === req.user!.id;
+    });
     const userIds = [...new Set(requests.map((request) => String(request.requestedBy)))];
     const users = await UserModel.find({ _id: { $in: userIds } })
       .select("firstName lastName username")
@@ -1067,11 +1155,28 @@ export const getDeadlineExtensionRequests: RequestHandler = async (req, res, nex
       name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
       username: user.username,
     }]));
-    sendSuccess(res, requests.map((request) => ({
-      ...request,
-      id: String(request._id),
-      requester: names.get(String(request.requestedBy)),
-    })));
+    sendSuccess(res, requests.map((request) => {
+      const type = request.requestType || "project";
+      const status = request.status === "pending" && type === "project"
+        ? "pending_admin_review"
+        : request.status;
+      const actions = isAdmin && type === "project" && status === "pending_admin_review"
+        ? ["approve", "reject"]
+        : actor.isTechnicalManager && type === "individual" && status === "pending"
+          ? ["approve", "reject"]
+          : actor.isTechnicalManager && type === "project" && status === "pending_technical_review"
+            ? ["forward", "reject"]
+            : [];
+      return {
+        ...request,
+        requestType: type,
+        status,
+        id: String(request._id),
+        isOwn: String(request.requestedBy) === req.user!.id,
+        requester: names.get(String(request.requestedBy)),
+        actions,
+      };
+    }));
   } catch (error) {
     next(error);
   }
@@ -1082,39 +1187,60 @@ export const createDeadlineExtensionRequest: RequestHandler = async (req, res, n
     const project = await ProjectModel.findById(String(req.params.id));
     if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
     const deadline = getProjectDeadline(project);
-    if (!deadline || deadline.getTime() > Date.now()) {
-      throw new AppError("A deadline extension can only be requested after expiry", HTTP_STATUS.CONFLICT);
+    if (!deadline || Date.now() >= deadline.getTime()) {
+      throw new AppError("Deadline extension requests must be created before the project expires", HTTP_STATUS.CONFLICT);
+    }
+    if (project.status === PROJECT_STATUS.CLOSED ||
+      project.status === PROJECT_STATUS.FINISHED ||
+      project.status === PROJECT_STATUS.REMOVED) {
+      throw new AppError("A closed project cannot accept extension requests", HTTP_STATUS.CONFLICT);
+    }
+    const requestedDeadline = new Date(req.body.requestedDeadline);
+    if (requestedDeadline.getTime() <= deadline.getTime()) {
+      throw new AppError("The requested deadline must be later than the current project deadline", HTTP_STATUS.BAD_REQUEST);
+    }
+    const actor = await deadlineRequestActor(project, req.user!.id);
+    if (!actor.isTester && !actor.isTechnicalManager) {
+      throw new AppError("Only assigned testers or technical managers can request an extension", HTTP_STATUS.FORBIDDEN);
+    }
+    if (req.body.requestType === "individual" && !actor.isTester) {
+      throw new AppError("Technical managers cannot request an individual extension", HTTP_STATUS.FORBIDDEN);
     }
     const pending = project.deadlineExtensionRequests.some((request) =>
-      String(request.requestedBy) === req.user!.id && request.status === "pending"
+      String(request.requestedBy) === req.user!.id &&
+      (request.requestType || "project") === req.body.requestType &&
+      ACTIVE_DEADLINE_REQUEST_STATUSES.includes(request.status)
     );
     if (pending) {
       throw new AppError("You already have a pending deadline extension request", HTTP_STATUS.CONFLICT);
     }
+    const status = req.body.requestType === "individual"
+      ? "pending"
+      : actor.isTechnicalManager ? "pending_admin_review" : "pending_technical_review";
     project.deadlineExtensionRequests.push({
       requestedBy: new mongoose.Types.ObjectId(req.user!.id),
       requestedAt: new Date(),
+      requestType: req.body.requestType,
+      currentDeadline: deadline,
+      requestedDeadline,
       message: req.body.message,
-      status: "pending",
+      status,
     });
     await project.save();
     const request = project.deadlineExtensionRequests.at(-1)!;
-    const admins = await UserModel.find({
-      $and: [
-        { $or: [{ roles: ROLES.ADMIN }, { "roles.Admin": { $gt: 0 } }] },
-        { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
-      ],
-    }).select("_id").lean();
-    await createNotifications(admins.map((admin) => ({
-      userId: String(admin._id),
+    const recipients = actor.isTechnicalManager && req.body.requestType === "project"
+      ? await activeDeadlineAdminIds()
+      : [deadlineTechnicalManagerId(project)].filter(Boolean);
+    await createNotifications(recipients.map((userId) => ({
+      userId,
       projectId: project._id.toString(),
       type: NOTIFICATION_TYPES.SYSTEM_ANNOUNCEMENT,
       title: "Deadline extension requested",
-      message: `A deadline extension was requested for "${project.projectName}".`,
+      message: `A ${req.body.requestType} deadline extension was requested for "${project.projectName}".`,
       priority: NOTIFICATION_PRIORITIES.HIGH,
       actionUrl: `/projects/${project._id}`,
       entityId: String(request._id),
-      dedupeKey: `project.deadline-extension:${request._id}:${admin._id}`,
+      dedupeKey: `project.deadline-extension:${request._id}:${userId}`,
     })));
     sendSuccess(res, request, HTTP_STATUS.CREATED);
   } catch (error) {
@@ -1130,39 +1256,97 @@ export const reviewDeadlineExtensionRequest: RequestHandler = async (req, res, n
       String(item._id) === String(req.params.requestId)
     );
     if (!request) throw new AppError("Deadline extension request not found", HTTP_STATUS.NOT_FOUND);
-    if (request.status !== "pending") {
+    const requestType = request.requestType || "project";
+    const status = request.status === "pending" && requestType === "project"
+      ? "pending_admin_review"
+      : request.status;
+    const isAdmin = req.user!.permissions.includes(PERMISSIONS.ADMIN_SYSTEM_MANAGE);
+    const isTechnicalManager = deadlineTechnicalManagerId(project) === req.user!.id;
+    const now = new Date();
+
+    if (requestType === "individual") {
+      if (!isTechnicalManager || status !== "pending" || req.body.action === "forward") {
+        throw new AppError("Only the assigned Technical Manager can review this request", HTTP_STATUS.FORBIDDEN);
+      }
+      request.status = req.body.action === "approve" ? "approved" : "rejected";
+      request.approvedDeadline = req.body.action === "approve" ? request.requestedDeadline : undefined;
+      request.technicalReviewedBy = new mongoose.Types.ObjectId(req.user!.id);
+      request.technicalReviewedAt = now;
+      request.technicalReviewNote = req.body.reviewNote;
+      request.reviewedBy = request.technicalReviewedBy;
+      request.reviewedAt = now;
+      request.reviewNote = req.body.reviewNote;
+      if (request.status === "approved") {
+        if (!request.approvedDeadline || request.approvedDeadline <= now) {
+          throw new AppError("The requested individual deadline has already passed", HTTP_STATUS.CONFLICT);
+        }
+        await reopenDeadlineClosedAssignment(project._id.toString(), String(request.requestedBy));
+      }
+    } else if (status === "pending_technical_review") {
+      if (!isTechnicalManager || !["forward", "reject"].includes(req.body.action)) {
+        throw new AppError("Only the assigned Technical Manager can review this request", HTTP_STATUS.FORBIDDEN);
+      }
+      request.status = req.body.action === "forward"
+        ? "pending_admin_review"
+        : "rejected_by_technical_manager";
+      request.technicalReviewedBy = new mongoose.Types.ObjectId(req.user!.id);
+      request.technicalReviewedAt = now;
+      request.technicalReviewNote = req.body.reviewNote;
+      request.reviewedBy = request.technicalReviewedBy;
+      request.reviewedAt = now;
+      request.reviewNote = req.body.reviewNote;
+      if (request.status === "pending_admin_review") {
+        const adminIds = await activeDeadlineAdminIds();
+        await createNotifications(adminIds.map((userId) => ({
+          userId,
+          projectId: project._id.toString(),
+          type: NOTIFICATION_TYPES.SYSTEM_ANNOUNCEMENT,
+          title: "Project deadline extension recommended",
+          message: `A Technical Manager recommended extending "${project.projectName}".`,
+          priority: NOTIFICATION_PRIORITIES.HIGH,
+          actionUrl: `/projects/${project._id}`,
+          entityId: String(request._id),
+          dedupeKey: `project.deadline-extension-forward:${request._id}:${userId}`,
+        })));
+      }
+    } else if (status === "pending_admin_review") {
+      if (!isAdmin || !["approve", "reject"].includes(req.body.action)) {
+        throw new AppError("Only a Lab Admin can make the final project deadline decision", HTTP_STATUS.FORBIDDEN);
+      }
+      request.status = req.body.action === "approve" ? "approved" : "rejected_by_admin";
+      request.adminReviewedBy = new mongoose.Types.ObjectId(req.user!.id);
+      request.adminReviewedAt = now;
+      request.adminReviewNote = req.body.reviewNote;
+      request.reviewedBy = request.adminReviewedBy;
+      request.reviewedAt = now;
+      request.reviewNote = req.body.reviewNote;
+      if (request.status === "approved") {
+        const approvedDeadline = request.requestedDeadline;
+        if (!approvedDeadline || approvedDeadline <= now) {
+          throw new AppError("The requested project deadline has already passed", HTTP_STATUS.CONFLICT);
+        }
+        request.approvedDeadline = approvedDeadline;
+        project.testExpiresAt = approvedDeadline;
+        project.expireDay = approvedDeadline;
+        if (project.expireDayQuality) project.expireDayQuality = approvedDeadline;
+        if (project.closureReason === "deadline") {
+          project.status = PROJECT_STATUS.OPEN;
+          project.closureReason = undefined;
+          project.deadlineExpiredAt = undefined;
+          await reopenDeadlineClosedAssignments(project._id.toString());
+        }
+      }
+    } else {
       throw new AppError("This request has already been reviewed", HTTP_STATUS.CONFLICT);
     }
-    const approvedDeadline = req.body.status === "approved"
-      ? new Date(req.body.deadline)
-      : undefined;
-    if (approvedDeadline && approvedDeadline.getTime() <= Date.now()) {
-      throw new AppError("The approved deadline must be in the future", HTTP_STATUS.BAD_REQUEST);
-    }
-    request.status = req.body.status;
-    request.reviewedBy = new mongoose.Types.ObjectId(req.user!.id);
-    request.reviewedAt = new Date();
-    request.approvedDeadline = approvedDeadline;
-    if (approvedDeadline) {
-      project.testExpiresAt = approvedDeadline;
-      project.expireDay = approvedDeadline;
-      if (project.expireDayQuality) project.expireDayQuality = approvedDeadline;
-      if (project.closureReason === "deadline") {
-        project.status = PROJECT_STATUS.OPEN;
-        project.closureReason = undefined;
-        project.deadlineExpiredAt = undefined;
-        await reopenDeadlineClosedAssignments(project._id.toString());
-      }
-    }
+
     await project.save();
     await createNotifications([{
       userId: String(request.requestedBy),
       projectId: project._id.toString(),
       type: NOTIFICATION_TYPES.SYSTEM_ANNOUNCEMENT,
-      title: `Deadline extension ${request.status}`,
-      message: request.status === "approved"
-        ? `The deadline extension for "${project.projectName}" was approved.`
-        : `The deadline extension for "${project.projectName}" was rejected.`,
+      title: "Deadline extension updated",
+      message: `The deadline extension request for "${project.projectName}" is now ${request.status}.`,
       priority: NOTIFICATION_PRIORITIES.HIGH,
       actionUrl: `/projects/${project._id}`,
       entityId: String(request._id),

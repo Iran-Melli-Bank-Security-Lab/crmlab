@@ -115,7 +115,12 @@ router.post(
 );
 router.put(
   "/:id/deadline-extension-requests/:requestId",
-  requirePermission(PERMISSIONS.ADMIN_SYSTEM_MANAGE),
+  requireAnyPermission(
+    PERMISSIONS.ADMIN_SYSTEM_MANAGE,
+    PERMISSIONS.SECURITY_PROJECTS_UPDATE,
+    PERMISSIONS.QUALITY_PROJECTS_UPDATE
+  ),
+  requireProjectAccess("params.id"),
   validate(reviewDeadlineExtensionRequestSchema),
   reviewDeadlineExtensionRequest
 );

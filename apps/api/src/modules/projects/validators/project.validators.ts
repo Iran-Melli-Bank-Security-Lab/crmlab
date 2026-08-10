@@ -86,23 +86,19 @@ export const deadlineSettingsSchema = z.object({
 
 export const createDeadlineExtensionRequestSchema = z.object({
   params: z.object({ id: objectId }),
-  body: z.object({ message: z.string().trim().max(2000).optional() }).strict(),
+  body: z.object({
+    requestType: z.enum(["individual", "project"]),
+    requestedDeadline: dateString,
+    message: z.string().trim().max(2000).optional(),
+  }).strict(),
 });
 
 export const reviewDeadlineExtensionRequestSchema = z.object({
   params: z.object({ id: objectId, requestId: objectId }),
   body: z.object({
-    status: z.enum(["approved", "rejected"]),
-    deadline: dateString.optional(),
-  }).strict().superRefine((input, context) => {
-    if (input.status === "approved" && !input.deadline) {
-      context.addIssue({
-        code: "custom",
-        path: ["deadline"],
-        message: "A new deadline is required when approving the request",
-      });
-    }
-  }),
+    action: z.enum(["approve", "reject", "forward"]),
+    reviewNote: z.string().trim().max(2000).optional(),
+  }).strict(),
 });
 
 export const securityScopeReferenceSchema = z

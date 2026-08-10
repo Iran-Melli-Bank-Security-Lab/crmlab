@@ -51,6 +51,35 @@ export function getProjectDeadline(project: {
   return deadline && !Number.isNaN(deadline.getTime()) ? deadline : undefined;
 }
 
+export function getApprovedIndividualDeadline(
+  project: {
+    deadlineExtensionRequests?: Array<{
+      requestedBy?: unknown;
+      requestType?: string;
+      status?: string;
+      approvedDeadline?: unknown;
+      requestedDeadline?: unknown;
+    }>;
+  },
+  userId?: string,
+  now = new Date()
+) {
+  if (!userId) return undefined;
+  const deadlines = (project.deadlineExtensionRequests || []).flatMap((request) => {
+    if (
+      String(request.requestedBy || "") !== userId ||
+      request.requestType !== "individual" ||
+      request.status !== "approved"
+    ) return [];
+    const value = request.approvedDeadline || request.requestedDeadline;
+    const deadline = value ? new Date(String(value)) : undefined;
+    return deadline && !Number.isNaN(deadline.getTime()) && deadline > now
+      ? [deadline]
+      : [];
+  });
+  return deadlines.sort((left, right) => right.getTime() - left.getTime())[0];
+}
+
 export async function closeExpiredProjects(now = new Date()) {
   const filter = {
     status: { $nin: [PROJECT_STATUS.CLOSED, PROJECT_STATUS.FINISHED, PROJECT_STATUS.REMOVED] },
@@ -77,16 +106,17 @@ export async function closeExpiredProjects(now = new Date()) {
   await closeProjectAssignmentWorkTimers(projectIds, now);
 }
 
-export async function assertProjectOpenForWork(projectId: string) {
+export async function assertProjectOpenForWork(projectId: string, userId?: string) {
   const now = new Date();
   await closeExpiredProjects(now);
   const project = await ProjectModel.findById(projectId)
-    .select("status deadlineEnabled closureReason testExpiresAt expireDay expireDayQuality version")
+    .select("status deadlineEnabled closureReason testExpiresAt expireDay expireDayQuality version deadlineExtensionRequests")
     .lean();
   if (!project) throw new AppError("Project not found", HTTP_STATUS.NOT_FOUND);
   const deadline = getProjectDeadline(project);
   const deadlineBlocked = project.deadlineEnabled !== false &&
-    Boolean(deadline && deadline.getTime() <= now.getTime());
+    Boolean(deadline && deadline.getTime() <= now.getTime()) &&
+    !getApprovedIndividualDeadline(project, userId, now);
   const manuallyClosed = project.status === PROJECT_STATUS.FINISHED ||
     project.status === PROJECT_STATUS.REMOVED ||
     (project.status === PROJECT_STATUS.CLOSED && project.closureReason !== "deadline");
@@ -175,7 +205,7 @@ type TransitionInput = {
 };
 
 async function transition(input: TransitionInput) {
-  await assertProjectOpenForWork(input.projectId);
+  await assertProjectOpenForWork(input.projectId, input.actor.id);
   const project = await ProjectModel.findById(input.projectId)
     .select(
       "projectName type projectManager qualityManager devops representative provisioningStatus provisioningAttemptNumber provisioningBlockedAt provisioningBlockedDurationMs"

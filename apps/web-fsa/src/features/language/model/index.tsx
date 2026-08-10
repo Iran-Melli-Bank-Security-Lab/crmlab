@@ -886,6 +886,12 @@ const en = {
   "devopsAccess.showPassword": "Show password",
   "devopsAccess.hidePassword": "Hide password",
   "devopsAccess.noDetails": "No connection details are available yet.",
+  "project.deadlineExtension.expiredError":
+    "Deadline extension requests must be submitted before the project expires.",
+  "project.deadlineExtension.requestError":
+    "Unable to send the deadline extension request.",
+  "project.deadlineExtension.unavailableError":
+    "New requests cannot be created after the project deadline or after the project is closed. Existing requests remain reviewable.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1768,6 +1774,12 @@ const fa: Record<TranslationKey, string> = {
   "devopsAccess.showPassword": "نمایش گذرواژه",
   "devopsAccess.hidePassword": "پنهان‌کردن گذرواژه",
   "devopsAccess.noDetails": "هنوز جزئیات اتصالی موجود نیست.",
+  "project.deadlineExtension.expiredError":
+    "درخواست تمدید مهلت باید پیش از پایان مهلت پروژه ثبت شود.",
+  "project.deadlineExtension.requestError":
+    "ارسال درخواست تمدید مهلت امکان‌پذیر نبود.",
+  "project.deadlineExtension.unavailableError":
+    "پس از پایان مهلت یا بسته‌شدن پروژه، امکان ثبت درخواست جدید وجود ندارد. درخواست‌های قبلی همچنان قابل بررسی هستند.",
 };
 
 const translations: Record<Language, Record<TranslationKey, string>> = {

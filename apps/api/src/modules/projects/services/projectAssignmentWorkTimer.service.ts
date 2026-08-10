@@ -73,6 +73,24 @@ export async function reopenDeadlineClosedAssignments(projectId: string) {
   );
 }
 
+export async function reopenDeadlineClosedAssignment(projectId: string, userId: string) {
+  await ProjectAssignmentModel.updateMany(
+    {
+      status: PROJECT_ASSIGNMENT_STATUS.CLOSED,
+      $and: [
+        { $or: [{ projectId }, { project: projectId }] },
+        { $or: [{ userId }, { pentester: userId }] },
+      ],
+    },
+    {
+      $set: {
+        status: PROJECT_ASSIGNMENT_STATUS.PENDING,
+        workTimerStartedAt: null,
+      },
+    }
+  );
+}
+
 export function toPentesterTableStatus(
   value: unknown,
   projectStatus?: unknown

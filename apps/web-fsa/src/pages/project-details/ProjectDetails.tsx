@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { PERMISSIONS } from "@/entities/permission/model/permissions";
+import { useLanguage } from "@/features/language/model";
 import {
   useGetProjectBugVisibilitySettingsQuery,
   useGetProjectQuery,
@@ -19,6 +20,7 @@ import Button from "@/shared/ui/primitives/Button";
 import Input from "@/shared/ui/primitives/Input";
 import ErrorState from "@/shared/ui/feedback/ErrorState";
 import LoadingScreen from "@/shared/ui/feedback/LoadingScreen";
+import { getApiErrorMessage } from "@/shared/lib/getApiErrorMessage";
 import type { Project, ProjectDiscipline, ProjectStatus } from "@/shared/types";
 import ProjectProvisioningPanel from "@/entities/devops/ui/ProjectProvisioningPanel";
 import QaAssignmentPanel from "@/entities/project/ui/assignment/QaAssignmentPanel";
@@ -244,13 +246,29 @@ function AdminBugVisibilitySettings({ projectId }: { projectId: string }) {
 }
 
 function DeadlineManagement({ project, isAdmin }: { project: Project; isAdmin: boolean }) {
+  const { t } = useLanguage();
   const { data: requests = [], isLoading } = useGetDeadlineExtensionRequestsQuery(project.id);
   const [updateSettings, settingsState] = useUpdateProjectDeadlineSettingsMutation();
   const [createRequest, createState] = useCreateDeadlineExtensionRequestMutation();
   const [reviewRequest, reviewState] = useReviewDeadlineExtensionRequestMutation();
   const [message, setMessage] = useState("");
-  const [deadlines, setDeadlines] = useState<Record<string, string>>({});
-  const hasPendingRequest = requests.some((request) => request.status === "pending");
+  const [requestType, setRequestType] = useState<"individual" | "project">("individual");
+  const [requestedDeadline, setRequestedDeadline] = useState("");
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const responsibilities = project.responsibilityContext?.responsibilityKeys || project.myResponsibilities || [];
+  const isTechnicalManager = responsibilities.includes("security_manager") ||
+    responsibilities.includes("quality_manager");
+  const canRequestExtension = isTechnicalManager ||
+    responsibilities.includes("pentester") ||
+    responsibilities.includes("qa");
+  const effectiveRequestType = isTechnicalManager ? "project" : requestType;
+  const hasPendingRequest = requests.some((request) =>
+    request.isOwn &&
+    request.requestType === effectiveRequestType &&
+    ["pending", "pending_technical_review", "pending_admin_review"].includes(request.status)
+  );
+  const canCreateRequest = canRequestExtension &&
+    !project.deadlinePassed && project.status !== "completed";
 
   const toggleDeadline = async () => {
     try {
@@ -265,29 +283,43 @@ function DeadlineManagement({ project, isAdmin }: { project: Project; isAdmin: b
   };
 
   const submitRequest = async () => {
+    if (!requestedDeadline) {
+      toast.error("Select the requested extension deadline");
+      return;
+    }
     try {
-      await createRequest({ projectId: project.id, message: message.trim() || undefined }).unwrap();
+      await createRequest({
+        projectId: project.id,
+        requestType: effectiveRequestType,
+        requestedDeadline: new Date(requestedDeadline).toISOString(),
+        message: message.trim() || undefined,
+      }).unwrap();
       setMessage("");
+      setRequestedDeadline("");
       toast.success("Deadline extension request sent");
-    } catch {
-      toast.error("Unable to send deadline extension request");
+    } catch (error) {
+      const apiMessage = getApiErrorMessage(error, "");
+      toast.error(
+        apiMessage === "Deadline extension requests must be created before the project expires"
+          ? t("project.deadlineExtension.expiredError")
+          : apiMessage || t("project.deadlineExtension.requestError"),
+        { position: "top-center" }
+      );
     }
   };
 
-  const review = async (requestId: string, status: "approved" | "rejected") => {
-    const localDeadline = deadlines[requestId];
-    if (status === "approved" && !localDeadline) {
-      toast.error("Select a new deadline first");
-      return;
-    }
+  const review = async (
+    requestId: string,
+    action: "approve" | "reject" | "forward"
+  ) => {
     try {
       await reviewRequest({
         projectId: project.id,
         requestId,
-        status,
-        deadline: localDeadline ? new Date(localDeadline).toISOString() : undefined,
+        action,
+        reviewNote: reviewNotes[requestId]?.trim() || undefined,
       }).unwrap();
-      toast.success(`Request ${status}`);
+      toast.success(`Request ${action === "forward" ? "forwarded" : `${action}d`}`);
     } catch {
       toast.error("Unable to review deadline request");
     }
@@ -311,24 +343,48 @@ function DeadlineManagement({ project, isAdmin }: { project: Project; isAdmin: b
         )}
       </HStack>
 
-      {!isAdmin && project.deadlinePassed && (
+      {!isAdmin && canRequestExtension && (
         <Box mt={5} pt={5} borderTop="1px solid" borderColor="var(--apple-border-soft)">
-          <Text fontWeight="850">Request more time</Text>
-          <Textarea
-            mt={3}
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder="Optional reason or message"
-            maxLength={2000}
-          />
-          <Button
-            mt={3}
-            onClick={submitRequest}
-            isLoading={createState.isLoading}
-            disabled={hasPendingRequest}
-          >
-            {hasPendingRequest ? "Request pending" : "Send extension request"}
-          </Button>
+          <Text fontWeight="850">Request a deadline extension</Text>
+          {!canCreateRequest ? (
+            <Text mt={2} color="var(--apple-warning-text)" fontSize="sm">
+              {t("project.deadlineExtension.unavailableError")}
+            </Text>
+          ) : (
+            <VStack align="stretch" gap={3} mt={3}>
+              {!isTechnicalManager && (
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    value={requestType}
+                    onChange={(event) => setRequestType(event.target.value as "individual" | "project")}
+                  >
+                    <option value="individual">Individual extension</option>
+                    <option value="project">Whole-project extension</option>
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              )}
+              <Input
+                type="datetime-local"
+                value={requestedDeadline}
+                onChange={(event) => setRequestedDeadline(event.target.value)}
+              />
+              <Textarea
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Optional reason or message"
+                maxLength={2000}
+              />
+              <Button
+                alignSelf="start"
+                onClick={submitRequest}
+                isLoading={createState.isLoading}
+                disabled={hasPendingRequest}
+              >
+                {hasPendingRequest ? "Request pending" : "Send extension request"}
+              </Button>
+            </VStack>
+          )}
         </Box>
       )}
 
@@ -340,30 +396,43 @@ function DeadlineManagement({ project, isAdmin }: { project: Project; isAdmin: b
               <Box>
                 <Text fontWeight="850">{request.requester?.name || "My request"}</Text>
                 <Text fontSize="xs" color="var(--apple-muted)">
-                  {new Date(request.requestedAt).toLocaleString()} · {request.status}
+                  {new Date(request.requestedAt).toLocaleString()} · {request.requestType} · {request.status}
                 </Text>
               </Box>
               <Badge>{request.status}</Badge>
             </HStack>
+            <SimpleGrid columns={{ base: 1, sm: 2 }} gap={3} mt={3}>
+              <DetailItem label="Current deadline" value={formatDate(request.currentDeadline)} />
+              <DetailItem label="Requested deadline" value={formatDate(request.requestedDeadline)} />
+            </SimpleGrid>
             {request.message && <Text mt={3} whiteSpace="pre-wrap">{request.message}</Text>}
-            {isAdmin && request.status === "pending" && (
-              <HStack mt={4} gap={2} flexWrap="wrap">
-                <Input
-                  type="datetime-local"
-                  value={deadlines[request.id] || ""}
-                  onChange={(event) => setDeadlines((current) => ({
+            {request.technicalReviewNote && <Text mt={2}>Technical review: {request.technicalReviewNote}</Text>}
+            {request.adminReviewNote && <Text mt={2}>Admin review: {request.adminReviewNote}</Text>}
+            {request.actions?.length ? (
+              <VStack align="stretch" gap={3} mt={4}>
+                <Textarea
+                  value={reviewNotes[request.id] || ""}
+                  onChange={(event) => setReviewNotes((current) => ({
                     ...current,
                     [request.id]: event.target.value,
                   }))}
+                  placeholder="Optional review note"
+                  maxLength={2000}
                 />
-                <Button onClick={() => review(request.id, "approved")} isLoading={reviewState.isLoading}>
-                  Approve
-                </Button>
-                <Button variant="secondary" onClick={() => review(request.id, "rejected")} isLoading={reviewState.isLoading}>
-                  Reject
-                </Button>
-              </HStack>
-            )}
+                <HStack gap={2} flexWrap="wrap">
+                  {request.actions.map((action) => (
+                    <Button
+                      key={action}
+                      variant={action === "reject" ? "secondary" : "primary"}
+                      onClick={() => review(request.id, action)}
+                      isLoading={reviewState.isLoading}
+                    >
+                      {action === "forward" ? "Recommend to Lab Admin" : action}
+                    </Button>
+                  ))}
+                </HStack>
+              </VStack>
+            ) : null}
           </Box>
         ))}
       </VStack>

@@ -38,11 +38,27 @@ export type DeadlineExtensionRequest = {
   requestedBy: string;
   requestedAt: string;
   message?: string;
-  status: "pending" | "approved" | "rejected";
+  requestType: "individual" | "project";
+  isOwn: boolean;
+  currentDeadline?: string;
+  requestedDeadline?: string;
+  status:
+    | "pending"
+    | "pending_technical_review"
+    | "rejected_by_technical_manager"
+    | "pending_admin_review"
+    | "approved"
+    | "rejected"
+    | "rejected_by_admin"
+    | "cancelled";
   reviewedBy?: string;
   reviewedAt?: string;
   approvedDeadline?: string;
+  reviewNote?: string;
+  technicalReviewNote?: string;
+  adminReviewNote?: string;
   requester?: { name: string; username?: string };
+  actions?: Array<"approve" | "reject" | "forward">;
 };
 
 function normalizeUsersResponse(response: UsersResponse): User[] {
@@ -243,12 +259,21 @@ export const projectsApi = api.injectEndpoints({
     }),
     createDeadlineExtensionRequest: builder.mutation<
       DeadlineExtensionRequest,
-      { projectId: string; message?: string }
+      {
+        projectId: string;
+        requestType: "individual" | "project";
+        requestedDeadline: string;
+        message?: string;
+      }
     >({
-      query: ({ projectId, message }) => ({
+      query: ({ projectId, requestType, requestedDeadline, message }) => ({
         url: `/projects/${projectId}/deadline-extension-requests`,
         method: "POST",
-        body: { ...(message ? { message } : {}) },
+        body: {
+          requestType,
+          requestedDeadline,
+          ...(message ? { message } : {}),
+        },
       }),
       invalidatesTags: (_result, _error, { projectId }) => [
         { type: "Projects", id: `deadline-requests-${projectId}` },
@@ -256,12 +281,17 @@ export const projectsApi = api.injectEndpoints({
     }),
     reviewDeadlineExtensionRequest: builder.mutation<
       DeadlineExtensionRequest,
-      { projectId: string; requestId: string; status: "approved" | "rejected"; deadline?: string }
+      {
+        projectId: string;
+        requestId: string;
+        action: "approve" | "reject" | "forward";
+        reviewNote?: string;
+      }
     >({
-      query: ({ projectId, requestId, status, deadline }) => ({
+      query: ({ projectId, requestId, action, reviewNote }) => ({
         url: `/projects/${projectId}/deadline-extension-requests/${requestId}`,
         method: "PUT",
-        body: { status, ...(deadline ? { deadline } : {}) },
+        body: { action, ...(reviewNote ? { reviewNote } : {}) },
       }),
       invalidatesTags: (_result, _error, { projectId }) => [
         "Projects",

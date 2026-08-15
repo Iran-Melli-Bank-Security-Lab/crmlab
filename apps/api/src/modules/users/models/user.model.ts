@@ -77,7 +77,6 @@ const userSchema = new Schema(
     security: { type: Boolean, default: false },
     qualityAssurance: { type: Boolean, default: false },
     userProject: [{ type: Schema.Types.ObjectId, ref: "ProjectAssignment" }],
-    projectIds: [{ type: Schema.Types.ObjectId, ref: "Project" }],
     sessionVersion: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },

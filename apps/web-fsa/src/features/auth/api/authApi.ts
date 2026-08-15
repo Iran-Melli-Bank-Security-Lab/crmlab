@@ -16,7 +16,6 @@ type BackendUser = Partial<User> & {
   lastName?: string;
   username?: string;
   sessionVersion?: number;
-  projectIds?: string[];
   roles?: Role[];
   permissions?: Permission[];
 };

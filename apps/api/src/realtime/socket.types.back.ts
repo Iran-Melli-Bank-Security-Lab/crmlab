@@ -12,7 +12,7 @@ export type AuthenticatedSocketUser = {
   roles: Role[];
   permissions: Permission[];
   sessionVersion: number;
-  projectIds?: string[];
+  accessibleProjectIds?: string[];
 };
 
 export type NotificationPayload = {

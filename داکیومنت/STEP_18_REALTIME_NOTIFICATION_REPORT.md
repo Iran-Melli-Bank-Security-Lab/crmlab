@@ -54,7 +54,7 @@ The project list filter still supports role-specific views:
 - DevOps manager sees projects where they are `devops`.
 - Admin can see all projects when they have `admin.system.manage.all`.
 
-The assigned managers are also added to `User.projectIds`, so their socket can join related project rooms on reconnect.
+On reconnect, assigned-manager socket rooms are resolved from project responsibility fields and normalized project assignments.
 
 ### 4. Persisted in-app notification
 

@@ -25,8 +25,8 @@ Room names and membership are owned by `socket.rooms.ts`. Business modules shoul
 use `socket.delivery.ts` instead of constructing room names directly.
 
 When users are assigned while connected, all of their active sockets are joined
-to the project room immediately. Their persisted `projectIds` restore membership
-after reconnecting.
+to the project room immediately. On reconnect, membership is resolved from
+indexed project assignments and project responsibility fields.
 
 ## Server Events
 

@@ -152,6 +152,8 @@ projectAssignmentSchema.index(
 projectAssignmentSchema.index({ userId: 1, status: 1, updatedAt: -1 });
 projectAssignmentSchema.index({ projectId: 1, status: 1, updatedAt: -1 });
 projectAssignmentSchema.index({ managerId: 1, status: 1, updatedAt: -1 });
+projectAssignmentSchema.index({ pentester: 1, status: 1, updated_at: -1 });
+projectAssignmentSchema.index({ manager: 1, status: 1, updated_at: -1 });
 projectAssignmentSchema.index({ assignedById: 1, createdAt: -1 });
 projectAssignmentSchema.index({ assignmentRole: 1, status: 1 });
 projectAssignmentSchema.index({

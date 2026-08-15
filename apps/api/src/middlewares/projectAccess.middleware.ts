@@ -1,5 +1,4 @@
 import type { RequestHandler } from "express";
-import mongoose from "mongoose";
 import { HTTP_STATUS } from "@/constants/http";
 import { ROLES } from "@/constants/roles";
 import { ProjectModel } from "@/modules/projects/models/project.model";
@@ -10,6 +9,7 @@ import {
   assertProjectCapability,
   resolveProjectResponsibilityContext,
 } from "@/modules/projects/services/projectResponsibility.service";
+import { getRelatedProjectIdsForUser } from "@/modules/projects/services/projectMembership.service";
 
 type ProjectIdSource = "params.id" | "params.projectId" | "body.projectId";
 
@@ -43,36 +43,7 @@ export function canAccessProject(
 
 export async function getAccessibleProjectIds(user: Express.UserContext) {
   if (user.roles.includes(ROLES.ADMIN)) return undefined;
-
-  const [projects, assignments] = await Promise.all([
-    ProjectModel.find({
-      $or: [
-        { ownerId: user.id },
-        { projectManager: user.id },
-        { qualityManager: user.id },
-        { devops: user.id },
-        { representative: user.id },
-        { assignedUserIds: user.id },
-      ],
-    }).select("_id"),
-    ProjectAssignmentModel.find({
-      $or: [
-        { userId: user.id },
-        { pentester: user.id },
-        { managerId: user.id },
-        { manager: user.id },
-      ],
-      status: { $ne: "removed" },
-    }).select("projectId project"),
-  ]);
-
-  return Array.from(new Set([
-    ...projects.map((project) => String(project._id)),
-    ...assignments.flatMap((assignment) => {
-      const projectId = assignment.projectId || assignment.project;
-      return projectId ? [String(projectId)] : [];
-    }),
-  ])).map((id) => new mongoose.Types.ObjectId(id));
+  return getRelatedProjectIdsForUser(user.id);
 }
 
 export const requireProjectAccess = (source: ProjectIdSource = "params.id"): RequestHandler => {

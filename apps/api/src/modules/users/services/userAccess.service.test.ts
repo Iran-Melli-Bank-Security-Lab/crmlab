@@ -12,6 +12,10 @@ import {
   protectAdminUserAccess,
 } from "./userAccessPolicy.service";
 
+test("the User schema does not store project membership ids", () => {
+  assert.equal(UserModel.schema.path("projectIds"), undefined);
+});
+
 test("removing one role from a canonical multi-role user persists across refresh", () => {
   const storedUser = {
     roles: [ROLES.PENTESTER],

@@ -202,7 +202,7 @@ project:{projectId}
 When a user is assigned to a project, backend:
 
 1. updates project assigned users
-2. updates user's projectIds
+2. persists the normalized project assignment
 3. creates a notification in MongoDB
 4. emits `notification:new` via Socket.IO
 

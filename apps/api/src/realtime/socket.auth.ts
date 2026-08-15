@@ -40,6 +40,7 @@ import type { ExtendedError } from "socket.io";
 
 import { COOKIE_NAMES } from "@/constants/security";
 import { getAuthUserFromAccessToken } from "@/modules/auth/services/session.service";
+import { getRelatedProjectIdsForUser } from "@/modules/projects/services/projectMembership.service";
 import type { RealtimeSocket } from "./socket.types";
 
 export async function socketAuthMiddleware(
@@ -79,6 +80,8 @@ export async function socketAuthMiddleware(
       return next(new Error("Unauthorized"));
     }
 
+    const accessibleProjectIds = await getRelatedProjectIdsForUser(user.id);
+
     socket.data.user = {
       id: user.id,
       firstName: user.firstName,
@@ -86,7 +89,7 @@ export async function socketAuthMiddleware(
       username: user?.username,
       roles: user?.roles,
       sessionVersion: user?.sessionVersion,
-      projectIds: user?.projectIds,
+      accessibleProjectIds,
     };
 
     console.log("[socket:auth] success", {

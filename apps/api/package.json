@@ -16,7 +16,8 @@
     "seed": "tsx src/db/seed.ts",
     "seed:security-standards": "tsx src/modules/security-standards/services/securityStandards.seed.ts",
     "seed:security-standards:wstg": "npm run seed:security-standards -- owasp-wstg",
-    "diagnose:legacy-db": "tsx --tsconfig tsconfig.json src/db/diagnoseLegacyCompatibility.ts"
+    "diagnose:legacy-db": "tsx --tsconfig tsconfig.json src/db/diagnoseLegacyCompatibility.ts",
+    "cleanup:user-project-ids": "tsx --tsconfig tsconfig.json src/db/removeLegacyUserProjectIds.ts"
   },
   "dependencies": {
     "@role-dashboard/authz": "file:../../packages/authz",

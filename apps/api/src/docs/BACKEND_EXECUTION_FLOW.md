@@ -789,7 +789,6 @@ Important fields:
 
 - `passwordHash` is `select: false` by default.
 - `roles` defaults to pentester.
-- `projectIds` stores assigned projects.
 - `sessionVersion` invalidates old tokens when incremented.
 - `isActive` disables users.
 
@@ -866,7 +865,7 @@ Handlers:
 
 - `getProjects`: admin sees all; non-admin sees owned/assigned projects.
 - `createProject`: creates a project owned by current user and writes audit log.
-- `assignUsersToProject`: adds users to project, updates users' projectIds, sends notifications, writes audit log.
+- `assignUsersToProject`: persists normalized project assignments, sends notifications, and writes an audit log.
 
 Why it exists: Owns project CRUD/assignment business behavior.
 

@@ -292,18 +292,11 @@ async function insertProject(values: Record<string, unknown>) {
   }
 }
 
-async function rollbackProjectCreation(
-  projectId: string,
-  projectMemberIds: string[]
-) {
+async function rollbackProjectCreation(projectId: string) {
   const results = await Promise.allSettled([
     ProjectAssignmentModel.deleteMany({
       $or: [{ projectId }, { project: projectId }],
     }),
-    UserModel.updateMany(
-      { _id: { $in: projectMemberIds } },
-      { $pull: { projectIds: projectId } }
-    ),
     ProjectModel.deleteOne({ _id: projectId }),
   ]);
   const rollbackErrors = results.flatMap((result) =>
@@ -1098,7 +1091,7 @@ function deadlineTechnicalManagerId(project: {
 }
 
 async function deadlineRequestActor(project: {
-  _id: unknown;
+  _id: mongoose.Types.ObjectId;
   type?: unknown;
   projectType?: unknown;
   projectManager?: unknown;
@@ -1110,8 +1103,8 @@ async function deadlineRequestActor(project: {
     ? PROJECT_ASSIGNMENT_ROLES.QA
     : PROJECT_ASSIGNMENT_ROLES.PENTESTER;
   const testerAssignment = await ProjectAssignmentModel.findOne({
-    status: { $ne: PROJECT_ASSIGNMENT_STATUS.REMOVED },
     $and: [
+      { status: { $ne: PROJECT_ASSIGNMENT_STATUS.REMOVED } },
       { $or: [{ projectId: project._id }, { project: project._id }] },
       { $or: [{ userId }, { pentester: userId }] },
       { $or: [
@@ -1601,12 +1594,8 @@ export const createProject: RequestHandler = async (req, res, next) => {
         await project.save();
       }
 
-      await UserModel.updateMany(
-        { _id: { $in: projectMemberIds } },
-        { $addToSet: { projectIds: projectId } }
-      );
     } catch (error) {
-      await rollbackProjectCreation(projectId, projectMemberIds);
+      await rollbackProjectCreation(projectId);
       if (isDuplicateKeyError(error)) {
         throw new AppError(
           "An initial project assignment conflicts with an existing assignment",
@@ -1934,23 +1923,9 @@ export const assignUsersToProject: RequestHandler = async (req, res, next) => {
       { new: true }
     );
 
-    if (addedUserIds.length) {
-      await UserModel.updateMany(
-        { _id: { $in: addedUserIds } },
-        { $addToSet: { projectIds: projectId } }
-      );
-    }
-
     const fullyRemovedUserIds = removedUserIds.filter(
       (userId) => !nextAssignedUserIds.includes(userId)
     );
-
-    if (fullyRemovedUserIds.length) {
-      await UserModel.updateMany(
-        { _id: { $in: fullyRemovedUserIds } },
-        { $pull: { projectIds: projectId } }
-      );
-    }
 
     const addedUserIdSet = new Set(addedUserIds);
     const addedAssignments = requestedAssignments.filter((assignment) =>

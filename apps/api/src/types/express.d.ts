@@ -12,7 +12,6 @@ declare global {
       roles: Role[];
       permissions: Permission[];
       sessionVersion: number;
-      projectIds?: string[];
     }
 
     interface Request {

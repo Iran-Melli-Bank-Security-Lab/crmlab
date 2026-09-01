@@ -20,7 +20,6 @@ Fields:
 - `password`
 - `avatarUrl`
 - `roles`
-- `projectIds`
 - `sessionVersion`
 - `isActive`
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatorVersion": 2,
   "generatedBy": "scripts/generate-project-index.mjs",
-  "sourceFingerprint": "51db5c773d999f38",
+  "sourceFingerprint": "ca2676de9a23af19",
   "workflow": [
     "Read AGENTS.md, then this index or docs/PROJECT_INDEX.md.",
     "Search domains, keywords, symbols, endpoints, and relationships before broad search.",
@@ -59,9 +59,9 @@
     "vendored source"
   ],
   "stats": {
-    "indexedFiles": 354,
+    "indexedFiles": 358,
     "domains": 13,
-    "apiEndpoints": 72,
+    "apiEndpoints": 79,
     "frontendRoutes": 25
   },
   "majorRelationships": [
@@ -264,7 +264,8 @@
       "path": "/api/pentest/projects/:projectId/bugs",
       "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
       "permissions": [
-        "SECURITY_VULNERABILITIES_READ"
+        "SECURITY_VULNERABILITIES_READ",
+        "PENTEST_VULNERABILITIES_READ"
       ]
     },
     {
@@ -272,7 +273,8 @@
       "path": "/api/pentest/projects/:projectId/bugs/:bugId",
       "routeFile": "apps/api/src/modules/pentest/routes/pentest.routes.ts",
       "permissions": [
-        "SECURITY_VULNERABILITIES_READ"
+        "SECURITY_VULNERABILITIES_READ",
+        "PENTEST_VULNERABILITIES_READ"
       ]
     },
     {
@@ -374,6 +376,7 @@
       "path": "/api/projects/:id",
       "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
       "permissions": [
+        "ADMIN_SYSTEM_MANAGE",
         "PENTEST_PROJECTS_READ",
         "QA_PROJECTS_READ",
         "DEVOPS_PROJECTS_READ",
@@ -392,6 +395,67 @@
       ],
       "capabilities": [
         "assign-project-members"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects/:id/bug-visibility-settings",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "ADMIN_SYSTEM_MANAGE"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/projects/:id/bug-visibility-settings",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "ADMIN_SYSTEM_MANAGE"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects/:id/deadline-extension-requests",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "ADMIN_SYSTEM_MANAGE",
+        "PENTEST_PROJECTS_READ",
+        "QA_PROJECTS_READ",
+        "DEVOPS_PROJECTS_READ",
+        "REPRESENTATIVE_PROJECTS_READ",
+        "SECURITY_PROJECTS_READ",
+        "QUALITY_PROJECTS_READ"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/projects/:id/deadline-extension-requests",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "PENTEST_PROJECTS_READ",
+        "QA_PROJECTS_READ",
+        "DEVOPS_PROJECTS_READ",
+        "REPRESENTATIVE_PROJECTS_READ",
+        "SECURITY_PROJECTS_READ",
+        "QUALITY_PROJECTS_READ"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/projects/:id/deadline-extension-requests/:requestId",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "ADMIN_SYSTEM_MANAGE",
+        "SECURITY_PROJECTS_UPDATE",
+        "QUALITY_PROJECTS_UPDATE"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/projects/:id/deadline-settings",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "ADMIN_SYSTEM_MANAGE"
       ]
     },
     {
@@ -470,6 +534,14 @@
         "SECURITY_PROJECTS_READ",
         "SECURITY_PROJECTS_ASSIGN",
         "PENTEST_PROJECTS_READ"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/projects/:id/status",
+      "routeFile": "apps/api/src/modules/projects/routes/project.routes.ts",
+      "permissions": [
+        "ADMIN_SYSTEM_MANAGE"
       ]
     },
     {
@@ -804,7 +876,7 @@
             "PROJECT_ASSIGNMENT_STATUS",
             "PROJECT_ASSIGNMENT_STATUS_VALUES"
           ],
-          "contentHash": "d28fcb0558e7"
+          "contentHash": "2e0d994a9945"
         },
         {
           "path": "apps/api/src/middlewares/projectAccess.middleware.ts",
@@ -830,9 +902,9 @@
             "apps/api/src/constants/roles.ts",
             "apps/api/src/modules/projects/models/project.model.ts",
             "apps/api/src/modules/projects/models/projectAssignment.model.ts",
-            "apps/api/src/modules/projects/services/projectResponsibility.service.ts"
+            "apps/api/src/modules/projects/services/projectMembership.service.ts"
           ],
-          "contentHash": "e33455e34c62"
+          "contentHash": "cf10c0c9b3b3"
         },
         {
           "path": "apps/api/src/modules/projects/constants/securityScope.ts",
@@ -873,21 +945,21 @@
           "symbols": [
             "getProjects",
             "getProject",
-            "getProjectSecurityStandards",
-            "getProjectSecurityScope",
-            "getProjectPentesterScopes",
-            "putProjectSecurityScope",
-            "createProject",
-            "getEligibleProjectAssignees"
+            "closeProject",
+            "updateProjectDeadlineSettings",
+            "getDeadlineExtensionRequests",
+            "createDeadlineExtensionRequest",
+            "reviewDeadlineExtensionRequest",
+            "getProjectSecurityStandards"
           ],
           "related": [
             "apps/api/src/constants/audit.ts",
             "apps/api/src/constants/http.ts",
+            "apps/api/src/constants/notifications.ts",
             "apps/api/src/constants/permissions.ts",
-            "apps/api/src/constants/projects.ts",
-            "apps/api/src/constants/roles.ts"
+            "apps/api/src/constants/projects.ts"
           ],
-          "contentHash": "371e5e27dc9a"
+          "contentHash": "ef17031d405f"
         },
         {
           "path": "apps/api/src/modules/projects/controllers/projectProvisioning.controller.ts",
@@ -940,7 +1012,7 @@
             "apps/api/src/constants/legacyCollections.ts",
             "apps/api/src/constants/projects.ts"
           ],
-          "contentHash": "8a7d9514bafe"
+          "contentHash": "8694e3c4eb70"
         },
         {
           "path": "apps/api/src/modules/projects/models/projectAssignment.model.ts",
@@ -966,7 +1038,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/projects/constants/securityScope.ts"
           ],
-          "contentHash": "6e363cdf8ae0"
+          "contentHash": "149d10b58c6e"
         },
         {
           "path": "apps/api/src/modules/projects/models/projectSecurityScope.model.ts",
@@ -1013,7 +1085,7 @@
             "apps/api/src/middlewares/permission.middleware.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "dd710b163885"
+          "contentHash": "8651eadec94e"
         },
         {
           "path": "apps/api/src/modules/projects/services/project.mapper.test.ts",
@@ -1132,16 +1204,18 @@
           "symbols": [
             "WorkTimerStatus",
             "PentesterTableStatus",
+            "closeProjectAssignmentWorkTimers",
+            "reopenDeadlineClosedAssignments",
+            "reopenDeadlineClosedAssignment",
             "toPentesterTableStatus",
             "ProjectAssignmentWorkTimerSnapshot",
-            "toProjectAssignmentWorkTimerSnapshot",
-            "transitionProjectAssignmentWorkTimer"
+            "toProjectAssignmentWorkTimerSnapshot"
           ],
           "related": [
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/projects/models/projectAssignment.model.ts"
           ],
-          "contentHash": "6cefdb4ca6c8"
+          "contentHash": "3c661c6f3f2a"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectIndex.service.ts",
@@ -1165,6 +1239,49 @@
             "apps/api/src/modules/projects/models/projectAssignment.model.ts"
           ],
           "contentHash": "9c9bc56d1f6f"
+        },
+        {
+          "path": "apps/api/src/modules/projects/services/projectMembership.service.test.ts",
+          "kind": "test",
+          "responsibility": "Regression tests for project Membership service test.",
+          "keywords": [
+            "api",
+            "modules",
+            "projects",
+            "services",
+            "project",
+            "membership",
+            "service"
+          ],
+          "related": [
+            "apps/api/src/constants/socket.ts",
+            "apps/api/src/modules/projects/services/projectMembership.service.ts",
+            "apps/api/src/realtime/socket.rooms.ts"
+          ],
+          "contentHash": "73305526ab7e"
+        },
+        {
+          "path": "apps/api/src/modules/projects/services/projectMembership.service.ts",
+          "kind": "service",
+          "responsibility": "Business logic for project Membership service.",
+          "keywords": [
+            "api",
+            "modules",
+            "projects",
+            "services",
+            "project",
+            "membership",
+            "service"
+          ],
+          "symbols": [
+            "collectRelatedProjectIds",
+            "getRelatedProjectIdsForUser"
+          ],
+          "related": [
+            "apps/api/src/modules/projects/models/project.model.ts",
+            "apps/api/src/modules/projects/models/projectAssignment.model.ts"
+          ],
+          "contentHash": "d731d3fee5b1"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectProvisioning.service.test.ts",
@@ -1200,13 +1317,13 @@
           ],
           "symbols": [
             "LEGACY_PROJECT_PROVISIONING_STATUS",
+            "getProjectDeadline",
+            "getApprovedIndividualDeadline",
+            "closeExpiredProjects",
+            "assertProjectOpenForWork",
             "getEffectiveProvisioningStatus",
             "assertProvisioningTransitionAllowed",
-            "assertAssignedRepresentative",
-            "notifyInitialDevopsAssignment",
-            "buildInitialDevopsAssignmentNotification",
-            "startProjectProvisioning",
-            "confirmProjectProvisioning"
+            "assertAssignedRepresentative"
           ],
           "related": [
             "apps/api/src/constants/http.ts",
@@ -1215,7 +1332,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/constants/roles.ts"
           ],
-          "contentHash": "f668640cbe02"
+          "contentHash": "f59096bfef51"
         },
         {
           "path": "apps/api/src/modules/projects/services/projectResponsibility.service.test.ts",
@@ -1349,7 +1466,7 @@
             "apps/api/src/modules/settings/models/projectTableColumnRegistry.model.ts",
             "apps/api/src/utils/AppError.ts"
           ],
-          "contentHash": "6bd539b12ab3"
+          "contentHash": "db33aa583e05"
         },
         {
           "path": "apps/api/src/modules/projects/validators/project.validators.test.ts",
@@ -1386,17 +1503,17 @@
             "createProjectRequestSchema",
             "CreateProjectRequest",
             "createProjectSchema",
-            "securityScopeReferenceSchema",
-            "projectSecurityScopeSchema",
-            "assignUsersRequestSchema",
-            "assignUsersSchema",
-            "AssignUsersRequest"
+            "closeProjectSchema",
+            "deadlineSettingsSchema",
+            "createDeadlineExtensionRequestSchema",
+            "reviewDeadlineExtensionRequestSchema",
+            "securityScopeReferenceSchema"
           ],
           "related": [
             "apps/api/src/constants/projects.ts",
             "apps/api/src/modules/projects/constants/securityScope.ts"
           ],
-          "contentHash": "a089a88a0565"
+          "contentHash": "cfc58a61f4a3"
         },
         {
           "path": "apps/api/src/modules/settings/controllers/projectTableSetting.controller.ts",
@@ -1451,7 +1568,7 @@
           "related": [
             "apps/api/src/constants/permissions.ts"
           ],
-          "contentHash": "d2f1e9d838c2"
+          "contentHash": "40d90257aa52"
         },
         {
           "path": "apps/api/src/modules/settings/models/projectTableSetting.model.ts",
@@ -1520,7 +1637,7 @@
             "apps/api/src/modules/settings/models/projectTableColumnRegistry.model.ts",
             "apps/api/src/utils/AppError.ts"
           ],
-          "contentHash": "5c54b6dd804b"
+          "contentHash": "833fbebfe8cd"
         },
         {
           "path": "apps/web-fsa/src/entities/project/api/projectsApi.ts",
@@ -1536,6 +1653,8 @@
             "table settings"
           ],
           "symbols": [
+            "ProjectBugVisibilitySettings",
+            "DeadlineExtensionRequest",
             "projectsApi"
           ],
           "related": [
@@ -1545,7 +1664,7 @@
             "apps/web-fsa/src/shared/types/index.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "81beafad8043"
+          "contentHash": "effd305503a3"
         },
         {
           "path": "apps/web-fsa/src/entities/project/model/provisioning.test.ts",
@@ -1707,7 +1826,7 @@
             "apps/web-fsa/src/entities/project/ui/table/types.ts",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "c9b42562ee4a"
+          "contentHash": "880f4635d94f"
         },
         {
           "path": "apps/web-fsa/src/entities/project/ui/table/formatters.ts",
@@ -1817,7 +1936,7 @@
             "apps/web-fsa/src/entities/project/ui/table/types.ts",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "6098d8f769d9"
+          "contentHash": "6fbb54fa5444"
         },
         {
           "path": "apps/web-fsa/src/entities/project/ui/table/types.ts",
@@ -1846,7 +1965,7 @@
             "apps/web-fsa/src/shared/types/api/projects.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "74b231bf7940"
+          "contentHash": "c04509a49dbe"
         },
         {
           "path": "apps/web-fsa/src/entities/project/ui/table/views/AdminProjectsTable.tsx",
@@ -1894,7 +2013,7 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/features/ui-state/api/projectTableSettingsApi.ts"
           ],
-          "contentHash": "087be3be23da"
+          "contentHash": "b585d4ef0c07"
         },
         {
           "path": "apps/web-fsa/src/features/ui-state/api/projectTableSettingsApi.ts",
@@ -2016,7 +2135,7 @@
             "apps/web-fsa/src/entities/project/ui/assignment/QaAssignmentPanel.tsx",
             "apps/web-fsa/src/entities/project/ui/table/formatters.ts"
           ],
-          "contentHash": "aa32100ec88c"
+          "contentHash": "d87a677ac566"
         },
         {
           "path": "apps/web-fsa/src/pages/projects/Projects.tsx",
@@ -2036,11 +2155,11 @@
           "related": [
             "apps/web-fsa/src/entities/permission/model/permissions.ts",
             "apps/web-fsa/src/entities/project/api/projectsApi.ts",
-            "apps/web-fsa/src/entities/project/model/provisioning.ts",
             "apps/web-fsa/src/entities/project/ui/assignment/PentesterAssignmentDock.tsx",
-            "apps/web-fsa/src/features/access-control/model/usePermission.ts"
+            "apps/web-fsa/src/features/access-control/model/usePermission.ts",
+            "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "a840c9685a5d"
+          "contentHash": "1674a9864f2c"
         },
         {
           "path": "apps/web-fsa/src/pages/security-bugs/SecurityProjectBugsPage.tsx",
@@ -2065,7 +2184,7 @@
             "apps/web-fsa/src/shared/ui/feedback/ErrorState.tsx",
             "apps/web-fsa/src/shared/ui/feedback/LoadingScreen.tsx"
           ],
-          "contentHash": "032c8651e494"
+          "contentHash": "a39ad875dc9f"
         },
         {
           "path": "apps/web-fsa/src/pages/settings/Settings.tsx",
@@ -2138,7 +2257,7 @@
           "related": [
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "7d9af55abb90"
+          "contentHash": "ac4108646b2d"
         },
         {
           "path": "docs/PROJECT_EXPLAINED_FROM_ZERO.md",
@@ -2154,6 +2273,21 @@
             "assignments"
           ],
           "contentHash": "f3ec9e511c9b"
+        },
+        {
+          "path": "docs/USER_PROJECT_IDS_REMOVAL.md",
+          "kind": "documentation",
+          "responsibility": "Repository documentation for USER PROJECT IDS REMOVAL.",
+          "keywords": [
+            "docs",
+            "user",
+            "project",
+            "ids",
+            "removal",
+            "projects",
+            "assignments"
+          ],
+          "contentHash": "4592857aa001"
         }
       ]
     },
@@ -2198,7 +2332,7 @@
             "apps/api/src/constants/permissions.ts",
             "apps/api/src/constants/uploads.ts"
           ],
-          "contentHash": "03456146a63a"
+          "contentHash": "3a4fbf808dcc"
         },
         {
           "path": "apps/api/src/modules/pentest/middlewares/pocUpload.middleware.ts",
@@ -2314,7 +2448,7 @@
             "apps/api/src/middlewares/permission.middleware.ts",
             "apps/api/src/middlewares/projectAccess.middleware.ts"
           ],
-          "contentHash": "e7eff2753d40"
+          "contentHash": "c79aa2e41311"
         },
         {
           "path": "apps/api/src/modules/pentest/services/assignedSecurityStandard.service.test.ts",
@@ -2410,7 +2544,7 @@
             "apps/api/src/constants/routes.ts",
             "apps/api/src/modules/notifications/services/notification.service.ts"
           ],
-          "contentHash": "306a8e781206"
+          "contentHash": "fea1a88aba94"
         },
         {
           "path": "apps/api/src/modules/pentest/services/cvssV4.constants.ts",
@@ -2755,8 +2889,8 @@
             "SecuringMethod",
             "WafSecuringPossibility",
             "Vulnerability",
-            "SaveItemAssessmentRequest",
-            "CreateVulnerabilityRequest"
+            "ProjectBugsAccess",
+            "ProjectBugsResult"
           ],
           "related": [
             "apps/web-fsa/src/entities/pentest/model/attachments.ts",
@@ -2765,7 +2899,7 @@
             "apps/web-fsa/src/shared/api/unwrapApiData.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "1eb53e405e58"
+          "contentHash": "39924b940e66"
         },
         {
           "path": "apps/web-fsa/src/entities/pentest/config/attachmentUpload.ts",
@@ -3260,7 +3394,7 @@
             "apps/web-fsa/src/entities/pentest/ui/modules/ModuleFallback.tsx",
             "apps/web-fsa/src/features/language/model/index.tsx"
           ],
-          "contentHash": "6214df339374"
+          "contentHash": "51ea4504960b"
         },
         {
           "path": "apps/web-fsa/src/pages/pentest-workspace/PentestWorkspacePage.tsx",
@@ -3649,7 +3783,7 @@
             "apps/api/src/constants/legacyCollections.ts",
             "apps/api/src/constants/roles.ts"
           ],
-          "contentHash": "38beb72b5247"
+          "contentHash": "c0aef2c81fe3"
         },
         {
           "path": "apps/api/src/modules/users/models/userPermission.model.ts",
@@ -3748,7 +3882,7 @@
             "apps/api/src/modules/users/models/userPermission.model.ts",
             "apps/api/src/modules/users/services/userAccessPolicy.service.ts"
           ],
-          "contentHash": "53c1fd3ef037"
+          "contentHash": "4f862bd72f1f"
         },
         {
           "path": "apps/api/src/modules/users/services/userAccessPolicy.service.ts",
@@ -3799,11 +3933,11 @@
           "related": [
             "apps/api/src/constants/permissions.ts",
             "apps/api/src/constants/roles.ts",
-            "apps/api/src/modules/projects/models/projectAssignment.model.ts",
             "apps/api/src/modules/users/models/user.model.ts",
-            "apps/api/src/modules/users/models/userPermission.model.ts"
+            "apps/api/src/modules/users/models/userPermission.model.ts",
+            "apps/api/src/modules/users/services/role.service.ts"
           ],
-          "contentHash": "adf276219b6b"
+          "contentHash": "6438795ee73c"
         },
         {
           "path": "apps/api/src/modules/users/validators/user.validators.ts",
@@ -3968,7 +4102,7 @@
             "apps/web-fsa/src/entities/permission/model/permissions.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "f17449af28e2"
+          "contentHash": "373f5ab95f17"
         },
         {
           "path": "apps/web-fsa/src/entities/permission/domain/accessRules.ts",
@@ -4162,7 +4296,7 @@
             "apps/web-fsa/src/shared/api/baseApi.ts",
             "apps/web-fsa/src/shared/types/index.ts"
           ],
-          "contentHash": "9e6f2ef97244"
+          "contentHash": "71856cf179ea"
         },
         {
           "path": "apps/web-fsa/src/features/auth/model/authSlice.ts",
@@ -4657,9 +4791,10 @@
           "related": [
             "apps/api/src/constants/security.ts",
             "apps/api/src/modules/auth/services/session.service.ts",
+            "apps/api/src/modules/projects/services/projectMembership.service.ts",
             "apps/api/src/realtime/socket.types.ts"
           ],
-          "contentHash": "e13163fda62d"
+          "contentHash": "6d840d520d03"
         },
         {
           "path": "apps/api/src/realtime/socket.config.ts",
@@ -4755,15 +4890,15 @@
             "notifications"
           ],
           "symbols": [
-            "getInitialRooms",
             "joinUserSocketsToProject",
-            "removeUserSocketsFromProject"
+            "removeUserSocketsFromProject",
+            "getInitialRooms"
           ],
           "related": [
             "apps/api/src/constants/socket.ts",
             "apps/api/src/realtime/socket.types.ts"
           ],
-          "contentHash": "862ec1a43325"
+          "contentHash": "e7875216d498"
         },
         {
           "path": "apps/api/src/realtime/socket.server.ts",
@@ -4819,7 +4954,7 @@
             "apps/api/src/constants/projects.ts",
             "apps/api/src/constants/roles.ts"
           ],
-          "contentHash": "588443cbd9a5"
+          "contentHash": "c526d3815c7d"
         },
         {
           "path": "apps/api/src/realtime/socket.types.ts",
@@ -4847,7 +4982,7 @@
             "apps/api/src/constants/socket.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "0422be978b35"
+          "contentHash": "95b68e0cbcca"
         },
         {
           "path": "apps/api/src/realtime/socket/server.ts",
@@ -5615,7 +5750,7 @@
             "AuditAction",
             "AuditEntityType"
           ],
-          "contentHash": "56eb5454c826"
+          "contentHash": "58ab56090195"
         },
         {
           "path": "apps/api/src/constants/tasks.ts",
@@ -6230,7 +6365,7 @@
             "LanguageProvider",
             "useLanguage"
           ],
-          "contentHash": "c0caf59f4d2a"
+          "contentHash": "f296d3fcf293"
         },
         {
           "path": "apps/web-fsa/src/features/language/ui/LanguageSwitcher.tsx",
@@ -6454,7 +6589,7 @@
             "apps/web-fsa/src/features/language/model/index.tsx",
             "apps/web-fsa/src/pages/security-bugs/BugEvidenceGallery.tsx"
           ],
-          "contentHash": "bd5cc440c71a"
+          "contentHash": "8a823b31cefd"
         },
         {
           "path": "apps/web-fsa/src/pages/signup/Signup.tsx",
@@ -6572,7 +6707,7 @@
           "symbols": [
             "getApiErrorMessage"
           ],
-          "contentHash": "0b7f490358f7"
+          "contentHash": "97b54536beb0"
         },
         {
           "path": "apps/web-fsa/src/shared/mocks/browser.ts",
@@ -6747,7 +6882,7 @@
             "packages/authz/src/index.ts",
             "packages/contracts/src/index.ts"
           ],
-          "contentHash": "c167a0941306"
+          "contentHash": "86da6dd72d32"
         },
         {
           "path": "apps/web-fsa/src/shared/ui/feedback/EmptyState.tsx",
@@ -7434,7 +7569,7 @@
             "apps/api/src/constants/roles.ts",
             "apps/api/src/modules/projects/models/project.model.ts"
           ],
-          "contentHash": "468847f9e7d6"
+          "contentHash": "36fd19c24aef"
         },
         {
           "path": "apps/api/src/utils/AppError.ts",
@@ -7650,7 +7785,7 @@
           "related": [
             "packages/authz/src/index.ts"
           ],
-          "contentHash": "8959fe1214f1"
+          "contentHash": "be373e66d1ea"
         },
         {
           "path": "packages/contracts/src/projectTable.ts",
@@ -7669,7 +7804,7 @@
           "related": [
             "packages/authz/src/index.ts"
           ],
-          "contentHash": "fb0259fe5a98"
+          "contentHash": "773e13afc3e6"
         },
         {
           "path": "packages/contracts/src/rbac.ts",
@@ -7848,6 +7983,25 @@
             "apps/api/src/constants/legacyCollections.ts"
           ],
           "contentHash": "a73886062411"
+        },
+        {
+          "path": "apps/api/src/db/removeLegacyUserProjectIds.ts",
+          "kind": "module",
+          "responsibility": "Implementation module for remove Legacy User Project Ids.",
+          "keywords": [
+            "api",
+            "remove",
+            "legacy",
+            "user",
+            "project",
+            "ids",
+            "MongoDB"
+          ],
+          "related": [
+            "apps/api/src/config/env.ts",
+            "apps/api/src/constants/legacyCollections.ts"
+          ],
+          "contentHash": "5ff8745870c7"
         },
         {
           "path": "apps/api/src/modules/notifications/services/notificationCompatibility.service.test.ts",
@@ -8044,7 +8198,7 @@
             "configuration",
             "deployment"
           ],
-          "contentHash": "65b23beb3208"
+          "contentHash": "9bf98a1d472c"
         },
         {
           "path": "apps/api/tsconfig.json",

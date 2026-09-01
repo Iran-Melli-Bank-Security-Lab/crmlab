@@ -1,14 +1,6 @@
 import { SOCKET_ROOMS } from "@/constants/socket";
 import type { RealtimeServer } from "./socket.types";
 
-// export function getInitialRooms(user: Express.UserContext): string[] {
-//   return [
-//     SOCKET_ROOMS.USER(user.id),
-//     ...user.roles.map(SOCKET_ROOMS.ROLE),
-//     ...(user.projectIds || []).map(SOCKET_ROOMS.PROJECT),
-//   ];
-// }
-
 // export async function joinUserSocketsToProject(
 //   io: RealtimeServer,
 //   userIds: readonly string[],
@@ -38,7 +30,7 @@ import type { RealtimeServer } from "./socket.types";
 type AuthSocketUser = {
   id: string;
   roles?: string[];
-  projectIds?: string[];
+  accessibleProjectIds?: string[];
 };
 
 export function getInitialRooms(user: AuthSocketUser): string[] {
@@ -48,7 +40,7 @@ export function getInitialRooms(user: AuthSocketUser): string[] {
     rooms.push(SOCKET_ROOMS.ROLE(role));
   }
 
-  for (const projectId of user.projectIds ?? []) {
+  for (const projectId of user.accessibleProjectIds ?? []) {
     rooms.push(SOCKET_ROOMS.PROJECT(projectId));
   }
 

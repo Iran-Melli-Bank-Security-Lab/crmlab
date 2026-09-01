@@ -3,7 +3,6 @@ import type { Role } from "@/constants/roles";
 import { getPermissionsForRoles } from "./role.service";
 import { normalizeRoles, UserModel, type UserDocument } from "../models/user.model";
 import { UserPermissionModel } from "../models/userPermission.model";
-import { ProjectAssignmentModel } from "@/modules/projects/models/projectAssignment.model";
 
 function uniquePermissions(permissions: Permission[] = []) {
   return Array.from(new Set(permissions));
@@ -77,24 +76,6 @@ export async function getOrCreateUserPermissions(user: UserDocument, roles = nor
 export async function toAuthUserContext(user: UserDocument) {
   const roles = normalizeRoles(user);
   const permissions = await getOrCreateUserPermissions(user, roles);
-  let projectIds = user.projectIds || [];
-  if (!projectIds.length) {
-    const assignmentIds = user.userProject || [];
-    const assignments = await ProjectAssignmentModel.find({
-      $or: [
-        ...(assignmentIds.length ? [{ _id: { $in: assignmentIds } }] : []),
-        { userId: user._id },
-        { pentester: user._id },
-        { managerId: user._id },
-        { manager: user._id },
-      ],
-      status: { $ne: "removed" },
-    }).select("projectId project");
-    projectIds = Array.from(new Map(assignments.flatMap((assignment) => {
-      const projectId = assignment.projectId || assignment.project;
-      return projectId ? [[String(projectId), projectId] as const] : [];
-    })).values());
-  }
 
   return {
     id: user._id.toString(),
@@ -106,6 +87,5 @@ export async function toAuthUserContext(user: UserDocument) {
     roles,
     permissions,
     sessionVersion: user.sessionVersion || 0,
-    projectIds: projectIds.map(String),
   };
 }

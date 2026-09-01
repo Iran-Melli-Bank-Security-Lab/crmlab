@@ -46,7 +46,7 @@ Returns accessible projects newest-first by default for every project-list view.
 
 - Reads project id from route params.
 - Adds user ids to `assignedUserIds`.
-- Updates assigned users' `projectIds`.
+- Creates or removes normalized `ProjectAssignment` records.
 - Creates assignment notifications.
 - Writes `project.assign_users` audit log.
 - Returns updated project data.

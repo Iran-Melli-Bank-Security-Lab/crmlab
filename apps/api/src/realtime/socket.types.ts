@@ -12,7 +12,7 @@ export type AuthSocketUser = {
    username?: string;
    sessionVersion?: number;
    roles: string[]; 
-   projectIds?: string[];
+   accessibleProjectIds?: string[];
 };
 
 export type SocketConnectedPayload = {
